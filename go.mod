@@ -2,7 +2,7 @@ module git.internal.yunify.com/tools/device-sdk-go
 
 go 1.12
 
-replace git.internal.yunify.com/tools/device-sdk-go => ./
+replace git.internal.yunify.com/tools/device-sdk-go/index => ./index
 
 require (
 	github.com/eclipse/paho.mqtt.golang v1.2.0
