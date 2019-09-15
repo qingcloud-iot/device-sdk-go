@@ -6,6 +6,7 @@ package mqtt
  */
 import (
 	"errors"
+	jwt "github.com/dgrijalva/jwt-go"
 	"regexp"
 	"strings"
 )
@@ -13,7 +14,7 @@ import (
 const (
 	TOKEN_DEVICE_ID = "orgi"
 	TOKEN_THING_ID  = "thid"
-	WORKER_ID       = 1001
+	WORKER_ID       = 1
 	MQTT_VERSION    = "v1.0.0"
 	WORKER_POOL     = 10
 )

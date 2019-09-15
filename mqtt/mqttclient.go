@@ -1,7 +1,6 @@
 package mqtt
 
 import (
-	"api/metadata/v1"
 	"context"
 	"encoding/json"
 	"fmt"
@@ -55,14 +54,14 @@ func NewMqtt(options *index.Options) (index.Client, error) {
 		return m, nil
 	}
 }
-func (m *mqttClient) Start(messageReply index.MessageReply, serviceHandle index.ServiceHandle) error {
+func (m *mqttClient) Start(setProperty index.SetProperty, serviceHandle index.ServiceHandle) error {
 	if token := m.client.Subscribe(fmt.Sprintf(post_property_topic_reply, m.thingId, m.deviceId), byte(0), m.recvPropertyReply()); token.WaitTimeout(5*time.Second) && token.Error() != nil {
 		return token.Error()
 	}
 	if token := m.client.Subscribe(fmt.Sprintf(post_event_topic_reply, m.thingId, m.deviceId), byte(0), m.recvEventReply()); token.WaitTimeout(5*time.Second) && token.Error() != nil {
 		return token.Error()
 	}
-	if token := m.client.Subscribe(fmt.Sprintf(set_property_topic, m.thingId, m.deviceId), byte(0), m.setPropertyReply()); token.WaitTimeout(5*time.Second) && token.Error() != nil {
+	if token := m.client.Subscribe(fmt.Sprintf(set_property_topic, m.thingId, m.deviceId), byte(0), m.setPropertyReply(setProperty)); token.WaitTimeout(5*time.Second) && token.Error() != nil {
 		return token.Error()
 	}
 	if token := m.client.Subscribe(fmt.Sprintf(set_service_topic, m.thingId, m.deviceId), byte(0), m.requestServiceReply(serviceHandle)); token.WaitTimeout(5*time.Second) && token.Error() != nil {
@@ -129,12 +128,20 @@ func (m *mqttClient) recvEventReply() func(mqttp.Client, mqttp.Message) {
 }
 
 //recv
-func (m *mqttClient) setPropertyReply() func(mqttp.Client, mqttp.Message) {
+func (m *mqttClient) setPropertyReply(setProperty index.SetProperty) func(mqttp.Client, mqttp.Message) {
 	return func(client mqttp.Client, msg mqttp.Message) {
 		topic := msg.Topic()
 		//qos := msg.Qos()
 		payload := msg.Payload()
 		fmt.Println("[sdk-go-sub]", topic, string(payload))
+		message, err := parseMessage(payload)
+		if err != nil {
+			fmt.Errorf("requestServiceReply err:%s", err.Error())
+			return
+		}
+		if setProperty != nil {
+			setProperty(message.Id, message.Params)
+		}
 	}
 }
 func (m *mqttClient) requestServiceReply(serviceHandle index.ServiceHandle) func(mqttp.Client, mqttp.Message) {
@@ -144,22 +151,24 @@ func (m *mqttClient) requestServiceReply(serviceHandle index.ServiceHandle) func
 			fmt.Errorf("requestServiceReply topic:%s is not match", topic)
 			return
 		}
-		//name := parseServiceName(topic)
+		name := parseServiceName(topic)
 		//qos := msg.Qos()
 		payload := msg.Payload()
 		fmt.Println("[sdk-go-sub]", topic, string(payload))
-		//message,err := parseMessage(payload)
-		//if err != nil {
-		//	fmt.Errorf("requestServiceReply err:%s",err.Error())
-		//	return
-		//}
+		message, err := parseMessage(payload)
+		if err != nil {
+			fmt.Errorf("requestServiceReply err:%s", err.Error())
+			return
+		}
 		if serviceHandle != nil {
-			//serviceHandle(message.Id,name,)
+			serviceHandle(message.Id, name, message.Params)
 		}
 	}
 }
 func (m *mqttClient) PubProperty(ctx context.Context, meta index.Metadata) *index.Reply {
-	reply := &index.Reply{}
+	reply := &index.Reply{
+		Code: index.RPC_SUCCESS,
+	}
 	message := buildMessage(meta)
 	data, err := json.Marshal(message)
 	if err != nil {
@@ -167,6 +176,7 @@ func (m *mqttClient) PubProperty(ctx context.Context, meta index.Metadata) *inde
 	}
 	topic := buildProperty(m.deviceId, m.thingId)
 	if token := m.client.Publish(topic, byte(0), false, data); token.WaitTimeout(5*time.Second) && token.Error() != nil {
+		reply.Code = index.RPC_PUBLISH_TIMEOUT
 		return reply
 	}
 	ch := make(chan *index.Reply)
@@ -175,12 +185,14 @@ func (m *mqttClient) PubProperty(ctx context.Context, meta index.Metadata) *inde
 	case value := <-ch:
 		return value
 	case <-ctx.Done():
-		reply.Code = RPC_TIMEOUT
+		reply.Code = index.RPC_TIMEOUT
 	}
 	return reply
 }
 func (m *mqttClient) PubEvent(ctx context.Context, event string, meta index.Metadata) *index.Reply {
-	reply := &index.Reply{}
+	reply := &index.Reply{
+		Code: index.RPC_SUCCESS,
+	}
 	message := buildMessage(meta)
 	data, err := json.Marshal(message)
 	if err != nil {
@@ -188,6 +200,7 @@ func (m *mqttClient) PubEvent(ctx context.Context, event string, meta index.Meta
 	}
 	topic := buildEvent(m.deviceId, m.thingId, event)
 	if token := m.client.Publish(topic, byte(0), false, data); token.WaitTimeout(5*time.Second) && token.Error() != nil {
+		reply.Code = index.RPC_PUBLISH_TIMEOUT
 		return reply
 	}
 	ch := make(chan *index.Reply)
@@ -196,13 +209,29 @@ func (m *mqttClient) PubEvent(ctx context.Context, event string, meta index.Meta
 	case value := <-ch:
 		return value
 	case <-ctx.Done():
-		reply.Code = RPC_TIMEOUT
+		reply.Code = index.RPC_TIMEOUT
 	}
 	return reply
 }
-func (m *mqttClient) ReplyProperty(id string, meta index.Metadata) error {
+func (m *mqttClient) ReplyProperty(reply *index.Reply) error {
+	topic := buildPropertyReply(m.deviceId, m.thingId)
+	data, err := json.Marshal(reply)
+	if err != nil {
+		return err
+	}
+	if token := m.client.Publish(topic, byte(0), false, data); token.WaitTimeout(5*time.Second) && token.Error() != nil {
+		return token.Error()
+	}
 	return nil
 }
-func (m *mqttClient) ReplyService(id string, name string, meta index.Metadata) error {
+func (m *mqttClient) ReplyService(name string, reply *index.Reply) error {
+	topic := buildServiceReply(name, m.deviceId, m.thingId)
+	data, err := json.Marshal(reply)
+	if err != nil {
+		return err
+	}
+	if token := m.client.Publish(topic, byte(0), false, data); token.WaitTimeout(5*time.Second) && token.Error() != nil {
+		return token.Error()
+	}
 	return nil
 }
