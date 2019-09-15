@@ -6,22 +6,27 @@ package mqtt
  */
 import (
 	"errors"
+	"regexp"
+	"strings"
 )
+
 const (
 	TOKEN_DEVICE_ID = "orgi"
 	TOKEN_THING_ID  = "thid"
-	WORKER_ID = 1001
-	MQTT_VERSION ="v1.0.0"
+	WORKER_ID       = 1001
+	MQTT_VERSION    = "v1.0.0"
+	WORKER_POOL     = 10
 )
+
 // return token payload
 func parseToken(deviceToken string) (string, string, error) {
 	var (
 		deviceId string
-		thingId string
-		err error
+		thingId  string
+		err      error
 	)
 	defer func() {
-		if errToken := recover();err != nil {
+		if errToken := recover(); err != nil {
 			err = errToken.(error)
 			return
 		}
@@ -45,4 +50,19 @@ func parseToken(deviceToken string) (string, string, error) {
 	} else {
 		return deviceId, thingId, errors.New("token error")
 	}
+}
+func isServceTopic(topic string) bool {
+	reg := regexp.MustCompile("^/sys/iott-.*/iotd-.*/thing/service/.*$")
+	res := reg.FindAllString(topic, -1)
+	if res == nil {
+		return false
+	}
+	return true
+}
+func parseServiceName(topic string) string {
+	kv := strings.Split(topic, "/")
+	if len(kv) != 7 {
+		return ""
+	}
+	return kv[6]
 }

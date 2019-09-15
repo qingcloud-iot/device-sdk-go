@@ -1,17 +1,19 @@
 package index
 
+import "context"
+
 /**
 * @Author: hexing
 * @Date: 19-9-9 上午11:32
  */
-type MessageReply func(reply *Reply)
-type ServiceHandle func(name string, meta Metadata)
+type setProperty func(id string, meta Metadata)
+type ServiceHandle func(id string, name string, meta Metadata)
 type Options struct {
 	DeviceId string
 	Token    string
 	Server   string
 }
-type Metadata map[string]*Property
+type Metadata map[string]interface{}
 type Property struct {
 	Value interface{} `json:"value"`
 	Time  int64       `json:"time"`
@@ -27,7 +29,9 @@ type Message struct {
 	Params  Metadata `json:"params"`
 }
 type Client interface {
-	Start(messageReply MessageReply, serviceHandle ServiceHandle) error
-	PubProperty(deviceId string, meta Metadata) error
-	PubEvent(deviceId string, event string, meta Metadata) error
+	Start(setProperty setProperty, serviceHandle ServiceHandle) error
+	PubProperty(ctx context.Context, meta Metadata) *Reply
+	PubEvent(ctx context.Context, event string, meta Metadata) Reply
+	ReplyProperty(id string, meta Metadata) error
+	ReplyService(id string, name string, meta Metadata) error
 }
