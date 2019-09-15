@@ -29,9 +29,9 @@ type Message struct {
 	Params  Metadata `json:"params"`
 }
 type Client interface {
-	Start(setProperty SetProperty, serviceHandle ServiceHandle) error
-	PubProperty(ctx context.Context, meta Metadata) *Reply
-	PubEvent(ctx context.Context, event string, meta Metadata) *Reply
+	Start(setProperty SetProperty, serviceHandle ServiceHandle) error //register
+	PubProperty(ctx context.Context, meta Metadata) *Reply            //post property sync
+	PubEvent(ctx context.Context, event string, meta Metadata) *Reply //post property　sync
 	ReplyProperty(reply *Reply) error
 	ReplyService(name string, reply *Reply) error
 }
