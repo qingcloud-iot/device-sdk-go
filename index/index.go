@@ -17,9 +17,9 @@ type Property struct {
 	Time  int64       `json:"time"`
 }
 type Reply struct {
-	Code    int
-	Message string
-	Data    interface{}
+	Code int
+	Id   string
+	Data interface{}
 }
 type Message struct {
 	Id      string   `json:"id"`

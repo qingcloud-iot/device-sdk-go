@@ -10,6 +10,8 @@ import (
 const (
 	TOKEN_DEVICE_ID = "orgi"
 	TOKEN_THING_ID  = "thid"
+	WORKER_ID = 1001
+	MQTT_VERSION ="v1.0.0"
 )
 // return token payload
 func parseToken(deviceToken string) (string, string, error) {
