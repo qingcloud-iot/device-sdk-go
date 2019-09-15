@@ -179,6 +179,7 @@ func (m *mqttClient) PubProperty(ctx context.Context, meta index.Metadata) *inde
 		reply.Code = index.RPC_PUBLISH_TIMEOUT
 		return reply
 	}
+	fmt.Println(topic, string(data))
 	ch := make(chan *index.Reply)
 	m.cacheClient.Add(message.Id, RPC_TIME_OUT, reply)
 	select {
