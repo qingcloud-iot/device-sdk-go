@@ -18,20 +18,24 @@ type Property struct {
 	Value interface{} `json:"value"`
 	Time  int64       `json:"time"`
 }
+type Event struct {
+	Value Metadata `json:"value"`
+	Time  int64    `json:"time"`
+}
 type Reply struct {
 	Code int
 	Id   string
 	Data interface{}
 }
 type Message struct {
-	Id      string   `json:"id"`
-	Version string   `json:"version"`
-	Params  Metadata `json:"params"`
+	Id      string      `json:"id"`
+	Version string      `json:"version"`
+	Params  interface{} `json:"params"`
 }
 type Client interface {
-	Start(setProperty SetProperty, serviceHandle ServiceHandle) error //register
-	PubProperty(ctx context.Context, meta Metadata) *Reply            //post property sync
-	PubEvent(ctx context.Context, event string, meta Metadata) *Reply //post property　sync
+	Start(setProperty SetProperty, serviceHandle ServiceHandle) error          //register
+	PubProperty(ctx context.Context, meta Metadata) (*Reply, error)            //post property sync
+	PubEvent(ctx context.Context, event string, meta Metadata) (*Reply, error) //post property　sync
 	ReplyProperty(reply *Reply) error
 	ReplyService(name string, reply *Reply) error
 }

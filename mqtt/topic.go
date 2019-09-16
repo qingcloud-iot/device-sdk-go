@@ -26,14 +26,37 @@ const (
 	RPC_TIME_OUT = 5 * time.Second
 )
 
-func buildMessage(meta index.Metadata) *index.Message {
+func buildPropertyMessage(meta index.Metadata) *index.Message {
 	worker := GetInsIdWorker(WORKER_ID)
 	id, _ := worker.NextId()
 	str := strconv.FormatInt(id, 10)
+	params := make(map[string]*index.Property)
+	for k, v := range meta {
+		property := &index.Property{
+			Value: v,
+			Time:  time.Now().Unix() * 1000,
+		}
+		params[k] = property
+	}
 	message := &index.Message{
 		Id:      str,
 		Version: MQTT_VERSION,
-		Params:  meta,
+		Params:  params,
+	}
+	return message
+}
+func buildEventMessage(meta index.Metadata) *index.Message {
+	worker := GetInsIdWorker(WORKER_ID)
+	id, _ := worker.NextId()
+	str := strconv.FormatInt(id, 10)
+	event := &index.Event{
+		Value: meta,
+		Time:  time.Now().Unix() * 1000,
+	}
+	message := &index.Message{
+		Id:      str,
+		Version: MQTT_VERSION,
+		Params:  event,
 	}
 	return message
 }

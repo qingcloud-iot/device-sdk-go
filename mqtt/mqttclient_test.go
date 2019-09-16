@@ -14,23 +14,25 @@ import (
  */
 func TestNewMqtt(t *testing.T) {
 	options := &index.Options{
-		Token:    "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJhY3IiOiIxIiwiYXVkIjoiaWFtIiwiYXpwIjoiaWFtIiwiY3VpZCI6ImlhbXItbW4xN3prNXoiLCJlaXNrIjoiTXk4YTBNRlZjRE93UG9Mc3lWOTlkSlVKU3QydmFrb1dmSTkxT21JeTc2dz0iLCJleHAiOjE1OTg5NDMyMzEsImlhdCI6MTU2NzQwNzIzMSwiaXNzIjoic3RzIiwianRpIjoiQTVMVjAzT1Bsc1ZuYndZa1R4Z2ZhUSIsIm5iZiI6MCwib3JnaSI6ImlvdGQtZDM3NTU2YjYtM2E1MS00ZTdhLWFkOTMtMmM4MjJjZTNmZWZkIiwib3d1ciI6InVzci1rTFZWQkRxZCIsInByZWYiOiJxcm46cWluZ2Nsb3VkOmlhbToiLCJydHlwIjoicm9sZSIsInN1YiI6InN0cyIsInRoaWQiOiI4IiwidHlwIjoiSUQifQ.G8HgdDM4Sk0Y0Ikf_OCHm2Gw3RX0HROWm8coeJV6jVMJCcPpx4_SgSBkXs7tlzoVJV6HTtx_0CeKw6yISx_ubTErhaHMww_6TyOQx0pzpzCKbHd2HaNYxyjCJJ34gYEmZZRtfuXlX1atdNmvOdgknSMyx8xVFV4v1eyv0U-UQXRrNIKOmV03lXGGEWx2NqV1GN8JjI4taZHrj1iVXLgmXBnEV_PoV67iqrtwoOeVqi7CcXx9GGs5hdL5Dca3lK8lsInC3xu80hqM0jnA5yXvSWOE4yRsvps3CkHCmaYxbHKUkkQRfDkEvljQQ_QLw0Yo_bmD-xMlAK8LPpN-GXgS7Q",
-		DeviceId: "iotd-d37556b6-3a51-4e7a-ad93-2c822ce3fefd",
+		Token:    "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJhY3IiOiIxIiwiYXVkIjoiaWFtIiwiYXpwIjoiaWFtIiwiY3VpZCI6ImlhbXItMnE5MjMzbjEiLCJlaXNrIjoiNGNUT0luSFkzX2VURDNfblJmZDQwdl9LVVJFNnBNcEJDZ21uX3d3OTh5VT0iLCJleHAiOjE1OTg5NDMyMDYsImlhdCI6MTU2NzQwNzIwNiwiaXNzIjoic3RzIiwianRpIjoiQTVMVjAzT1Bsc1ZuYndZa1R4Z2ZaciIsIm5iZiI6MCwib3JnaSI6ImlvdGQtYjk5MWQ2NDAtODM1Ni00NDA4LTllMmQtYzA0MjJmODYxMjMzIiwib3d1ciI6InVzci1rTFZWQkRxZCIsInByZWYiOiJxcm46cWluZ2Nsb3VkOmlhbToiLCJydHlwIjoicm9sZSIsInN1YiI6InN0cyIsInRoaWQiOiJpb3R0LTY1YTMyYWZiLTBkMTUtNDQwYS1iNzBkLThhNTFkMWM1Y2NkZSIsInR5cCI6IklEIn0.wBO04t88gOWi4dzTCbFB-KiipuRXKKDjc9v8x2vFcStFTnHbbB4At8dHrKP-FtA006xfn6ORYvUBkQFd3HE_Oyn4DevWkEz1rrk9DNtlRm2U59ppUoBTi2OQJSTqs277gBnb5ApyI6VbHVAfcUf8tP6m9EBHvlQnwsIFMIzRnD8ouYuynZH5MVkqDHxEu36hFzjz8aareOPLupEgBEEi-nZPpyfAviJYue_8M273Ho7CdBV9akbF-pW6uNEjUF2ejuan_dw9terACbjLAoGYOckxqIfQFqD9yiwnQ3AymVwh9zx4aXOT0neWk1VnH9FZCsZT0gp4Jpm4ocJ0L10cqg",
+		DeviceId: "iotd-b991d640-8356-4408-9e2d-c0422f861233",
 		Server:   "tcp://192.168.14.120:8055",
 	}
 	m, err := NewMqtt(options)
 	assert.Nil(t, err)
 	assert.NotNil(t, m)
 	err = m.Start(nil, nil)
+	assert.Nil(t, err)
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
 	data := index.Metadata{
-		"key1": "xxx",
-		"key2": "yyy",
+		"key1": 111,
+		"key2": "xxx",
 	}
-	reply := m.PubProperty(ctx, data)
+	reply, err := m.PubProperty(ctx, data)
+	assert.Nil(t, err)
 	t.Log(reply)
-	name := "test"
-	reply = m.PubEvent(ctx, name, data)
-	t.Log(reply)
+	//name := "test"
+	//reply = m.PubEvent(ctx, name, data)
+	//t.Log(reply)
 }
