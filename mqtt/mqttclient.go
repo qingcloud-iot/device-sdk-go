@@ -75,7 +75,7 @@ func (m *mqttClient) recvPropertyReply() func(mqttp.Client, mqttp.Message) {
 		topic := msg.Topic()
 		//qos := msg.Qos()
 		payload := msg.Payload()
-		fmt.Println("[sdk-go-sub]", topic, string(payload))
+		fmt.Println("[sdk-go-sub-reply]", topic, string(payload))
 		reply := &index.Reply{}
 		err := json.Unmarshal(payload, reply)
 		if err != nil {
@@ -185,7 +185,7 @@ func (m *mqttClient) PubProperty(ctx context.Context, meta index.Metadata) (*ind
 	}
 	fmt.Println(topic, string(data))
 	ch := make(chan *index.Reply)
-	m.cacheClient.Add(message.Id, RPC_TIME_OUT, reply)
+	m.cacheClient.Add(message.Id, RPC_TIME_OUT, ch)
 	select {
 	case value := <-ch:
 		return value, nil

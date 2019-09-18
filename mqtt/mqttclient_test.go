@@ -2,6 +2,7 @@ package mqtt
 
 import (
 	"context"
+	"fmt"
 	"git.internal.yunify.com/tools/device-sdk-go/index"
 	"github.com/stretchr/testify/assert"
 	"testing"
@@ -14,8 +15,8 @@ import (
  */
 func TestNewMqtt(t *testing.T) {
 	options := &index.Options{
-		Token:    "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJhY3IiOiIxIiwiYXVkIjoiaWFtIiwiYXpwIjoiaWFtIiwiY3VpZCI6ImlhbXItMnE5MjMzbjEiLCJlaXNrIjoiNGNUT0luSFkzX2VURDNfblJmZDQwdl9LVVJFNnBNcEJDZ21uX3d3OTh5VT0iLCJleHAiOjE1OTg5NDMyMDYsImlhdCI6MTU2NzQwNzIwNiwiaXNzIjoic3RzIiwianRpIjoiQTVMVjAzT1Bsc1ZuYndZa1R4Z2ZaciIsIm5iZiI6MCwib3JnaSI6ImlvdGQtYjk5MWQ2NDAtODM1Ni00NDA4LTllMmQtYzA0MjJmODYxMjMzIiwib3d1ciI6InVzci1rTFZWQkRxZCIsInByZWYiOiJxcm46cWluZ2Nsb3VkOmlhbToiLCJydHlwIjoicm9sZSIsInN1YiI6InN0cyIsInRoaWQiOiJpb3R0LTY1YTMyYWZiLTBkMTUtNDQwYS1iNzBkLThhNTFkMWM1Y2NkZSIsInR5cCI6IklEIn0.wBO04t88gOWi4dzTCbFB-KiipuRXKKDjc9v8x2vFcStFTnHbbB4At8dHrKP-FtA006xfn6ORYvUBkQFd3HE_Oyn4DevWkEz1rrk9DNtlRm2U59ppUoBTi2OQJSTqs277gBnb5ApyI6VbHVAfcUf8tP6m9EBHvlQnwsIFMIzRnD8ouYuynZH5MVkqDHxEu36hFzjz8aareOPLupEgBEEi-nZPpyfAviJYue_8M273Ho7CdBV9akbF-pW6uNEjUF2ejuan_dw9terACbjLAoGYOckxqIfQFqD9yiwnQ3AymVwh9zx4aXOT0neWk1VnH9FZCsZT0gp4Jpm4ocJ0L10cqg",
-		DeviceId: "iotd-b991d640-8356-4408-9e2d-c0422f861233",
+		Token:    "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJhY3IiOiIxIiwiYXVkIjoiaWFtIiwiYXpwIjoiaWFtIiwiY3VpZCI6ImlhbXItdzNuMWM4ZzIiLCJlaXNrIjoiQkNmXzQzczc3VElzZ3pNcVJzNlM0V0VVZHlyUEUydlV3eWVIbkIyeTBoaz0iLCJleHAiOjE2MDAzMjg1NTQsImlhdCI6MTU2ODc5MjU1NCwiaXNzIjoic3RzIiwianRpIjoiQTVMVjAzT1Bsc1ZuYndZa1R4Z2ZrMSIsIm5iZiI6MCwib3JnaSI6ImlvdGQtOGI3NzM0NjctNjVkOC00Y2JhLThjYTgtYzZlNmZjNzNjZDUwIiwib3d1ciI6InVzci1rTFZWQkRxZCIsInByZWYiOiJxcm46cWluZ2Nsb3VkOmlhbToiLCJydHlwIjoicm9sZSIsInN1YiI6InN0cyIsInRoaWQiOiJpb3R0LTNhNDc3MGJmLTI4ZDYtNDg1Zi1hZDYwLTQzZGU4NzVkMzdiMCIsInR5cCI6IklEIn0.xfCUbiT8mbhFtMDimWpujpxR19bqB9HFcwQ7yHoR828xRsqjJ_eLXoTbpIKt99dlAWaVbaL1UgZxr608LH6aeizExVKmJxoIIx7UwqDdyUGWANZLdK1NuENa-T3qHQ51EhSGyXU2xcJirt11dn4sqSQzYy-QI0zZIxreQvFvowPLkHl8sI0ulY63yCsD_2ipywNFqc03XCLk6Ey4Vzzl9SesLskZYX1bOku3rDn9HFXr1XtQe6TKCOsxGOp91NyRwynLXiCfaFK12UHr_u5UuS5EpXzpAkMN1CEEibNX0M4e9EKsx4iY9EN6-4li1egbCUovR5QDD9bCVljYQTERNQ",
+		DeviceId: "iotd-8b773467-65d8-4cba-8ca8-c6e6fc73cd50",
 		Server:   "tcp://192.168.14.120:8055",
 	}
 	m, err := NewMqtt(options)
@@ -26,12 +27,14 @@ func TestNewMqtt(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
 	data := index.Metadata{
-		"key1": 111,
-		"key2": "xxx",
+		"car":       "hexing",
+		"car_res":   "xxx",
+		"label_res": 1212,
 	}
 	reply, err := m.PubProperty(ctx, data)
 	assert.Nil(t, err)
-	t.Log(reply)
+	fmt.Println(reply)
+	select {}
 	//name := "test"
 	//reply = m.PubEvent(ctx, name, data)
 	//t.Log(reply)

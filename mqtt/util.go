@@ -5,6 +5,8 @@ package mqtt
 * @Date: 19-9-15 下午3:24
  */
 import (
+	"bytes"
+	"encoding/gob"
 	"errors"
 	jwt "github.com/dgrijalva/jwt-go"
 	"regexp"
@@ -66,4 +68,11 @@ func parseServiceName(topic string) string {
 		return ""
 	}
 	return kv[6]
+}
+func deepCopy(dst, src interface{}) error {
+	var buf bytes.Buffer
+	if err := gob.NewEncoder(&buf).Encode(src); err != nil {
+		return err
+	}
+	return gob.NewDecoder(bytes.NewBuffer(buf.Bytes())).Decode(dst)
 }
