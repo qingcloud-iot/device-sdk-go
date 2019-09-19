@@ -16,7 +16,7 @@ const (
 	post_property_topic       = "/sys/%s/%s/thing/event/property/post"        //down
 	post_property_topic_reply = "/sys/%s/%s/thing/event/property/post_reply"  //down
 	post_event_topic          = "/sys/%s/%s/thing/event/%s/post"              //down
-	post_event_topic_reply    = "/sys/%s/%s//thing/event/+/post_reply"        //down
+	post_topic_reply          = "/sys/%s/%s/thing/event/+/post_reply"         //down
 	set_property_topic        = "/sys/%s/%s/thing/service/property/set"       //down
 	set_property_topic_reply  = "/sys/%s/%s/thing/service/property/set_reply" //down
 	set_service_topic         = "/sys/%s/%s/thing/service/+"
@@ -72,7 +72,7 @@ func parseMessage(payload []byte) (*index.Message, error) {
 func buildProperty(deviceId, thingId string) string {
 	return fmt.Sprintf(post_property_topic, thingId, deviceId)
 }
-func buildEvent(name, deviceId, thingId string) string {
+func buildEvent(deviceId, thingId, name string) string {
 	return fmt.Sprintf(post_event_topic, thingId, deviceId, name)
 }
 func buildPropertyReply(deviceId, thingId string) string {

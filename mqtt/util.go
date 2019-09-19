@@ -5,10 +5,9 @@ package mqtt
 * @Date: 19-9-15 下午3:24
  */
 import (
-	"bytes"
-	"encoding/gob"
 	"errors"
-	jwt "github.com/dgrijalva/jwt-go"
+	"fmt"
+	"github.com/dgrijalva/jwt-go"
 	"regexp"
 	"strings"
 )
@@ -69,10 +68,8 @@ func parseServiceName(topic string) string {
 	}
 	return kv[6]
 }
-func deepCopy(dst, src interface{}) error {
-	var buf bytes.Buffer
-	if err := gob.NewEncoder(&buf).Encode(src); err != nil {
-		return err
-	}
-	return gob.NewDecoder(bytes.NewBuffer(buf.Bytes())).Decode(dst)
+
+func isServiceTopic(thingId, deviceId, topic string) bool {
+	temp := fmt.Sprintf("/sys/%s/%s/thing/service", thingId, deviceId)
+	return strings.HasPrefix(topic, temp)
 }

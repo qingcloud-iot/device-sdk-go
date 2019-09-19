@@ -9,9 +9,11 @@ import "context"
 type SetProperty func(id string, meta Metadata)
 type ServiceHandle func(id string, name string, meta Metadata)
 type Options struct {
-	DeviceId string
-	Token    string
-	Server   string
+	DeviceId      string
+	Token         string
+	Server        string
+	SetProperty   SetProperty
+	ServiceHandle ServiceHandle
 }
 type Metadata map[string]interface{}
 type Property struct {
@@ -33,7 +35,6 @@ type Message struct {
 	Params  interface{} `json:"params"`
 }
 type Client interface {
-	Start(setProperty SetProperty, serviceHandle ServiceHandle) error          //register
 	PubProperty(ctx context.Context, meta Metadata) (*Reply, error)            //post property sync
 	PubEvent(ctx context.Context, event string, meta Metadata) (*Reply, error) //post property　sync
 	ReplyProperty(reply *Reply) error

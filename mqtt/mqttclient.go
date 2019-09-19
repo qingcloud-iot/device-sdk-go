@@ -26,6 +26,7 @@ type mqttClient struct {
 }
 
 func NewMqtt(options *index.Options) (index.Client, error) {
+	m := &mqttClient{}
 	if deviceId, thingId, err := parseToken(options.Token); err != nil {
 		return nil, err
 	} else {
@@ -37,6 +38,18 @@ func NewMqtt(options *index.Options) (index.Client, error) {
 		opts.SetCleanSession(true)
 		opts.SetAutoReconnect(true)
 		opts.SetKeepAlive(30 * time.Second)
+		opts.SetDefaultPublishHandler(func(client mqttp.Client, msg mqttp.Message) {
+			switch {
+			case msg.Topic() == fmt.Sprintf(post_property_topic_reply, thingId, deviceId):
+				m.recvPropertyReply(client, msg)
+			case msg.Topic() == fmt.Sprintf(set_property_topic, thingId, deviceId):
+				m.setPropertyReply(options.SetProperty)(client, msg)
+			case isServiceTopic(thingId, deviceId, msg.Topic()):
+				m.requestServiceReply(options.ServiceHandle)(client, msg)
+			default:
+				m.recvEventReply(client, msg)
+			}
+		})
 		client := mqttp.NewClient(opts)
 		if token := client.Connect(); token.Wait() && token.Error() != nil {
 			return nil, token.Error()
@@ -45,86 +58,64 @@ func NewMqtt(options *index.Options) (index.Client, error) {
 		if err != nil {
 			return nil, err
 		}
-		m := &mqttClient{
-			client:      client,
-			deviceId:    deviceId,
-			thingId:     thingId,
-			cacheClient: cache.Cache(deviceId),
-			pool:        pool,
-		}
+		m.client = client
+		m.deviceId = deviceId
+		m.thingId = thingId
+		m.cacheClient = cache.Cache(deviceId)
+		m.pool = pool
 		return m, nil
 	}
 }
-func (m *mqttClient) Start(setProperty index.SetProperty, serviceHandle index.ServiceHandle) error {
-	if token := m.client.Subscribe(fmt.Sprintf(post_property_topic_reply, m.thingId, m.deviceId), byte(0), m.recvPropertyReply()); token.Wait() && token.Error() != nil {
-		return token.Error()
+func (m *mqttClient) recvPropertyReply(client mqttp.Client, msg mqttp.Message) {
+	topic := msg.Topic()
+	//qos := msg.Qos()
+	payload := msg.Payload()
+	fmt.Println("[sdk-go-sub-property]", topic, string(payload))
+	reply := &index.Reply{}
+	err := json.Unmarshal(payload, reply)
+	if err != nil {
+		fmt.Errorf("recvPropertyReply err:%s", err.Error())
+		return
 	}
-	if token := m.client.Subscribe(fmt.Sprintf(post_event_topic_reply, m.thingId, m.deviceId), byte(0), m.recvEventReply()); token.Wait() && token.Error() != nil {
-		return token.Error()
+	item, err := m.cacheClient.Value(reply.Id)
+	if err != nil {
+		fmt.Errorf("recvPropertyReply err:%s", err.Error())
+		return
 	}
-	if token := m.client.Subscribe(fmt.Sprintf(set_property_topic, m.thingId, m.deviceId), byte(0), m.setPropertyReply(setProperty)); token.Wait() && token.Error() != nil {
-		return token.Error()
-	}
-	if token := m.client.Subscribe(fmt.Sprintf(set_service_topic, m.thingId, m.deviceId), byte(0), m.requestServiceReply(serviceHandle)); token.Wait() && token.Error() != nil {
-		return token.Error()
-	}
-	return nil
-}
-func (m *mqttClient) recvPropertyReply() func(mqttp.Client, mqttp.Message) {
-	return func(client mqttp.Client, msg mqttp.Message) {
-		topic := msg.Topic()
-		//qos := msg.Qos()
-		payload := msg.Payload()
-		fmt.Println("[sdk-go-sub-reply]", topic, string(payload))
-		reply := &index.Reply{}
-		err := json.Unmarshal(payload, reply)
-		if err != nil {
-			fmt.Errorf("recvPropertyReply err:%s", err.Error())
-			return
-		}
-		item, err := m.cacheClient.Value(reply.Id)
-		if err != nil {
-			fmt.Errorf("recvPropertyReply err:%s", err.Error())
-			return
-		}
-		ch := item.Data()
-		if c, ok := ch.(chan *index.Reply); ok {
-			if err := m.pool.Submit(func() {
-				c <- reply
-			}); err != nil {
-				fmt.Errorf("pool exec err:%s", err.Error())
-			}
-
+	ch := item.Data()
+	if c, ok := ch.(chan *index.Reply); ok {
+		if err := m.pool.Submit(func() {
+			c <- reply
+		}); err != nil {
+			fmt.Errorf("pool exec err:%s", err.Error())
 		}
 
 	}
 }
-func (m *mqttClient) recvEventReply() func(mqttp.Client, mqttp.Message) {
-	return func(client mqttp.Client, msg mqttp.Message) {
-		topic := msg.Topic()
-		//qos := msg.Qos()
-		payload := msg.Payload()
-		fmt.Println("[sdk-go-sub]", topic, string(payload))
-		reply := &index.Reply{}
-		err := json.Unmarshal(payload, reply)
-		if err != nil {
-			fmt.Errorf("recvPropertyReply err:%s", err.Error())
-			return
+func (m *mqttClient) recvEventReply(client mqttp.Client, msg mqttp.Message) {
+	topic := msg.Topic()
+	//qos := msg.Qos()
+	payload := msg.Payload()
+	fmt.Println("[sdk-go-sub-event]", topic, string(payload))
+	reply := &index.Reply{}
+	err := json.Unmarshal(payload, reply)
+	if err != nil {
+		fmt.Errorf("recvPropertyReply err:%s", err.Error())
+		return
+	}
+	item, err := m.cacheClient.Value(reply.Id)
+	if err != nil {
+		fmt.Errorf("recvPropertyReply err:%s", err.Error())
+		return
+	}
+	ch := item.Data()
+	if c, ok := ch.(chan *index.Reply); ok {
+		if err := m.pool.Submit(func() {
+			c <- reply
+		}); err != nil {
+			fmt.Errorf("pool exec err:%s", err.Error())
 		}
-		item, err := m.cacheClient.Value(reply.Id)
-		if err != nil {
-			fmt.Errorf("recvPropertyReply err:%s", err.Error())
-			return
-		}
-		ch := item.Data()
-		if c, ok := ch.(chan *index.Reply); ok {
-			if err := m.pool.Submit(func() {
-				c <- reply
-			}); err != nil {
-				fmt.Errorf("pool exec err:%s", err.Error())
-			}
 
-		}
 	}
 }
 
@@ -207,12 +198,13 @@ func (m *mqttClient) PubEvent(ctx context.Context, event string, meta index.Meta
 		return reply, nil
 	}
 	topic := buildEvent(m.deviceId, m.thingId, event)
+	fmt.Println(topic, string(data))
 	if token := m.client.Publish(topic, byte(0), false, data); token.WaitTimeout(5*time.Second) && token.Error() != nil {
 		reply.Code = index.RPC_PUBLISH_TIMEOUT
 		return reply, nil
 	}
 	ch := make(chan *index.Reply)
-	m.cacheClient.Add(message.Id, RPC_TIME_OUT, reply)
+	m.cacheClient.Add(message.Id, RPC_TIME_OUT, ch)
 	select {
 	case value := <-ch:
 		return value, nil

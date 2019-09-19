@@ -15,23 +15,31 @@ import (
  */
 func TestNewMqtt(t *testing.T) {
 	options := &index.Options{
-		Token:    "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJhY3IiOiIxIiwiYXVkIjoiaWFtIiwiYXpwIjoiaWFtIiwiY3VpZCI6ImlhbXItdzNuMWM4ZzIiLCJlaXNrIjoiQkNmXzQzczc3VElzZ3pNcVJzNlM0V0VVZHlyUEUydlV3eWVIbkIyeTBoaz0iLCJleHAiOjE2MDAzMjg1NTQsImlhdCI6MTU2ODc5MjU1NCwiaXNzIjoic3RzIiwianRpIjoiQTVMVjAzT1Bsc1ZuYndZa1R4Z2ZrMSIsIm5iZiI6MCwib3JnaSI6ImlvdGQtOGI3NzM0NjctNjVkOC00Y2JhLThjYTgtYzZlNmZjNzNjZDUwIiwib3d1ciI6InVzci1rTFZWQkRxZCIsInByZWYiOiJxcm46cWluZ2Nsb3VkOmlhbToiLCJydHlwIjoicm9sZSIsInN1YiI6InN0cyIsInRoaWQiOiJpb3R0LTNhNDc3MGJmLTI4ZDYtNDg1Zi1hZDYwLTQzZGU4NzVkMzdiMCIsInR5cCI6IklEIn0.xfCUbiT8mbhFtMDimWpujpxR19bqB9HFcwQ7yHoR828xRsqjJ_eLXoTbpIKt99dlAWaVbaL1UgZxr608LH6aeizExVKmJxoIIx7UwqDdyUGWANZLdK1NuENa-T3qHQ51EhSGyXU2xcJirt11dn4sqSQzYy-QI0zZIxreQvFvowPLkHl8sI0ulY63yCsD_2ipywNFqc03XCLk6Ey4Vzzl9SesLskZYX1bOku3rDn9HFXr1XtQe6TKCOsxGOp91NyRwynLXiCfaFK12UHr_u5UuS5EpXzpAkMN1CEEibNX0M4e9EKsx4iY9EN6-4li1egbCUovR5QDD9bCVljYQTERNQ",
-		DeviceId: "iotd-8b773467-65d8-4cba-8ca8-c6e6fc73cd50",
+		Token:    "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJhY3IiOiIxIiwiYXVkIjoiaWFtIiwiYXpwIjoiaWFtIiwiY3VpZCI6ImlhbXItOXcwZ3RkYW4iLCJlaXNrIjoiRTVVbzdzLVRkTkUybDJpeU14N2ZQc2t4WE9renR3akVTczliS3BGbXhVdz0iLCJleHAiOjE2MDAzMjc1NjgsImlhdCI6MTU2ODc5MTU2OCwiaXNzIjoic3RzIiwianRpIjoiQTVMVjAzT1Bsc1ZuYndZa1R4Z2ZqUyIsIm5iZiI6MCwib3JnaSI6ImlvdGQtNzUwNjQyODgtZGY4OC00M2JhLTgyMDctMTRmY2NhNjY5NzEyIiwib3d1ciI6InVzci1rTFZWQkRxZCIsInByZWYiOiJxcm46cWluZ2Nsb3VkOmlhbToiLCJydHlwIjoicm9sZSIsInN1YiI6InN0cyIsInRoaWQiOiJpb3R0LTlkNWJmMDQxLTZiOTctNGIzZi05ZWUwLTY0MzQwYjI0NTQzZCIsInR5cCI6IklEIn0.RIO5PFu9eR9x-0tU9iNJOSbP4UqlgITstoqJ8BSLYcl8IjRJFQ-s1g_QMo6OkAh0zW1BMJS3zSP613zgwzb5z9TRc7eAitcBLBjmgMkCnUqMCKy_EP4Z_fvFRVkYHuBsgyr3Mz-NTgaYPujOuvdjZh934bxpBm792wlFkJgBfW-p9mvediAHPepqwx1OxGDLxPPPBmvcdEkznZk5DdEoMvgmA9zDVf_-OpZ9smvbU-8gka09Ph1LBxnd9NPJBItDeQf3ZmIl9ePTGcWTlxWETbEEn9QnAtSMfdaVJgUYBfysBRssGO8qk2UZe08wdSHI0bNNFsWkUD2CJGqMsAMTlw",
+		DeviceId: "iotd-75064288-df88-43ba-8207-14fcca669712",
 		Server:   "tcp://192.168.14.120:8055",
 	}
 	m, err := NewMqtt(options)
 	assert.Nil(t, err)
 	assert.NotNil(t, m)
-	err = m.Start(nil, nil)
 	assert.Nil(t, err)
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
 	data := index.Metadata{
-		"car":       "hexing",
-		"car_res":   "xxx",
-		"label_res": 1212,
+		"event1": 1,
+		"event2": "xxx",
+		"event3": 12.2,
+		"event4": 12.2,
 	}
-	reply, err := m.PubProperty(ctx, data)
+	reply, err := m.PubEvent(ctx, "eventxx", data)
+	//data := index.Metadata{
+	//	"car":       "car",
+	//	"car_res":   "car_res",
+	//	"filepath": "filepath",
+	//	"label": "xxx",
+	//	"label_res":"label_res",
+	//}
+	//reply, err := m.PubProperty(ctx,data)
 	assert.Nil(t, err)
 	fmt.Println(reply)
 	select {}
