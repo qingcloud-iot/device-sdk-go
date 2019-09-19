@@ -39,6 +39,7 @@ func NewMqtt(options *index.Options) (index.Client, error) {
 		opts.SetAutoReconnect(true)
 		opts.SetKeepAlive(30 * time.Second)
 		opts.SetDefaultPublishHandler(func(client mqttp.Client, msg mqttp.Message) {
+			fmt.Println("[sdk-go]", msg.Topic(), string(msg.Payload()))
 			switch {
 			case msg.Topic() == fmt.Sprintf(post_property_topic_reply, thingId, deviceId):
 				m.recvPropertyReply(client, msg)
@@ -132,17 +133,13 @@ func (m *mqttClient) setPropertyReply(setProperty index.SetProperty) func(mqttp.
 			return
 		}
 		if setProperty != nil {
-			setProperty(message.Id, message.Params.(index.Metadata))
+			setProperty(message.Id, message.Params)
 		}
 	}
 }
 func (m *mqttClient) requestServiceReply(serviceHandle index.ServiceHandle) func(mqttp.Client, mqttp.Message) {
 	return func(client mqttp.Client, msg mqttp.Message) {
 		topic := msg.Topic()
-		if isServceTopic(topic) {
-			fmt.Errorf("requestServiceReply topic:%s is not match", topic)
-			return
-		}
 		name := parseServiceName(topic)
 		//qos := msg.Qos()
 		payload := msg.Payload()
@@ -153,7 +150,7 @@ func (m *mqttClient) requestServiceReply(serviceHandle index.ServiceHandle) func
 			return
 		}
 		if serviceHandle != nil {
-			serviceHandle(message.Id, name, message.Params.(index.Metadata))
+			serviceHandle(message.Id, name, message.Params)
 		}
 	}
 }

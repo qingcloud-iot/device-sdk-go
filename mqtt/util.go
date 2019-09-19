@@ -8,7 +8,6 @@ import (
 	"errors"
 	"fmt"
 	"github.com/dgrijalva/jwt-go"
-	"regexp"
 	"strings"
 )
 
@@ -52,14 +51,6 @@ func parseToken(deviceToken string) (string, string, error) {
 	} else {
 		return deviceId, thingId, errors.New("token error")
 	}
-}
-func isServceTopic(topic string) bool {
-	reg := regexp.MustCompile("^/sys/iott-.*/iotd-.*/thing/service/.*$")
-	res := reg.FindAllString(topic, -1)
-	if res == nil {
-		return false
-	}
-	return true
 }
 func parseServiceName(topic string) string {
 	kv := strings.Split(topic, "/")

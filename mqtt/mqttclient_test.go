@@ -1,7 +1,6 @@
 package mqtt
 
 import (
-	"context"
 	"fmt"
 	"git.internal.yunify.com/tools/device-sdk-go/index"
 	"github.com/stretchr/testify/assert"
@@ -15,33 +14,43 @@ import (
  */
 func TestNewMqtt(t *testing.T) {
 	options := &index.Options{
-		Token:    "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJhY3IiOiIxIiwiYXVkIjoiaWFtIiwiYXpwIjoiaWFtIiwiY3VpZCI6ImlhbXItOXcwZ3RkYW4iLCJlaXNrIjoiRTVVbzdzLVRkTkUybDJpeU14N2ZQc2t4WE9renR3akVTczliS3BGbXhVdz0iLCJleHAiOjE2MDAzMjc1NjgsImlhdCI6MTU2ODc5MTU2OCwiaXNzIjoic3RzIiwianRpIjoiQTVMVjAzT1Bsc1ZuYndZa1R4Z2ZqUyIsIm5iZiI6MCwib3JnaSI6ImlvdGQtNzUwNjQyODgtZGY4OC00M2JhLTgyMDctMTRmY2NhNjY5NzEyIiwib3d1ciI6InVzci1rTFZWQkRxZCIsInByZWYiOiJxcm46cWluZ2Nsb3VkOmlhbToiLCJydHlwIjoicm9sZSIsInN1YiI6InN0cyIsInRoaWQiOiJpb3R0LTlkNWJmMDQxLTZiOTctNGIzZi05ZWUwLTY0MzQwYjI0NTQzZCIsInR5cCI6IklEIn0.RIO5PFu9eR9x-0tU9iNJOSbP4UqlgITstoqJ8BSLYcl8IjRJFQ-s1g_QMo6OkAh0zW1BMJS3zSP613zgwzb5z9TRc7eAitcBLBjmgMkCnUqMCKy_EP4Z_fvFRVkYHuBsgyr3Mz-NTgaYPujOuvdjZh934bxpBm792wlFkJgBfW-p9mvediAHPepqwx1OxGDLxPPPBmvcdEkznZk5DdEoMvgmA9zDVf_-OpZ9smvbU-8gka09Ph1LBxnd9NPJBItDeQf3ZmIl9ePTGcWTlxWETbEEn9QnAtSMfdaVJgUYBfysBRssGO8qk2UZe08wdSHI0bNNFsWkUD2CJGqMsAMTlw",
-		DeviceId: "iotd-75064288-df88-43ba-8207-14fcca669712",
+		Token:    "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJhY3IiOiIxIiwiYXVkIjoiaWFtIiwiYXpwIjoiaWFtIiwiY3VpZCI6ImlhbXItY2x6Y3JrZ2giLCJlaXNrIjoiZXdVX20tdkw4bUxNZnNaQkFDVThtc1VmQmJudDhOVS1EeURwSmZ1Z0Ezdz0iLCJleHAiOjE2MDA0MTMzMDQsImlhdCI6MTU2ODg3NzMwNCwiaXNzIjoic3RzIiwianRpIjoiQTVMVjAzT1Bsc1ZuYndZa1R4Z2ZrYSIsIm5iZiI6MCwib3JnaSI6ImlvdGQtZTI0NmQzMTEtMmIyNC00OTRjLTg1YmUtYTA0Njk2Y2Q3NmMzIiwib3d1ciI6InVzci1rTFZWQkRxZCIsInByZWYiOiJxcm46cWluZ2Nsb3VkOmlhbToiLCJydHlwIjoicm9sZSIsInN1YiI6InN0cyIsInRoaWQiOiJpb3R0LWIwYjQ2YjZiLWNmZDQtNGM3Ny05NTRiLTkzNzU0ZDY3NTUyNCIsInR5cCI6IklEIn0.LwO1mF8iRtdci2QNF3PuqWHSIOzKHOtpcEzecVA8C8kkGdd3bKrzt9b6DvxxfMLh7iEZMl7cwE2vpTRaC5hKJNUyoTiOPr0bAUmcQJngQDAvnR3UC8cY2_AGWiC6tq4778CZ1F2elytgxpDG3oJi85HCMuRyDW0kaCIER2vfY3elPsdmji4EyVeU5sOVJezrVzucvtNI1-_DrQew0MUU3XnT8JkY3px_Nkv6j9CtN3nnR7X18uO8hcUAF0GdzXWcKRDK46b4ZdPSrlF_74umGDH0iLBISRHIACj783jhKqqQqH73jAJfcaWqdUdyZkTp-hHnX7k07gr1DQgS6wNv0Q",
+		DeviceId: "iotd-e246d311-2b24-494c-85be-a04696cd76c3",
 		Server:   "tcp://192.168.14.120:8055",
+		SetProperty: func(id string, meta index.Metadata) {
+			fmt.Println("SetProperty", id, meta)
+		},
+		ServiceHandle: func(id string, name string, meta index.Metadata) {
+			fmt.Println("ServiceHandle", id, name, meta)
+		},
 	}
 	m, err := NewMqtt(options)
 	assert.Nil(t, err)
 	assert.NotNil(t, m)
-	assert.Nil(t, err)
-	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
-	defer cancel()
-	data := index.Metadata{
-		"event1": 1,
-		"event2": "xxx",
-		"event3": 12.2,
-		"event4": 12.2,
-	}
-	reply, err := m.PubEvent(ctx, "eventxx", data)
-	//data := index.Metadata{
-	//	"car":       "car",
-	//	"car_res":   "car_res",
-	//	"filepath": "filepath",
-	//	"label": "xxx",
-	//	"label_res":"label_res",
-	//}
-	//reply, err := m.PubProperty(ctx,data)
-	assert.Nil(t, err)
-	fmt.Println(reply)
+	time.Sleep(5 * time.Second)
+
+	//go func() {
+	//	for {
+	//		data := index.Metadata{
+	//			"int32":      10,
+	//			"float":  rand.Float32(),
+	//			"double": rand.Float64(),
+	//			"string": "xxxxxxxxxxxxxxxxx",
+	//		}
+	//		reply, err := m.PubProperty(context.Background(),data)
+	//		assert.Nil(t, err)
+	//		fmt.Println(reply)
+	//		data = index.Metadata{
+	//			"int32": 10,
+	//			"string": "hexing-string",
+	//			"float": rand.Float32(),
+	//			"double": rand.Float64(),
+	//		}
+	//		reply, err = m.PubEvent(context.Background(), "he-event1", data)
+	//		assert.Nil(t, err)
+	//		time.Sleep(5 * time.Second)
+	//	}
+	//}()
 	select {}
 	//name := "test"
 	//reply = m.PubEvent(ctx, name, data)
