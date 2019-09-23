@@ -135,6 +135,16 @@ func (m *mqttClient) setPropertyReply(setProperty index.SetProperty) func(mqttp.
 		if setProperty != nil {
 			setProperty(message.Id, message.Params)
 		}
+		reply := &index.Reply{
+			Id:   message.Id,
+			Code: index.RPC_SUCCESS,
+		}
+		data, err := json.Marshal(reply)
+		if err != nil {
+			fmt.Errorf("requestServiceReply err:%s", err.Error())
+			return
+		}
+		m.client.Publish(topic+"_reply", byte(0), false, data)
 	}
 }
 func (m *mqttClient) requestServiceReply(serviceHandle index.ServiceHandle) func(mqttp.Client, mqttp.Message) {

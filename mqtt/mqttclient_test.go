@@ -1,9 +1,11 @@
 package mqtt
 
 import (
+	"context"
 	"fmt"
 	"git.internal.yunify.com/tools/device-sdk-go/index"
 	"github.com/stretchr/testify/assert"
+	"math/rand"
 	"testing"
 	"time"
 )
@@ -29,28 +31,31 @@ func TestNewMqtt(t *testing.T) {
 	assert.NotNil(t, m)
 	time.Sleep(5 * time.Second)
 
-	//go func() {
-	//	for {
-	//		data := index.Metadata{
-	//			"int32":      10,
-	//			"float":  rand.Float32(),
-	//			"double": rand.Float64(),
-	//			"string": "xxxxxxxxxxxxxxxxx",
-	//		}
-	//		reply, err := m.PubProperty(context.Background(),data)
-	//		assert.Nil(t, err)
-	//		fmt.Println(reply)
-	//		data = index.Metadata{
-	//			"int32": 10,
-	//			"string": "hexing-string",
-	//			"float": rand.Float32(),
-	//			"double": rand.Float64(),
-	//		}
-	//		reply, err = m.PubEvent(context.Background(), "he-event1", data)
-	//		assert.Nil(t, err)
-	//		time.Sleep(5 * time.Second)
-	//	}
-	//}()
+	go func() {
+		for {
+			data := index.Metadata{
+				"int32":  10,
+				"float":  rand.Float32(),
+				"double": rand.Float64(),
+				"string": "xxxxxxxxxxxxxxxxx",
+			}
+			ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+			reply, err := m.PubProperty(ctx, data)
+			cancel()
+			assert.Nil(t, err)
+			fmt.Println(reply)
+			data = index.Metadata{
+				"int32":  10,
+				"string": "hexing-string",
+				"float":  rand.Float32(),
+				"double": rand.Float64(),
+			}
+			reply, err = m.PubEvent(context.Background(), "he-event1", data)
+			assert.Nil(t, err)
+			fmt.Println(reply)
+			time.Sleep(5 * time.Second)
+		}
+	}()
 	select {}
 	//name := "test"
 	//reply = m.PubEvent(ctx, name, data)
