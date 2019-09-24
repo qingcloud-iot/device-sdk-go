@@ -6,7 +6,7 @@ import "context"
 * @Author: hexing
 * @Date: 19-9-9 上午11:32
  */
-type SetProperty func(id string, meta Metadata)
+type SetProperty func(meta Metadata)
 type ServiceHandle func(id string, name string, meta Metadata)
 type Options struct {
 	DeviceId      string

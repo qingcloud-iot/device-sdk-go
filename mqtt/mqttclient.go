@@ -126,14 +126,14 @@ func (m *mqttClient) setPropertyReply(setProperty index.SetProperty) func(mqttp.
 		topic := msg.Topic()
 		//qos := msg.Qos()
 		payload := msg.Payload()
-		fmt.Println("[sdk-go-sub]", topic, string(payload))
+		fmt.Println("[sdk-go-set]", topic, string(payload))
 		message, err := parseMessage(payload)
 		if err != nil {
 			fmt.Errorf("requestServiceReply err:%s", err.Error())
 			return
 		}
 		if setProperty != nil {
-			setProperty(message.Id, message.Params)
+			setProperty(message.Params)
 		}
 		reply := &index.Reply{
 			Id:   message.Id,
