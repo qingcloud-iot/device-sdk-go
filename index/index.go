@@ -55,6 +55,8 @@ type Message struct {
 	Params  Metadata `json:"params"`
 }
 type Client interface {
-	PubProperty(ctx context.Context, meta Metadata) (*Reply, error)            //post property sync
-	PubEvent(ctx context.Context, event string, meta Metadata) (*Reply, error) //post property　sync
+	PubPropertySync(ctx context.Context, meta Metadata) (*Reply, error)                            //post property sync
+	PubPropertyAsync(ctx context.Context, meta Metadata, res DownReply) (*Reply, error)            //post property sync
+	PubEventSync(ctx context.Context, event string, meta Metadata) (*Reply, error)                 //post property　sync
+	PubEventAsync(ctx context.Context, event string, meta Metadata, res DownReply) (*Reply, error) //post property　sync
 }

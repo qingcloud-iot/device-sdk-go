@@ -193,7 +193,7 @@ func (m *mqttClient) requestServiceReply(serviceHandle index.ServiceHandle) func
 		}
 	}
 }
-func (m *mqttClient) PubProperty(ctx context.Context, meta index.Metadata) (*index.Reply, error) {
+func (m *mqttClient) PubPropertySync(ctx context.Context, meta index.Metadata) (*index.Reply, error) {
 	reply := &index.Reply{
 		Code: index.RPC_SUCCESS,
 	}
@@ -221,7 +221,15 @@ func (m *mqttClient) PubProperty(ctx context.Context, meta index.Metadata) (*ind
 	}
 	return reply, nil
 }
-func (m *mqttClient) PubEvent(ctx context.Context, event string, meta index.Metadata) (*index.Reply, error) {
+
+//todo not suported
+func (m *mqttClient) PubPropertyAsync(ctx context.Context, meta index.Metadata, res index.Reply) (*index.Reply, error) {
+	reply := &index.Reply{
+		Code: index.RPC_SUCCESS,
+	}
+	return reply, nil
+}
+func (m *mqttClient) PubEventSync(ctx context.Context, event string, meta index.Metadata) (*index.Reply, error) {
 	reply := &index.Reply{
 		Code: index.RPC_SUCCESS,
 	}
@@ -250,25 +258,10 @@ func (m *mqttClient) PubEvent(ctx context.Context, event string, meta index.Meta
 	return reply, nil
 }
 
-//func (m *mqttClient) HandleProperty(reply *index.Reply) error {
-//	topic := buildPropertyReply(m.deviceId, m.thingId)
-//	data, err := json.Marshal(reply)
-//	if err != nil {
-//		return err
-//	}
-//	if token := m.client.Publish(topic, byte(0), false, data); token.WaitTimeout(5*time.Second) && token.Error() != nil {
-//		return token.Error()
-//	}
-//	return nil
-//}
-//func (m *mqttClient) HandleService(name string, reply *index.Reply) error {
-//	topic := buildServiceReply(name, m.deviceId, m.thingId)
-//	data, err := json.Marshal(reply)
-//	if err != nil {
-//		return err
-//	}
-//	if token := m.client.Publish(topic, byte(0), false, data); token.WaitTimeout(5*time.Second) && token.Error() != nil {
-//		return token.Error()
-//	}
-//	return nil
-//}
+//todo not suported
+func (m *mqttClient) PubEventAsync(ctx context.Context, event string, meta index.Metadata, res index.Reply) (*index.Reply, error) {
+	reply := &index.Reply{
+		Code: index.RPC_SUCCESS,
+	}
+	return reply, nil
+}
