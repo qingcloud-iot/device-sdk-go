@@ -138,6 +138,7 @@ func (m *mqttClient) setPropertyReply(setProperty index.SetProperty) func(mqttp.
 		reply := &index.Reply{
 			Id:   message.Id,
 			Code: index.RPC_SUCCESS,
+			Data: make(index.Metadata),
 		}
 		if setProperty != nil {
 			var err error
@@ -175,6 +176,7 @@ func (m *mqttClient) requestServiceReply(serviceHandle index.ServiceHandle) func
 		reply := &index.Reply{
 			Id:   message.Id,
 			Code: index.RPC_SUCCESS,
+			Data: make(index.Metadata),
 		}
 		if serviceHandle != nil {
 			result, err = serviceHandle(name, message.Params)
@@ -207,7 +209,7 @@ func (m *mqttClient) PubPropertySync(ctx context.Context, meta index.Metadata) (
 	}
 	topic := buildProperty(m.deviceId, m.thingId)
 	if token := m.client.Publish(topic, byte(0), false, data); token.WaitTimeout(5*time.Second) && token.Error() != nil {
-		reply.Code = index.RPC_PUBLISH_TIMEOUT
+		reply.Code = index.RPC_TIMEOUT
 		return reply, nil
 	}
 	fmt.Println(topic, string(data))
@@ -222,12 +224,33 @@ func (m *mqttClient) PubPropertySync(ctx context.Context, meta index.Metadata) (
 	return reply, nil
 }
 
-//todo not suported
-func (m *mqttClient) PubPropertyAsync(ctx context.Context, meta index.Metadata, res index.Reply) (*index.Reply, error) {
+func (m *mqttClient) PubPropertyAsync(meta index.Metadata) (index.ReplyChan, error) {
+	ch := make(index.ReplyChan)
 	reply := &index.Reply{
 		Code: index.RPC_SUCCESS,
 	}
-	return reply, nil
+	if len(meta) == 0 {
+		return ch, errors.New("param length is zero")
+	}
+	message := buildPropertyMessage(meta)
+	data, err := json.Marshal(message)
+	if err != nil {
+		return ch, err
+	}
+	topic := buildProperty(m.deviceId, m.thingId)
+	if token := m.client.Publish(topic, byte(0), false, data); token.WaitTimeout(5*time.Second) && token.Error() != nil {
+		reply.Code = index.RPC_TIMEOUT
+		return ch, token.Error()
+	}
+	fmt.Println(topic, string(data))
+	item := m.cacheClient.Add(message.Id, RPC_TIME_OUT, ch)
+	item.AddAboutToExpireCallback(func(i interface{}) {
+		reply := &index.Reply{
+			Code: index.RPC_TIMEOUT,
+		}
+		ch <- reply
+	})
+	return ch, nil
 }
 func (m *mqttClient) PubEventSync(ctx context.Context, event string, meta index.Metadata) (*index.Reply, error) {
 	reply := &index.Reply{
@@ -244,7 +267,7 @@ func (m *mqttClient) PubEventSync(ctx context.Context, event string, meta index.
 	topic := buildEvent(m.deviceId, m.thingId, event)
 	fmt.Println(topic, string(data))
 	if token := m.client.Publish(topic, byte(0), false, data); token.WaitTimeout(5*time.Second) && token.Error() != nil {
-		reply.Code = index.RPC_PUBLISH_TIMEOUT
+		reply.Code = index.RPC_TIMEOUT
 		return reply, nil
 	}
 	ch := make(chan *index.Reply)
@@ -258,10 +281,27 @@ func (m *mqttClient) PubEventSync(ctx context.Context, event string, meta index.
 	return reply, nil
 }
 
-//todo not suported
-func (m *mqttClient) PubEventAsync(ctx context.Context, event string, meta index.Metadata, res index.Reply) (*index.Reply, error) {
-	reply := &index.Reply{
-		Code: index.RPC_SUCCESS,
+func (m *mqttClient) PubEventAsync(event string, meta index.Metadata) (index.ReplyChan, error) {
+	ch := make(index.ReplyChan)
+	if len(meta) == 0 {
+		return ch, errors.New("param length is zero")
 	}
-	return reply, nil
+	message := buildEventMessage(meta)
+	data, err := json.Marshal(message)
+	if err != nil {
+		return ch, err
+	}
+	topic := buildEvent(m.deviceId, m.thingId, event)
+	fmt.Println(topic, string(data))
+	if token := m.client.Publish(topic, byte(0), false, data); token.WaitTimeout(5*time.Second) && token.Error() != nil {
+		return ch, err
+	}
+	item := m.cacheClient.Add(message.Id, RPC_TIME_OUT, ch)
+	item.AddAboutToExpireCallback(func(i interface{}) {
+		reply := &index.Reply{
+			Code: index.RPC_TIMEOUT,
+		}
+		ch <- reply
+	})
+	return ch, nil
 }

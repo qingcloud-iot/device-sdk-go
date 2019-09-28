@@ -6,7 +6,7 @@ import "context"
 * @Author: hexing
 * @Date: 19-9-9 上午11:32
  */
-type DownReply func(code int, meta Metadata)
+type DownReply func(*Reply)
 type SetProperty func(meta Metadata) (Metadata, error)
 type ServiceHandle func(name string, meta Metadata) (Metadata, error)
 type Options struct {
@@ -16,6 +16,7 @@ type Options struct {
 	SetProperty   SetProperty
 	ServiceHandle ServiceHandle
 }
+type ReplyChan chan *Reply
 type Metadata map[string]interface{}
 type Property struct {
 	Value interface{} `json:"value"`
@@ -45,9 +46,9 @@ type EventData struct {
 }
 
 type Reply struct {
-	Code int
-	Id   string
-	Data interface{}
+	Code int         `json:"code"`
+	Id   string      `json:"id"`
+	Data interface{} `json:"data"`
 }
 type Message struct {
 	Id      string   `json:"id"`
@@ -55,8 +56,8 @@ type Message struct {
 	Params  Metadata `json:"params"`
 }
 type Client interface {
-	PubPropertySync(ctx context.Context, meta Metadata) (*Reply, error)                            //post property sync
-	PubPropertyAsync(ctx context.Context, meta Metadata, res DownReply) (*Reply, error)            //post property sync
-	PubEventSync(ctx context.Context, event string, meta Metadata) (*Reply, error)                 //post property　sync
-	PubEventAsync(ctx context.Context, event string, meta Metadata, res DownReply) (*Reply, error) //post property　sync
+	PubPropertySync(ctx context.Context, meta Metadata) (*Reply, error)            //post property sync
+	PubPropertyAsync(meta Metadata) (ReplyChan, error)                             //post property async
+	PubEventSync(ctx context.Context, event string, meta Metadata) (*Reply, error) //post property　sync
+	PubEventAsync(event string, meta Metadata) (ReplyChan, error)                  //post property　async
 }
