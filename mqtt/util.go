@@ -54,7 +54,7 @@ func parseToken(deviceToken string) (string, string, error) {
 }
 func parseServiceName(topic string) string {
 	kv := strings.Split(topic, "/")
-	if len(kv) != 7 {
+	if len(kv) != 8 {
 		return ""
 	}
 	return kv[6]
