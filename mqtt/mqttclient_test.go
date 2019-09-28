@@ -19,11 +19,13 @@ func TestNewMqtt(t *testing.T) {
 		Token:    "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJhY3IiOiIxIiwiYXVkIjoiaWFtIiwiYXpwIjoiaWFtIiwiY3VpZCI6ImlhbXItY2x6Y3JrZ2giLCJlaXNrIjoiZXdVX20tdkw4bUxNZnNaQkFDVThtc1VmQmJudDhOVS1EeURwSmZ1Z0Ezdz0iLCJleHAiOjE2MDA0MTMzMDQsImlhdCI6MTU2ODg3NzMwNCwiaXNzIjoic3RzIiwianRpIjoiQTVMVjAzT1Bsc1ZuYndZa1R4Z2ZrYSIsIm5iZiI6MCwib3JnaSI6ImlvdGQtZTI0NmQzMTEtMmIyNC00OTRjLTg1YmUtYTA0Njk2Y2Q3NmMzIiwib3d1ciI6InVzci1rTFZWQkRxZCIsInByZWYiOiJxcm46cWluZ2Nsb3VkOmlhbToiLCJydHlwIjoicm9sZSIsInN1YiI6InN0cyIsInRoaWQiOiJpb3R0LWIwYjQ2YjZiLWNmZDQtNGM3Ny05NTRiLTkzNzU0ZDY3NTUyNCIsInR5cCI6IklEIn0.LwO1mF8iRtdci2QNF3PuqWHSIOzKHOtpcEzecVA8C8kkGdd3bKrzt9b6DvxxfMLh7iEZMl7cwE2vpTRaC5hKJNUyoTiOPr0bAUmcQJngQDAvnR3UC8cY2_AGWiC6tq4778CZ1F2elytgxpDG3oJi85HCMuRyDW0kaCIER2vfY3elPsdmji4EyVeU5sOVJezrVzucvtNI1-_DrQew0MUU3XnT8JkY3px_Nkv6j9CtN3nnR7X18uO8hcUAF0GdzXWcKRDK46b4ZdPSrlF_74umGDH0iLBISRHIACj783jhKqqQqH73jAJfcaWqdUdyZkTp-hHnX7k07gr1DQgS6wNv0Q",
 		DeviceId: "iotd-e246d311-2b24-494c-85be-a04696cd76c3",
 		Server:   "tcp://127.0.0.1:1889",
-		SetProperty: func(meta index.Metadata) {
+		SetProperty: func(meta index.Metadata) (index.Metadata, error) {
 			fmt.Println("SetProperty", meta)
+			return nil, nil
 		},
-		ServiceHandle: func(id string, name string, meta index.Metadata) {
-			fmt.Println("ServiceHandle", id, name, meta)
+		ServiceHandle: func(name string, meta index.Metadata) (index.Metadata, error) {
+			fmt.Println("ServiceHandle", name, meta)
+			return nil, nil
 		},
 	}
 	m, err := NewMqtt(options)

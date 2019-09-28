@@ -6,6 +6,7 @@ import "context"
 * @Author: hexing
 * @Date: 19-9-9 上午11:32
  */
+type DownReply func(code int, meta Metadata)
 type SetProperty func(meta Metadata) (Metadata, error)
 type ServiceHandle func(name string, meta Metadata) (Metadata, error)
 type Options struct {
