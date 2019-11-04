@@ -5,7 +5,6 @@ import (
 	"git.internal.yunify.com/tools/device-sdk-go/index"
 	"github.com/stretchr/testify/assert"
 	"math/rand"
-	"os"
 	"testing"
 	"time"
 )
@@ -16,9 +15,9 @@ import (
  */
 func TestNewMqtt(t *testing.T) {
 	options := &index.Options{
-		Token:    "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJhY3IiOiIxIiwiYXVkIjoiaWFtIiwiYXpwIjoiaWFtIiwiY3VpZCI6ImlhbXItY2x6Y3JrZ2giLCJlaXNrIjoiZXdVX20tdkw4bUxNZnNaQkFDVThtc1VmQmJudDhOVS1EeURwSmZ1Z0Ezdz0iLCJleHAiOjE2MDA0MTMzMDQsImlhdCI6MTU2ODg3NzMwNCwiaXNzIjoic3RzIiwianRpIjoiQTVMVjAzT1Bsc1ZuYndZa1R4Z2ZrYSIsIm5iZiI6MCwib3JnaSI6ImlvdGQtZTI0NmQzMTEtMmIyNC00OTRjLTg1YmUtYTA0Njk2Y2Q3NmMzIiwib3d1ciI6InVzci1rTFZWQkRxZCIsInByZWYiOiJxcm46cWluZ2Nsb3VkOmlhbToiLCJydHlwIjoicm9sZSIsInN1YiI6InN0cyIsInRoaWQiOiJpb3R0LWIwYjQ2YjZiLWNmZDQtNGM3Ny05NTRiLTkzNzU0ZDY3NTUyNCIsInR5cCI6IklEIn0.LwO1mF8iRtdci2QNF3PuqWHSIOzKHOtpcEzecVA8C8kkGdd3bKrzt9b6DvxxfMLh7iEZMl7cwE2vpTRaC5hKJNUyoTiOPr0bAUmcQJngQDAvnR3UC8cY2_AGWiC6tq4778CZ1F2elytgxpDG3oJi85HCMuRyDW0kaCIER2vfY3elPsdmji4EyVeU5sOVJezrVzucvtNI1-_DrQew0MUU3XnT8JkY3px_Nkv6j9CtN3nnR7X18uO8hcUAF0GdzXWcKRDK46b4ZdPSrlF_74umGDH0iLBISRHIACj783jhKqqQqH73jAJfcaWqdUdyZkTp-hHnX7k07gr1DQgS6wNv0Q",
-		DeviceId: "iotd-e246d311-2b24-494c-85be-a04696cd76c3",
-		Server:   "tcp://192.168.14.120:1883",
+		Token:    "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJhY3IiOiIxIiwiYXVkIjoiaWFtIiwiYXpwIjoiaWFtIiwiY3VpZCI6ImlhbXItNmQ4cnlrbjUiLCJlaXNrIjoiQlpaQm84TTZObldKb3Jqb1JjUWJSUVhnRlMwY3pXOXpuOFBqemZROC00RT0iLCJleHAiOjE2MDQzOTg5MTAsImlhdCI6MTU3Mjg2MjkxMCwiaXNzIjoic3RzIiwianRpIjoiVWpJNFdQQW9wNWdQNldPdHJIUTNEVCIsIm5iZiI6MCwib3JnaSI6ImlvdGQtNmMxNjE3MGUtOTZlMy00OTcyLTlkYmQtMDFkNjBlYjMyNDUwIiwib3d1ciI6InVzci1rTFZWQkRxZCIsInByZWYiOiJxcm46cWluZ2Nsb3VkOmlhbToiLCJydHlwIjoicm9sZSIsInN1YiI6InN0cyIsInRoaWQiOiJpb3R0LWZUeXRjS1BWTlEiLCJ0eXAiOiJJRCJ9.O-ha2kQ2JbXaQQ2IGxlP1YdbPBFDkRpEZ5MUyK9AOva1wzO5XKPNunfW6eUx-ANOivodr2zkhg-7gA10uV1G-KFbZouHYnxjR7Fa142mHufRoUowVwSnmXWA_PD26guxv4ObvfNxPzdg2bMgqOxQ0LP56KnQ1MfCVj_Awl5Esdw8U6CUiUaJOPaZLvB6Ps8SzjtR_EipQBBbthSvLWDqTy8tnULLB-BNjyAeAvU00ePPnbqsIXoD25ddUUBJ6YJEMlt2FwI1lrqNbjA2w-xlEZPQXOHAkpF4Djl7QBGVdGdS7yfkf2PdxsQ24nwk05_B32YoPT3_URtAvBRgo8UuzA",
+		DeviceId: "iotd-6c16170e-96e3-4972-9dbd-01d60eb32450",
+		Server:   "tcp://192.168.14.120:8055",
 		SetProperty: func(meta index.Metadata) (index.Metadata, error) {
 			fmt.Println("SetProperty", meta)
 			data := make(index.Metadata)
@@ -32,15 +31,14 @@ func TestNewMqtt(t *testing.T) {
 	}
 	m, err := NewMqtt(options)
 	assert.Nil(t, err)
-	assert.NotNil(t, m)
+	assert.Nil(t, m)
 	time.Sleep(5 * time.Second)
 
 	go func() {
 		data := index.Metadata{
-			"int32":  10,
+			"pro1":   10,
 			"float":  rand.Float32(),
 			"double": rand.Float64(),
-			"string": "xxxxxxxxxxxxxxxxx",
 		}
 		ch, err := m.PubPropertyAsync(data)
 		//ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
@@ -61,7 +59,7 @@ func TestNewMqtt(t *testing.T) {
 		//assert.Nil(t, err)
 		//fmt.Println(reply)
 		time.Sleep(5 * time.Second)
-		os.Exit(0)
+		//os.Exit(0)
 	}()
 	select {}
 	//name := "test"
