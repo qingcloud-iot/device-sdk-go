@@ -3,8 +3,8 @@ package mqtt
 import (
 	"fmt"
 	"git.internal.yunify.com/tools/device-sdk-go/index"
+	cache "github.com/muesli/cache2go"
 	"github.com/stretchr/testify/assert"
-	"math/rand"
 	"testing"
 	"time"
 )
@@ -35,34 +35,45 @@ func TestNewMqtt(t *testing.T) {
 	time.Sleep(5 * time.Second)
 
 	go func() {
-		data := index.Metadata{
-			"pro1":   10,
-			"float":  rand.Float32(),
-			"double": rand.Float64(),
+		i := 0
+		for {
+			data := index.Metadata{
+				"pro1": RandInt64(1, 100),
+				"pro2": RandInt64(1, 100),
+				"pro3": RandInt64(1, 100),
+			}
+			t := (time.Now().Unix() - int64(i*60*60)) * 1000
+			ch, err := m.PubPropertyAsyncEx(data, t)
+			//ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+			//reply, err := m.PubPropertySync(ctx, data)
+			//cancel()
+			assert.Nil(t, err)
+			select {
+			case value := <-ch:
+				fmt.Println(value)
+			}
+			//data = index.Metadata{
+			//	"int32":  10,
+			//	"string": "hexing-string",
+			//	"float":  rand.Float32(),
+			//	"double": rand.Float64(),
+			//}
+			//reply, err = m.PubEventSync(context.Background(), "he-event1", data)
+			//assert.Nil(t, err)
+			//fmt.Println(reply)
+			i++
+			time.Sleep(5 * time.Second)
 		}
-		ch, err := m.PubPropertyAsync(data)
-		//ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
-		//reply, err := m.PubPropertySync(ctx, data)
-		//cancel()
-		assert.Nil(t, err)
-		select {
-		case value := <-ch:
-			fmt.Println(value)
-		}
-		//data = index.Metadata{
-		//	"int32":  10,
-		//	"string": "hexing-string",
-		//	"float":  rand.Float32(),
-		//	"double": rand.Float64(),
-		//}
-		//reply, err = m.PubEventSync(context.Background(), "he-event1", data)
-		//assert.Nil(t, err)
-		//fmt.Println(reply)
-		time.Sleep(5 * time.Second)
 		//os.Exit(0)
 	}()
 	select {}
 	//name := "test"
 	//reply = m.PubEvent(ctx, name, data)
 	//t.Log(reply)
+}
+
+func TestTask(t *testing.T) {
+	cache := cache.Cache("xxxx")
+	cache.Add("a", 3*time.Second, "xxx")
+	cache.RemoveAboutToDeleteItemCallback()
 }

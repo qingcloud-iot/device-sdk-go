@@ -39,7 +39,7 @@ func NewMqtt(options *index.Options) (index.Client, error) {
 		opts.SetAutoReconnect(true)
 		opts.SetKeepAlive(30 * time.Second)
 		opts.SetDefaultPublishHandler(func(client mqttp.Client, msg mqttp.Message) {
-			fmt.Println("[sdk-go]", msg.Topic(), string(msg.Payload()))
+			//fmt.Println("[sdk-go]", msg.Topic(), string(msg.Payload()))
 			switch {
 			case msg.Topic() == fmt.Sprintf(post_property_topic_reply, thingId, deviceId):
 				m.recvPropertyReply(client, msg)
@@ -71,7 +71,7 @@ func (m *mqttClient) recvPropertyReply(client mqttp.Client, msg mqttp.Message) {
 	topic := msg.Topic()
 	//qos := msg.Qos()
 	payload := msg.Payload()
-	fmt.Println("[sdk-go-sub-property]", topic, string(payload))
+	fmt.Println("[sdk-go-sub-property] reply", topic, string(payload), time.Now().Unix())
 	reply := &index.Reply{}
 	err := json.Unmarshal(payload, reply)
 	if err != nil {
@@ -83,9 +83,10 @@ func (m *mqttClient) recvPropertyReply(client mqttp.Client, msg mqttp.Message) {
 		fmt.Errorf("recvPropertyReply err:%s", err.Error())
 		return
 	}
-	ch := item.Data()
-	if c, ok := ch.(chan *index.Reply); ok {
+	if c, ok := item.Data().(index.ReplyChan); ok {
+		item.RemoveAboutToExpireCallback()
 		if err := m.pool.Submit(func() {
+			fmt.Println("[sdk-go-sub-property] reply success ", topic, string(payload))
 			c <- reply
 		}); err != nil {
 			fmt.Errorf("pool exec err:%s", err.Error())
@@ -208,11 +209,11 @@ func (m *mqttClient) PubPropertySync(ctx context.Context, meta index.Metadata) (
 		return reply, nil
 	}
 	topic := buildProperty(m.deviceId, m.thingId)
+	fmt.Println("[PubPropertySync] ", topic, string(data), time.Now().Unix())
 	if token := m.client.Publish(topic, byte(0), false, data); token.WaitTimeout(5*time.Second) && token.Error() != nil {
 		reply.Code = index.RPC_TIMEOUT
 		return reply, nil
 	}
-	fmt.Println(topic, string(data))
 	ch := make(chan *index.Reply)
 	m.cacheClient.Add(message.Id, RPC_TIME_OUT, ch)
 	select {
@@ -223,7 +224,34 @@ func (m *mqttClient) PubPropertySync(ctx context.Context, meta index.Metadata) (
 	}
 	return reply, nil
 }
-
+func (m *mqttClient) PubPropertySyncEx(ctx context.Context, meta index.Metadata, t int64) (*index.Reply, error) {
+	reply := &index.Reply{
+		Code: index.RPC_SUCCESS,
+	}
+	if len(meta) == 0 {
+		return reply, errors.New("param length is zero")
+	}
+	message := buildPropertyMessageEx(meta, t)
+	data, err := json.Marshal(message)
+	if err != nil {
+		return reply, nil
+	}
+	topic := buildProperty(m.deviceId, m.thingId)
+	fmt.Println("[PubPropertySync] ", topic, string(data), time.Now().Unix())
+	if token := m.client.Publish(topic, byte(0), false, data); token.WaitTimeout(5*time.Second) && token.Error() != nil {
+		reply.Code = index.RPC_TIMEOUT
+		return reply, nil
+	}
+	ch := make(chan *index.Reply)
+	m.cacheClient.Add(message.Id, RPC_TIME_OUT, ch)
+	select {
+	case value := <-ch:
+		return value, nil
+	case <-ctx.Done():
+		reply.Code = index.RPC_TIMEOUT
+	}
+	return reply, nil
+}
 func (m *mqttClient) PubPropertyAsync(meta index.Metadata) (index.ReplyChan, error) {
 	ch := make(index.ReplyChan)
 	reply := &index.Reply{
@@ -238,13 +266,14 @@ func (m *mqttClient) PubPropertyAsync(meta index.Metadata) (index.ReplyChan, err
 		return ch, err
 	}
 	topic := buildProperty(m.deviceId, m.thingId)
+	fmt.Println("[PubPropertyAsync] ", topic, string(data), time.Now().Unix())
 	if token := m.client.Publish(topic, byte(0), false, data); token.WaitTimeout(5*time.Second) && token.Error() != nil {
 		reply.Code = index.RPC_TIMEOUT
 		return ch, token.Error()
 	}
-	fmt.Println(topic, string(data))
 	item := m.cacheClient.Add(message.Id, RPC_TIME_OUT, ch)
-	item.AddAboutToExpireCallback(func(i interface{}) {
+	item.SetAboutToExpireCallback(func(i interface{}) {
+		fmt.Printf("[PubPropertyAsync] i:%+v,timeout topic:%s,data:%s", i, topic, string(data))
 		reply := &index.Reply{
 			Code: index.RPC_TIMEOUT,
 		}
@@ -265,7 +294,7 @@ func (m *mqttClient) PubEventSync(ctx context.Context, event string, meta index.
 		return reply, nil
 	}
 	topic := buildEvent(m.deviceId, m.thingId, event)
-	fmt.Println(topic, string(data))
+	fmt.Println("[PubEventSync] ", topic, string(data), time.Now().Unix())
 	if token := m.client.Publish(topic, byte(0), false, data); token.WaitTimeout(5*time.Second) && token.Error() != nil {
 		reply.Code = index.RPC_TIMEOUT
 		return reply, nil
