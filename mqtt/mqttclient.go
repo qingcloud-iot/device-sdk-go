@@ -112,6 +112,7 @@ func (m *mqttClient) recvEventReply(client mqttp.Client, msg mqttp.Message) {
 	}
 	ch := item.Data()
 	if c, ok := ch.(chan *index.Reply); ok {
+		item.RemoveAboutToExpireCallback()
 		if err := m.pool.Submit(func() {
 			c <- reply
 		}); err != nil {
