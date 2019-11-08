@@ -38,6 +38,12 @@ func NewMqtt(options *index.Options) (index.Client, error) {
 		opts.SetCleanSession(true)
 		opts.SetAutoReconnect(true)
 		opts.SetKeepAlive(30 * time.Second)
+		opts.SetConnectionLostHandler(func(client mqttp.Client, e error) {
+			fmt.Println("lost connect")
+		})
+		opts.SetOnConnectHandler(func(client mqttp.Client) {
+			fmt.Println("connect success")
+		})
 		opts.SetDefaultPublishHandler(func(client mqttp.Client, msg mqttp.Message) {
 			//fmt.Println("[sdk-go]", msg.Topic(), string(msg.Payload()))
 			switch {
