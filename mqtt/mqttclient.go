@@ -260,6 +260,35 @@ func (m *mqttClient) PubPropertyAsync(meta index.Metadata) (index.ReplyChan, err
 	})
 	return ch, nil
 }
+func (m *mqttClient) PubPropertyAsyncEx(meta index.Metadata, t int64) (index.ReplyChan, error) {
+	ch := make(index.ReplyChan)
+	reply := &index.Reply{
+		Code: index.RPC_SUCCESS,
+	}
+	if len(meta) == 0 {
+		return ch, errors.New("param length is zero")
+	}
+	message := buildPropertyMessageEx(meta, t)
+	data, err := json.Marshal(message)
+	if err != nil {
+		return ch, err
+	}
+	topic := buildProperty(m.deviceId, m.thingId)
+	fmt.Println("[PubPropertyAsync] ", topic, string(data), time.Now().Unix())
+	if token := m.client.Publish(topic, byte(0), false, data); token.WaitTimeout(5*time.Second) && token.Error() != nil {
+		reply.Code = index.RPC_TIMEOUT
+		return ch, token.Error()
+	}
+	item := m.cacheClient.Add(message.Id, RPC_TIME_OUT, ch)
+	item.SetAboutToExpireCallback(func(i interface{}) {
+		fmt.Printf("[PubPropertyAsync] i:%+v,timeout topic:%s,data:%s", i, topic, string(data))
+		reply := &index.Reply{
+			Code: index.RPC_TIMEOUT,
+		}
+		ch <- reply
+	})
+	return ch, nil
+}
 func (m *mqttClient) PubEventSync(ctx context.Context, event string, meta index.Metadata) (*index.Reply, error) {
 	reply := &index.Reply{
 		Code: index.RPC_SUCCESS,

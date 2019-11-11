@@ -15,8 +15,8 @@ import (
  */
 func TestNewMqtt(t *testing.T) {
 	options := &index.Options{
-		Token:    "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJhY3IiOiIxIiwiYXVkIjoiaWFtIiwiYXpwIjoiaWFtIiwiY3VpZCI6ImlhbXItaDJjMjl2OXIiLCJlaXNrIjoiVjRSd3NoNjRpcXJhSTVJTHlnZ2xHZFhnV3E1S1JGWWxFYnRwakkxZk9Raz0iLCJleHAiOjE2MDQ1NDc0ODYsImlhdCI6MTU3MzAxMTQ4NiwiaXNzIjoic3RzIiwianRpIjoiVWpJNFdQQW9wNWdQNldPdHJIUTRlQiIsIm5iZiI6MCwib3JnaSI6ImlvdGQtMjk5MDY2MDktNzNiYS00NzBkLWE2ZmQtMGUxYzE3MTkwZmQwIiwib3d1ciI6InVzci1rTFZWQkRxZCIsInByZWYiOiJxcm46cWluZ2Nsb3VkOmlhbToiLCJydHlwIjoicm9sZSIsInN1YiI6InN0cyIsInRoaWQiOiJpb3R0LWZUeXRjS1BWTlEiLCJ0eXAiOiJJRCJ9.C1oCwaviLAsmb42mDXX4mXw2h0ccXYV8Kd5mAGkCpxpOFM7Rd7lOL2kGMJpvv_I5caOTlSNiFwMe2L2eXiA_dsZPBEW08dmzghLZXpVABFG7KJOrxT5t6WBYzVCOezt4CynSXheIs0NjSMZ5VBTdiEjj8GIi5iAIWUaYrEeFOlj3IZPp7ddr82rkog9OIDnHDvyXDK2MruKAb7xZ2QZFa0Wg1GKixFUhfT0iU37pQZbsGAduj-kB9z4o_ZwtP8gFko6AkW8WuBzzXhs35cQty2vXJ3ohxKnXtoiwChNfIQmNr8Cc7VJmQTmrQPrgmK3uMnxi02SQXsF2vd0HmpA_7A",
-		DeviceId: "iotd-29906609-73ba-470d-a6fd-0e1c17190fd0",
+		Token:    "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJhY3IiOiIxIiwiYXVkIjoiaWFtIiwiYXpwIjoiaWFtIiwiY3VpZCI6ImlhbXItbDZjcTh5emwiLCJlaXNrIjoiZGVaRGUwcG15YW9QTS1hd2R5VlIzS3JNbDNaa2FjR00xVnlkOUhzYjRIdz0iLCJleHAiOjE2MDQ3MjEwODEsImlhdCI6MTU3MzE4NTA4MSwiaXNzIjoic3RzIiwianRpIjoiVWpJNFdQQW9wNWdQNldPdHJIUTUwTSIsIm5iZiI6MCwib3JnaSI6ImlvdGQtNzhjNjc1ZjItMzQ5NS00NzM0LWFmNWItYmIzMWY4M2Y3NjRjIiwib3d1ciI6InVzci1rTFZWQkRxZCIsInByZWYiOiJxcm46cWluZ2Nsb3VkOmlhbToiLCJydHlwIjoicm9sZSIsInN1YiI6InN0cyIsInRoaWQiOiJpb3R0LVUxaElnSTBkMUEiLCJ0eXAiOiJJRCJ9.uHjxinx_BotQkRMCaL-DGtLwm4uLELwWE8Kv00sVxr92uEJEQ7NwRmtAlKj6IJnMcjQBkXJv-R4ceDt-fX2tJ0helyPhrCu-5EbU4G3FLQJLc3J4Cy8hd2Ltn0V3P_JolArSVWf4qQDGHYHI1nYXowh4D7J8ApACT2xQVcFiYzkET66Dmjczfsug9F318rUJyUxRqSBZS-7rVMr8dgyicjm6zhVThLlaq2xpHQWo6443szyeV2BoipWDFpA1dBDW4LgwXVb6nVs0ZxuPEaOsKWeciRxd2NC25Pfg9pvr6rvVlzL-2mA7_Budi5PYG_LeQ-LfA82LpJo8f--WgMTUtw",
+		DeviceId: "iotd-78c675f2-3495-4734-af5b-bb31f83f764c",
 		Server:   "tcp://192.168.14.120:8055",
 		SetProperty: func(meta index.Metadata) (index.Metadata, error) {
 			fmt.Println("SetProperty", meta)
@@ -34,37 +34,37 @@ func TestNewMqtt(t *testing.T) {
 	assert.Nil(t, m)
 	time.Sleep(5 * time.Second)
 
-	//go func() {
-	//	for {
-	//		i := 24*30 * (RandInt64(1,100))
-	//		data := index.Metadata{
-	//			"pro1": RandInt64(1, 100),
-	//			"pro2": RandInt64(1, 100),
-	//			"pro3": RandInt64(1, 100),
-	//		}
-	//		tm := (time.Now().Unix() - int64(i*60*60)) * 1000
-	//		ch, err := m.PubPropertyAsyncEx(data, tm)
-	//		//ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
-	//		//reply, err := m.PubPropertySync(ctx, data)
-	//		//cancel()
-	//		assert.Nil(t, err)
-	//		select {
-	//		case value := <-ch:
-	//			fmt.Println(value)
-	//		}
-	//		//data = index.Metadata{
-	//		//	"int32":  10,
-	//		//	"string": "hexing-string",
-	//		//	"float":  rand.Float32(),
-	//		//	"double": rand.Float64(),
-	//		//}
-	//		//reply, err = m.PubEventSync(context.Background(), "he-event1", data)
-	//		//assert.Nil(t, err)
-	//		//fmt.Println(reply)
-	//		time.Sleep(1 * time.Second)
-	//	}
-	//	//os.Exit(0)
-	//}()
+	go func() {
+		var i int64 = 1540608082000
+		for {
+			data := index.Metadata{
+				"CO2Concentration": RandInt64(1, 100),
+				"humidity":         RandInt64(1, 100),
+			}
+			//tm := (time.Now().Unix() - int64(i*60*60)) * 1000
+			_, err := m.PubPropertyAsyncEx(data, i)
+			//ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+			//reply, err := m.PubPropertySync(ctx, data)
+			//cancel()
+			assert.Nil(t, err)
+			//select {
+			//case value := <-ch:
+			//	fmt.Println(value)
+			//}
+			//data = index.Metadata{
+			//	"int32":  10,
+			//	"string": "hexing-string",
+			//	"float":  rand.Float32(),
+			//	"double": rand.Float64(),
+			//}
+			//reply, err = m.PubEventSync(context.Background(), "he-event1", data)
+			//assert.Nil(t, err)
+			//fmt.Println(reply)
+			//time.Sleep(1 * time.Second)
+			i = i + 1000
+		}
+		//os.Exit(0)
+	}()
 	select {}
 	//name := "test"
 	//reply = m.PubEvent(ctx, name, data)

@@ -45,6 +45,25 @@ func buildPropertyMessage(meta index.Metadata) *index.ThingPropertyMsg {
 	}
 	return message
 }
+func buildPropertyMessageEx(meta index.Metadata, t int64) *index.ThingPropertyMsg {
+	worker := GetInsIdWorker(WORKER_ID)
+	id, _ := worker.NextId()
+	str := strconv.FormatInt(id, 10)
+	params := make(map[string]*index.Property)
+	for k, v := range meta {
+		property := &index.Property{
+			Value: v,
+			Time:  t,
+		}
+		params[k] = property
+	}
+	message := &index.ThingPropertyMsg{
+		Id:      str,
+		Version: MQTT_VERSION,
+		Params:  params,
+	}
+	return message
+}
 func buildEventMessage(meta index.Metadata) *index.ThingEventMsg {
 	worker := GetInsIdWorker(WORKER_ID)
 	id, _ := worker.NextId()
