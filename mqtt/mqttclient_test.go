@@ -35,22 +35,22 @@ func TestNewMqtt(t *testing.T) {
 	time.Sleep(5 * time.Second)
 
 	go func() {
-		var i int64 = 1540608082000
+		var i int64 = 1539362482000
 		for {
 			data := index.Metadata{
 				"CO2Concentration": RandInt64(1, 100),
 				"humidity":         RandInt64(1, 100),
 			}
 			//tm := (time.Now().Unix() - int64(i*60*60)) * 1000
-			_, err := m.PubPropertyAsyncEx(data, i)
+			ch, err := m.PubPropertyAsyncEx(data, i)
 			//ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 			//reply, err := m.PubPropertySync(ctx, data)
 			//cancel()
 			assert.Nil(t, err)
-			//select {
-			//case value := <-ch:
-			//	fmt.Println(value)
-			//}
+			select {
+			case value := <-ch:
+				fmt.Println(value)
+			}
 			//data = index.Metadata{
 			//	"int32":  10,
 			//	"string": "hexing-string",
@@ -60,10 +60,34 @@ func TestNewMqtt(t *testing.T) {
 			//reply, err = m.PubEventSync(context.Background(), "he-event1", data)
 			//assert.Nil(t, err)
 			//fmt.Println(reply)
-			//time.Sleep(1 * time.Second)
-			i = i + 1000
+			i = i + 60000
+			if i > 1570898482000 {
+				i = 1539362482000
+			}
+			time.Sleep(500 * time.Millisecond)
 		}
 		//os.Exit(0)
+	}()
+	go func() {
+		var i int64 = 1570898482000
+		for {
+			data := index.Metadata{
+				"CO2Concentration": RandInt64(1, 100),
+				"humidity":         RandInt64(1, 100),
+			}
+			ch, err := m.PubPropertyAsyncEx(data, i)
+			assert.Nil(t, err)
+			select {
+			case value := <-ch:
+				fmt.Println(value)
+			}
+			i = i + 60000
+			i = i + 60000
+			if i > 1574093894607 {
+				i = 1539362482000
+			}
+			time.Sleep(100 * time.Millisecond)
+		}
 	}()
 	select {}
 	//name := "test"
