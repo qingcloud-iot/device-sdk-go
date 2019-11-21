@@ -92,7 +92,7 @@ func (m *mqttClient) recvPropertyReply(client mqttp.Client, msg mqttp.Message) {
 		fmt.Errorf("recvPropertyReply err:%s", err.Error())
 		return
 	}
-	if c, ok := item.Data().(index.ReplyChan); ok {
+	if c, ok := item.Data().(chan *index.Reply); ok {
 		item.RemoveAboutToExpireCallback()
 		if err := m.pool.Submit(func() {
 			fmt.Println("[sdk-go-sub-property] reply success ", topic, string(payload))
