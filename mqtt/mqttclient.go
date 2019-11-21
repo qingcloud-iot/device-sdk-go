@@ -58,7 +58,7 @@ func NewMqtt(options *index.Options) (index.Client, error) {
 			}
 		})
 		client := mqttp.NewClient(opts)
-		if token := client.Connect(); token.WaitTimeout(5*time.Second) || token.Error() != nil {
+		if token := client.Connect(); token.WaitTimeout(5*time.Second) && token.Error() != nil {
 			if token.Error() != nil {
 				return nil, token.Error()
 			}
