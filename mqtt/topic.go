@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"git.internal.yunify.com/tools/device-sdk-go/index"
-	"strconv"
+	uuid "github.com/satori/go.uuid"
 	"time"
 )
 
@@ -27,9 +27,7 @@ const (
 )
 
 func buildPropertyMessage(meta index.Metadata) *index.ThingPropertyMsg {
-	worker := GetInsIdWorker(WORKER_ID)
-	id, _ := worker.NextId()
-	str := strconv.FormatInt(id, 10)
+	id := uuid.NewV4().String()
 	params := make(map[string]*index.Property)
 	for k, v := range meta {
 		property := &index.Property{
@@ -39,16 +37,14 @@ func buildPropertyMessage(meta index.Metadata) *index.ThingPropertyMsg {
 		params[k] = property
 	}
 	message := &index.ThingPropertyMsg{
-		Id:      str,
+		Id:      id,
 		Version: MQTT_VERSION,
 		Params:  params,
 	}
 	return message
 }
 func buildPropertyMessageEx(meta index.Metadata, t int64) *index.ThingPropertyMsg {
-	worker := GetInsIdWorker(WORKER_ID)
-	id, _ := worker.NextId()
-	str := strconv.FormatInt(id, 10)
+	id := uuid.NewV4().String()
 	params := make(map[string]*index.Property)
 	for k, v := range meta {
 		property := &index.Property{
@@ -58,18 +54,16 @@ func buildPropertyMessageEx(meta index.Metadata, t int64) *index.ThingPropertyMs
 		params[k] = property
 	}
 	message := &index.ThingPropertyMsg{
-		Id:      str,
+		Id:      id,
 		Version: MQTT_VERSION,
 		Params:  params,
 	}
 	return message
 }
 func buildEventMessage(meta index.Metadata) *index.ThingEventMsg {
-	worker := GetInsIdWorker(WORKER_ID)
-	id, _ := worker.NextId()
-	str := strconv.FormatInt(id, 10)
+	id := uuid.NewV4().String()
 	message := &index.ThingEventMsg{
-		Id:      str,
+		Id:      id,
 		Version: MQTT_VERSION,
 		Params: &index.EventData{
 			Value: meta,
