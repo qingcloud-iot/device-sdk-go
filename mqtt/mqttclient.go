@@ -60,9 +60,9 @@ func NewMqtt(options *index.Options) (index.Client, error) {
 		client := mqttp.NewClient(opts)
 		if token := client.Connect(); token.WaitTimeout(5*time.Second) || token.Error() != nil {
 			if token.Error() != nil {
-				return nil, fmt.Errorf("mqtt client connect fail")
+				return nil, token.Error()
 			}
-			return m, token.Error()
+			return m, fmt.Errorf("mqtt client connect fail")
 		}
 		pool, err := ants.NewPool(WORKER_POOL)
 		if err != nil {
