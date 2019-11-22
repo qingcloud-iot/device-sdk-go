@@ -10,7 +10,7 @@ type DownReply func(*Reply)
 type SetProperty func(meta Metadata) (Metadata, error)
 type ServiceHandle func(name string, meta Metadata) (Metadata, error)
 type Options struct {
-	DeviceId      string
+	//DeviceId      string
 	Token         string
 	Server        string
 	SetProperty   SetProperty
