@@ -13,12 +13,12 @@ import (
 * @Date: 19-9-9 下午2:37
  */
 const (
-	post_property_topic       = "/sys/%s/%s/up/property/post"            //down
-	post_property_topic_reply = "/sys/%s/%s/up/property/post_reply"      //down
-	post_event_topic          = "/sys/%s/%s/up/event/%s/post"            //down
-	post_topic_reply          = "/sys/%s/%s/up/event/+/post_reply"       //down
-	set_property_topic        = "/sys/%s/%s/down/service/set/call"       //down
-	set_property_topic_reply  = "/sys/%s/%s/down/service/set/call_reply" //down
+	post_property_topic       = "/sys/%s/%s/thing/event/property/post"       //down
+	post_property_topic_reply = "/sys/%s/%s/thing/event/property/post_reply" //down
+	post_event_topic          = "/sys/%s/%s/thing/event/%s/post"             //down
+	post_topic_reply          = "/sys/%s/%s/thing/event/+/post_reply"        //down
+	set_property_topic        = "/sys/%s/%s/thing/service/set/call"          //down
+	set_property_topic_reply  = "/sys/%s/%s/thing/service/set/call_reply"    //down
 	set_service_topic         = "/sys/%s/%s/thing/service/+/call"
 	set_service_topic_reply   = "/sys/%s/%s/thing/service/%s/call_reply"
 )
