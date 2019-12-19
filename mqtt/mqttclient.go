@@ -92,7 +92,7 @@ func (m *mqttClient) recvPropertyReply(client mqttp.Client, msg mqttp.Message) {
 		fmt.Errorf("recvPropertyReply err:%s", err.Error())
 		return
 	}
-	if c, ok := item.Data().(chan *index.Reply); ok {
+	if c, ok := item.Data().(index.ReplyChan); ok {
 		item.RemoveAboutToExpireCallback()
 		if err := m.pool.Submit(func() {
 			fmt.Println("[sdk-go-sub-property] reply success ", topic, string(payload))
@@ -224,7 +224,7 @@ func (m *mqttClient) PubPropertySync(ctx context.Context, meta index.Metadata) (
 		reply.Code = index.RPC_TIMEOUT
 		return reply, nil
 	}
-	ch := make(chan *index.Reply)
+	ch := make(index.ReplyChan)
 	m.cacheClient.Add(message.Id, RPC_TIME_OUT, ch)
 	select {
 	case value := <-ch:
