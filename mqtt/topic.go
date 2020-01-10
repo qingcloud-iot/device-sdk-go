@@ -23,6 +23,10 @@ const (
 	set_service_topic_reply   = "/sys/%s/%s/thing/service/%s/call_reply"
 )
 const (
+	driver_set_service_topic = "/sys/+/+/thing/service/+/call"
+)
+const (
+	MQTT_HUB     = "tcp://127.0.0.1:1883"
 	RPC_TIME_OUT = 5 * time.Second
 )
 

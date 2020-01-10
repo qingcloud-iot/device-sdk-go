@@ -56,9 +56,13 @@ type Message struct {
 	Params  Metadata `json:"params"`
 }
 type Client interface {
-	PubPropertySync(ctx context.Context, meta Metadata) (*Reply, error)            //post property sync
-	PubPropertyAsync(meta Metadata) (ReplyChan, error)                             //post property async
-	PubPropertyAsyncEx(meta Metadata, t int64) (ReplyChan, error)                  //post property async
+	//device
+	PubPropertySync(ctx context.Context, meta Metadata) (*Reply, error) //post property sync
+	PubPropertyAsync(meta Metadata) (ReplyChan, error)                  //post property async
+	//PubPropertyAsyncEx(meta Metadata, t int64) (ReplyChan, error)                  //post property async
 	PubEventSync(ctx context.Context, event string, meta Metadata) (*Reply, error) //post property　sync
 	PubEventAsync(event string, meta Metadata) (ReplyChan, error)                  //post property　async
+	//driver
+	PubTopicPropertySync(ctx context.Context, deviceId, thingId string, meta Metadata) (*Reply, error)            //post property sync
+	PubTopicEventSync(ctx context.Context, deviceId, thingId string, event string, meta Metadata) (*Reply, error) //post property　sync
 }
