@@ -233,8 +233,10 @@ func (m *mqttClient) setPropertyReply(setProperty index.SetProperty) func(mqttp.
 			fmt.Errorf("requestServiceReply err:%s", err.Error())
 			return
 		}
-		if err := m.client.Publish(topic+"_reply", byte(0), false, data); err != nil {
-			fmt.Errorf("")
+		if token := m.client.Publish(topic+"_reply", byte(0), false, data); token.WaitTimeout(5*time.Second) && token.Error() != nil {
+			fmt.Errorf("requestServiceReply err:%s", token.Error())
+		} else {
+			fmt.Println("[requestServiceReply]", topic+"_reply", string(data))
 		}
 	}
 }
@@ -270,8 +272,10 @@ func (m *mqttClient) requestServiceReply(serviceHandle index.ServiceHandle) func
 			fmt.Errorf("requestServiceReply err:%s", err.Error())
 			return
 		}
-		if err := m.client.Publish(topic+"_reply", byte(0), false, data); err != nil {
-			fmt.Errorf("")
+		if token := m.client.Publish(topic+"_reply", byte(0), false, data); token.WaitTimeout(5*time.Second) && token.Error() != nil {
+			fmt.Errorf("requestServiceReply err:%s", token.Error())
+		} else {
+			fmt.Println("[requestServiceReply]", topic+"_reply", string(data))
 		}
 	}
 }

@@ -1,7 +1,6 @@
 package mqtt
 
 import (
-	"context"
 	"fmt"
 	"git.internal.yunify.com/tools/device-sdk-go/index"
 	cache "github.com/muesli/cache2go"
@@ -16,7 +15,7 @@ import (
  */
 func TestNewMqtt(t *testing.T) {
 	options := &index.Options{
-		Token: "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJhY3IiOiIxIiwiYXVkIjoiaWFtIiwiYXpwIjoiaWFtIiwiY3VpZCI6ImlhbXItN2R4eWVvOTUiLCJlaXNrIjoieFd5SlRFcUR1MkozVGR1S3V1TVB6X1R4Z0lXZWZIVTRidVZTUG1yUlRQQT0iLCJleHAiOjE2MDkyMTQ0ODUsImlhdCI6MTU3NzY3ODQ4NSwiaXNzIjoic3RzIiwianRpIjoiVWpJNFdQQW9wNWdQNldPdHJIUUhXWiIsIm5iZiI6MCwib3JnaSI6ImlvdGQtY2JjNmQwZGYtOTBiYi00YzNhLTllM2MtMmY4MDNlNDVhNDczIiwib3d1ciI6InVzci1PN2xUUVY3NyIsInByZWYiOiJxcm46cWluZ2Nsb3VkOmlhbToiLCJydHlwIjoicm9sZSIsInN1YiI6InN0cyIsInRoaWQiOiJpb3R0LUZSRHA3cTZjSnUiLCJ0eXAiOiJJRCJ9.rFsWSeP6QIutmdyb13kBm9pqypMBz0Bt4uwHt-ER9kJpcPBy5mWN88yr7IXZ-_Xd1YcCr90NZYgl9bZILSM4J6S4WZ97g4W82ZMGIP8-mdq_dDV1bP-2bWREQ1upZKQdfi0fM7Q4-ZRWLx9Qsk7ZZl-7SFaJthmzXMEe9vTI0uYbZJ0T_FY8mEJybMhkht4r14NeuC4rr56Ci4paX6dBKFLYeKd_Jgijcb04-H4z_nvF1JUAABKuNV07LBkHX2hRLPu3P640T5hjNemP9Ya6D24P9uAKL4vJvABFFgAQkFOvB3W708U1CYMLZIfPVfZv0EVW1nutwhY_S4RP6Bj4Kg",
+		Token: "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJhY3IiOiIxIiwiYXVkIjoiaWFtIiwiYXpwIjoiaWFtIiwiY3VpZCI6ImlhbXItaDJjMjl2OXIiLCJlaXNrIjoiVjRSd3NoNjRpcXJhSTVJTHlnZ2xHZFhnV3E1S1JGWWxFYnRwakkxZk9Raz0iLCJleHAiOjE2MDQ1NDc0ODYsImlhdCI6MTU3MzAxMTQ4NiwiaXNzIjoic3RzIiwianRpIjoiVWpJNFdQQW9wNWdQNldPdHJIUTRlQiIsIm5iZiI6MCwib3JnaSI6ImlvdGQtMjk5MDY2MDktNzNiYS00NzBkLWE2ZmQtMGUxYzE3MTkwZmQwIiwib3d1ciI6InVzci1rTFZWQkRxZCIsInByZWYiOiJxcm46cWluZ2Nsb3VkOmlhbToiLCJydHlwIjoicm9sZSIsInN1YiI6InN0cyIsInRoaWQiOiJpb3R0LWZUeXRjS1BWTlEiLCJ0eXAiOiJJRCJ9.C1oCwaviLAsmb42mDXX4mXw2h0ccXYV8Kd5mAGkCpxpOFM7Rd7lOL2kGMJpvv_I5caOTlSNiFwMe2L2eXiA_dsZPBEW08dmzghLZXpVABFG7KJOrxT5t6WBYzVCOezt4CynSXheIs0NjSMZ5VBTdiEjj8GIi5iAIWUaYrEeFOlj3IZPp7ddr82rkog9OIDnHDvyXDK2MruKAb7xZ2QZFa0Wg1GKixFUhfT0iU37pQZbsGAduj-kB9z4o_ZwtP8gFko6AkW8WuBzzXhs35cQty2vXJ3ohxKnXtoiwChNfIQmNr8Cc7VJmQTmrQPrgmK3uMnxi02SQXsF2vd0HmpA_7A",
 		//DeviceId: "iotd-78c675f2-3495-4734-af5b-bb31f83f764c",
 		Server: "tcp://192.168.14.120:8055",
 		SetProperty: func(meta index.Metadata) (index.Metadata, error) {
@@ -27,6 +26,7 @@ func TestNewMqtt(t *testing.T) {
 		ServiceHandle: func(name string, meta index.Metadata) (index.Metadata, error) {
 			fmt.Println("ServiceHandle", name, meta)
 			data := make(index.Metadata)
+			data["test"] = "xxxx"
 			return data, nil
 		},
 	}
@@ -40,16 +40,16 @@ func TestNewMqtt(t *testing.T) {
 	//	"license": "120",
 	//	"address": "http://iot.qingcloud.com/test.jpg",
 	//}
-	data := index.Metadata{
-		"target": "left",
-		"cause":  "fail",
-	}
-	for {
-		reply, err := m.PubEventSync(context.Background(), "FailureReport", data)
-		assert.Nil(t, err)
-		fmt.Println(reply)
-		time.Sleep(1 * time.Second)
-	}
+	//data := index.Metadata{
+	//	"target": "left",
+	//	"cause":  "fail",
+	//}
+	//for {
+	//	reply, err := m.PubEventSync(context.Background(), "FailureReport", data)
+	//	assert.Nil(t, err)
+	//	fmt.Println(reply)
+	//	time.Sleep(1 * time.Second)
+	//}
 	//go func() {
 	//	var i int64 = 1539362482000
 	//	for {
