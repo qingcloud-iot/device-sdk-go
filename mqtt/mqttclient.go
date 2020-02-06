@@ -90,6 +90,7 @@ func NewHubMqtt(options *index.Options) (index.Client, error) {
 	m.pool = pool
 	return m, nil
 }
+
 func NewMqtt(options *index.Options) (index.Client, error) {
 	var (
 		deviceId string
@@ -145,6 +146,9 @@ func NewMqtt(options *index.Options) (index.Client, error) {
 	m.pool = pool
 	return m, nil
 }
+
+// 订阅到消息之后的回调
+// 返回信息存储在 cache 里面
 func (m *mqttClient) recvPropertyReply(client mqttp.Client, msg mqttp.Message) {
 	topic := msg.Topic()
 	//qos := msg.Qos()
@@ -172,6 +176,7 @@ func (m *mqttClient) recvPropertyReply(client mqttp.Client, msg mqttp.Message) {
 
 	}
 }
+
 func (m *mqttClient) recvEventReply(client mqttp.Client, msg mqttp.Message) {
 	topic := msg.Topic()
 	//qos := msg.Qos()
@@ -240,6 +245,7 @@ func (m *mqttClient) setPropertyReply(setProperty index.SetProperty) func(mqttp.
 		}
 	}
 }
+
 func (m *mqttClient) requestServiceReply(serviceHandle index.ServiceHandle) func(mqttp.Client, mqttp.Message) {
 	return func(client mqttp.Client, msg mqttp.Message) {
 		var (
@@ -279,6 +285,8 @@ func (m *mqttClient) requestServiceReply(serviceHandle index.ServiceHandle) func
 		}
 	}
 }
+
+// PubPropertySync 将消息 id 放入 cache 并设置过期时间，值为 chan reply，ctx 到期后返回
 func (m *mqttClient) PubPropertySync(ctx context.Context, meta index.Metadata) (*index.Reply, error) {
 	reply := &index.Reply{
 		Code: index.RPC_SUCCESS,
@@ -308,6 +316,7 @@ func (m *mqttClient) PubPropertySync(ctx context.Context, meta index.Metadata) (
 	//}
 	return reply, nil
 }
+
 func (m *mqttClient) PubPropertyAsync(meta index.Metadata) (index.ReplyChan, error) {
 	ch := make(index.ReplyChan)
 	reply := &index.Reply{
@@ -338,6 +347,7 @@ func (m *mqttClient) PubPropertyAsync(meta index.Metadata) (index.ReplyChan, err
 	return ch, nil
 }
 
+// PubPropertyAsyncEx 发送消息，将消息的 id 放入 cache 并设置过期时间，即将过期时将 reply 结构体存入管道，直接返回，过期后异步通知
 //func (m *mqttClient) PubPropertyAsyncEx(meta index.Metadata, t int64) (index.ReplyChan, error) {
 //	ch := make(index.ReplyChan)
 //	reply := &index.Reply{
@@ -346,6 +356,16 @@ func (m *mqttClient) PubPropertyAsync(meta index.Metadata) (index.ReplyChan, err
 //	if len(meta) == 0 {
 //		return ch, errors.New("param length is zero")
 //	}
+// /*
+// 	message{
+// 			id: uuid
+// 			version: v1.0.0
+// 			params: map[meta_k]Property{
+// 				meta_value
+// 				time_now
+// 			}
+// 		}
+// */
 //	message := buildPropertyMessageEx(meta, t)
 //	data, err := json.Marshal(message)
 //	if err != nil {
@@ -357,6 +377,10 @@ func (m *mqttClient) PubPropertyAsync(meta index.Metadata) (index.ReplyChan, err
 //		reply.Code = index.RPC_TIMEOUT
 //		return ch, token.Error()
 //	}
+// /*
+// 	5s 的过期时间
+// 	快过期时向 ch 发送消息
+// */
 //	item := m.cacheClient.Add(message.Id, RPC_TIME_OUT, ch)
 //	item.SetAboutToExpireCallback(func(i interface{}) {
 //		fmt.Printf("[PubPropertyAsync] i:%+v,timeout topic:%s,data:%s", i, topic, string(data))
@@ -367,6 +391,8 @@ func (m *mqttClient) PubPropertyAsync(meta index.Metadata) (index.ReplyChan, err
 //	})
 //	return ch, nil
 //}
+
+// PubEventSync event 就是将整个 meta 放到 中
 func (m *mqttClient) PubEventSync(ctx context.Context, event string, meta index.Metadata) (*index.Reply, error) {
 	reply := &index.Reply{
 		Code: index.RPC_SUCCESS,
@@ -374,6 +400,17 @@ func (m *mqttClient) PubEventSync(ctx context.Context, event string, meta index.
 	if len(meta) == 0 {
 		return reply, errors.New("param length is zero")
 	}
+
+	/*
+		message{
+				id: uuid
+				version: v1.0.0
+				params: EventData{
+					Value: meta,
+					Time:  time.Now().Unix() * 1000,
+				}
+			}
+	*/
 	message := buildEventMessage(meta)
 	data, err := json.Marshal(message)
 	if err != nil {
