@@ -355,27 +355,17 @@ func TestSubDeviceControlAsync(t *testing.T) {
 			data["test"] = "xxxx"
 			return data, nil
 		},
+		Identifer: "start",
 	}
 	m, err := NewMqtt(options)
 	assert.Nil(t, err)
-	assert.Nil(t, m)
-	time.Sleep(5 * time.Second)
 
-	go func() {
-		var i int64 = 1539362482000
-		for {
-			reply, err := m.SubDeviceControlSync("he-event1")
-			assert.Nil(t, err)
+	go m.SubDeviceControlSync()
+	fmt.Println("run")
 
-			fmt.Println("=====reply:", reply)
+	time.Sleep(7 * time.Second)
 
-			i = i + 60000
-			if i > 1570898482000 {
-				i = 1539362482000
-			}
-			time.Sleep(10000 * time.Millisecond)
-		}
-	}()
+	m.UnSubDeviceControlSync()
 
-	select {}
+	time.Sleep(3 * time.Second)
 }

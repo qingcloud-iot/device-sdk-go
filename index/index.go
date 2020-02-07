@@ -10,11 +10,11 @@ type DownReply func(*Reply)
 type SetProperty func(meta Metadata) (Metadata, error)
 type ServiceHandle func(name string, meta Metadata) (Metadata, error)
 type Options struct {
-	//DeviceId      string
 	Token         string
 	Server        string
 	SetProperty   SetProperty
 	ServiceHandle ServiceHandle
+	Identifer     string
 }
 type ReplyChan chan *Reply
 type Metadata map[string]interface{}
@@ -65,4 +65,8 @@ type Client interface {
 	//driver
 	PubTopicPropertySync(ctx context.Context, deviceId, thingId string, meta Metadata) (*Reply, error)            //post property sync
 	PubTopicEventSync(ctx context.Context, deviceId, thingId string, event string, meta Metadata) (*Reply, error) //post property　sync
+
+	// sub
+	SubDeviceControlSync()
+	UnSubDeviceControlSync() error
 }

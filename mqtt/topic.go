@@ -21,6 +21,8 @@ const (
 	set_property_topic_reply  = "/sys/%s/%s/thing/service/set/call_reply"    //down
 	set_service_topic         = "/sys/%s/%s/thing/service/+/call"
 	set_service_topic_reply   = "/sys/%s/%s/thing/service/%s/call_reply"
+
+	device_control_topic = "/sys/%s/%s/thing/service/%s/call"
 )
 const (
 	driver_set_service_topic = "/sys/+/+/thing/service/+/call"
@@ -91,9 +93,14 @@ func buildProperty(deviceId, thingId string) string {
 func buildEvent(deviceId, thingId, name string) string {
 	return fmt.Sprintf(post_event_topic, thingId, deviceId, name)
 }
+
 func buildPropertyReply(deviceId, thingId string) string {
 	return fmt.Sprintf(set_property_topic_reply, thingId, deviceId)
 }
 func buildServiceReply(name, deviceId, thingId string) string {
 	return fmt.Sprintf(set_service_topic_reply, thingId, deviceId, name)
+}
+
+func buildServiceControlReply(thingId, deviceId, identifer string) string {
+	return fmt.Sprintf(device_control_topic, thingId, deviceId, identifer)
 }

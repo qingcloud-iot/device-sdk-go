@@ -5,12 +5,13 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"time"
+
 	"git.internal.yunify.com/tools/device-sdk-go/index"
 	mqttp "github.com/eclipse/paho.mqtt.golang"
 	cache "github.com/muesli/cache2go"
 	"github.com/panjf2000/ants"
 	uuid "github.com/satori/go.uuid"
-	"time"
 )
 
 /**
@@ -24,6 +25,9 @@ type mqttClient struct {
 	thingId     string
 	cacheClient *cache.CacheTable
 	pool        *ants.Pool
+
+	Identifier      string
+	UnSubScribeChan chan bool
 }
 
 func NewHubMqtt(options *index.Options) (index.Client, error) {
@@ -54,19 +58,6 @@ func NewHubMqtt(options *index.Options) (index.Client, error) {
 		fmt.Println("connect success")
 	})
 
-	//opts.SetDefaultPublishHandler(func(client mqttp.Client, msg mqttp.Message) {
-	//	//fmt.Println("[sdk-go]", msg.Topic(), string(msg.Payload()))
-	//	switch {
-	//	case msg.Topic() == fmt.Sprintf(post_property_topic_reply, thingId, deviceId):
-	//		m.recvPropertyReply(client, msg)
-	//	case msg.Topic() == fmt.Sprintf(set_property_topic, thingId, deviceId):
-	//		m.setPropertyReply(options.SetProperty)(client, msg)
-	//	case isServiceTopic(thingId, deviceId, msg.Topic()):
-	//		m.requestServiceReply(options.ServiceHandle)(client, msg)
-	//	default:
-	//		m.recvEventReply(client, msg)
-	//	}
-	//})
 	client := mqttp.NewClient(opts)
 	if token := client.Connect(); !token.WaitTimeout(5*time.Second) || token.Error() != nil {
 		if token.Error() != nil {
@@ -84,9 +75,6 @@ func NewHubMqtt(options *index.Options) (index.Client, error) {
 		return nil, err
 	}
 	m.client = client
-	//
-	//m.thingId = thingId
-	//m.cacheClient = cache.Cache(deviceId)
 	m.pool = pool
 	return m, nil
 }
@@ -97,7 +85,9 @@ func NewMqtt(options *index.Options) (index.Client, error) {
 		thingId  string
 		err      error
 	)
-	m := &mqttClient{}
+	m := &mqttClient{
+		UnSubScribeChan: make(chan bool),
+	}
 	if deviceId, thingId, err = parseToken(options.Token); err != nil {
 		return nil, err
 	}
@@ -116,16 +106,11 @@ func NewMqtt(options *index.Options) (index.Client, error) {
 		fmt.Println("connect success")
 	})
 	opts.SetDefaultPublishHandler(func(client mqttp.Client, msg mqttp.Message) {
-		//fmt.Println("[sdk-go]", msg.Topic(), string(msg.Payload()))
+		fmt.Printf("[sdk-go] topic:%s, message:%s\n", msg.Topic(), string(msg.Payload()))
 		switch {
-		case msg.Topic() == fmt.Sprintf(post_property_topic_reply, thingId, deviceId):
-			m.recvPropertyReply(client, msg)
-		case msg.Topic() == fmt.Sprintf(set_property_topic, thingId, deviceId):
-			m.setPropertyReply(options.SetProperty)(client, msg)
-		case isServiceTopic(thingId, deviceId, msg.Topic()):
-			m.requestServiceReply(options.ServiceHandle)(client, msg)
+		case msg.Topic() == fmt.Sprintf(device_control_topic, thingId, deviceId, options.Identifer):
+			m.recvDeviceControlReply(client, msg)
 		default:
-			m.recvEventReply(client, msg)
 		}
 	})
 	client := mqttp.NewClient(opts)
@@ -142,6 +127,7 @@ func NewMqtt(options *index.Options) (index.Client, error) {
 	m.client = client
 	m.deviceId = deviceId
 	m.thingId = thingId
+	m.Identifier = options.Identifer
 	m.cacheClient = cache.Cache(deviceId)
 	m.pool = pool
 	return m, nil
@@ -305,15 +291,6 @@ func (m *mqttClient) PubPropertySync(ctx context.Context, meta index.Metadata) (
 		reply.Code = index.RPC_TIMEOUT
 		return reply, nil
 	}
-	//todo fix delete reply
-	//ch := make(index.ReplyChan)
-	//m.cacheClient.Add(message.Id, RPC_TIME_OUT, ch)
-	//select {
-	//case value := <-ch:
-	//	return value, nil
-	//case <-ctx.Done():
-	//	reply.Code = index.RPC_TIMEOUT
-	//}
 	return reply, nil
 }
 
@@ -347,51 +324,6 @@ func (m *mqttClient) PubPropertyAsync(meta index.Metadata) (index.ReplyChan, err
 	return ch, nil
 }
 
-// PubPropertyAsyncEx 发送消息，将消息的 id 放入 cache 并设置过期时间，即将过期时将 reply 结构体存入管道，直接返回，过期后异步通知
-//func (m *mqttClient) PubPropertyAsyncEx(meta index.Metadata, t int64) (index.ReplyChan, error) {
-//	ch := make(index.ReplyChan)
-//	reply := &index.Reply{
-//		Code: index.RPC_SUCCESS,
-//	}
-//	if len(meta) == 0 {
-//		return ch, errors.New("param length is zero")
-//	}
-// /*
-// 	message{
-// 			id: uuid
-// 			version: v1.0.0
-// 			params: map[meta_k]Property{
-// 				meta_value
-// 				time_now
-// 			}
-// 		}
-// */
-//	message := buildPropertyMessageEx(meta, t)
-//	data, err := json.Marshal(message)
-//	if err != nil {
-//		return ch, err
-//	}
-//	topic := buildProperty(m.deviceId, m.thingId)
-//	fmt.Println("[PubPropertyAsync] ", topic, string(data), time.Now().Unix())
-//	if token := m.client.Publish(topic, byte(0), false, data); token.WaitTimeout(5*time.Second) && token.Error() != nil {
-//		reply.Code = index.RPC_TIMEOUT
-//		return ch, token.Error()
-//	}
-// /*
-// 	5s 的过期时间
-// 	快过期时向 ch 发送消息
-// */
-//	item := m.cacheClient.Add(message.Id, RPC_TIME_OUT, ch)
-//	item.SetAboutToExpireCallback(func(i interface{}) {
-//		fmt.Printf("[PubPropertyAsync] i:%+v,timeout topic:%s,data:%s", i, topic, string(data))
-//		reply := &index.Reply{
-//			Code: index.RPC_TIMEOUT,
-//		}
-//		ch <- reply
-//	})
-//	return ch, nil
-//}
-
 // PubEventSync event 就是将整个 meta 放到 中
 func (m *mqttClient) PubEventSync(ctx context.Context, event string, meta index.Metadata) (*index.Reply, error) {
 	reply := &index.Reply{
@@ -422,15 +354,6 @@ func (m *mqttClient) PubEventSync(ctx context.Context, event string, meta index.
 		reply.Code = index.RPC_TIMEOUT
 		return reply, nil
 	}
-	//todo fix delete reply
-	//ch := make(chan *index.Reply)
-	//m.cacheClient.Add(message.Id, RPC_TIME_OUT, ch)
-	//select {
-	//case value := <-ch:
-	//	return value, nil
-	//case <-ctx.Done():
-	//	reply.Code = index.RPC_TIMEOUT
-	//}
 	return reply, nil
 }
 
@@ -465,4 +388,68 @@ func (m *mqttClient) PubTopicPropertySync(ctx context.Context, deviceId, thingId
 }
 func (m *mqttClient) PubTopicEventSync(ctx context.Context, deviceId, thingId string, event string, meta index.Metadata) (*index.Reply, error) {
 	return nil, nil
+}
+
+// SubDeviceControlSync 同步订阅消息
+func (m *mqttClient) SubDeviceControlSync() {
+	topic := buildServiceControlReply(m.thingId, m.deviceId, m.Identifier)
+	fmt.Println("SubDeviceControlSync topic:", topic)
+	if token := m.client.Subscribe(topic, 0, nil); token.Wait() && token.Error() != nil {
+		fmt.Printf("SubDeviceControlSync err:%s", token.Error())
+	}
+
+	<-m.UnSubScribeChan
+	fmt.Printf("SubDeviceControlSync closed, topic:%s\n", topic)
+}
+
+func (m *mqttClient) UnSubDeviceControlSync() error {
+	// defer m.client.Disconnect(250)
+	defer func() {
+		close(m.UnSubScribeChan)
+	}()
+	topic := buildServiceControlReply(m.thingId, m.deviceId, m.Identifier)
+	fmt.Println("UnSubDeviceControlSync topic:", topic)
+	token := m.client.Unsubscribe(topic)
+	token.Wait()
+	err := token.Error()
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+// recvDeviceControlReply 订阅消息后的回调函数
+func (m *mqttClient) recvDeviceControlReply(client mqttp.Client, msg mqttp.Message) {
+
+	topic := msg.Topic()
+	payload := msg.Payload()
+
+	//qos := msg.Qos()
+	fmt.Println("[sdk-go-device-control] ", topic, string(payload))
+	message, err := parseMessage(payload)
+	if err != nil {
+		fmt.Errorf("recvDeviceControlReply err:%s", err.Error())
+		return
+	}
+
+	fmt.Printf("recvDeviceControlReply topic:%s payload:%s\n", topic, string(payload))
+
+	reply := &index.Reply{
+		Id:   message.Id,
+		Code: index.RPC_SUCCESS,
+		Data: make(index.Metadata),
+	}
+
+	reply.Data = message.Params
+
+	data, err := json.Marshal(reply)
+	if err != nil {
+		fmt.Printf("recvDeviceControlReply err:%s\n", err.Error())
+		return
+	}
+	if token := m.client.Publish(topic+"_reply", byte(0), false, data); token.WaitTimeout(5*time.Second) && token.Error() != nil {
+		fmt.Printf("recvDeviceControlReply err:%s", token.Error())
+	} else {
+		fmt.Println("[recvDeviceControlReply]", topic+"_reply", string(data))
+	}
 }

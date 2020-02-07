@@ -3,6 +3,7 @@ module git.internal.yunify.com/tools/device-sdk-go
 go 1.12
 
 require (
+	github.com/Workiva/go-datastructures v1.0.50
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible
 	github.com/eclipse/paho.mqtt.golang v1.2.0
 	github.com/muesli/cache2go v0.0.0-20191019095710-4098a3aa8c94
