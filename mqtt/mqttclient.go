@@ -11,7 +11,6 @@ import (
 	mqttp "github.com/eclipse/paho.mqtt.golang"
 	cache "github.com/muesli/cache2go"
 	"github.com/panjf2000/ants"
-	uuid "github.com/satori/go.uuid"
 )
 
 /**
@@ -28,55 +27,6 @@ type mqttClient struct {
 
 	Identifier      string
 	UnSubScribeChan chan bool
-}
-
-func NewHubMqtt(options *index.Options) (index.Client, error) {
-	var (
-		clientId string
-		err      error
-		server   string
-	)
-	if clientId == "" {
-		clientId = "dirver-" + uuid.NewV4().String()
-	}
-	if server == "" {
-		server = MQTT_HUB
-	}
-	m := &mqttClient{}
-	opts := mqttp.NewClientOptions()
-	opts.AddBroker(options.Server)
-	opts.SetClientID(clientId)
-	opts.SetUsername(clientId)
-	opts.SetPassword(options.Token)
-	opts.SetCleanSession(true)
-	opts.SetAutoReconnect(true)
-	opts.SetKeepAlive(30 * time.Second)
-	opts.SetConnectionLostHandler(func(client mqttp.Client, e error) {
-		fmt.Println("lost connect")
-	})
-	opts.SetOnConnectHandler(func(client mqttp.Client) {
-		fmt.Println("connect success")
-	})
-
-	client := mqttp.NewClient(opts)
-	if token := client.Connect(); !token.WaitTimeout(5*time.Second) || token.Error() != nil {
-		if token.Error() != nil {
-			return nil, token.Error()
-		}
-		return m, fmt.Errorf("mqtt client connect fail")
-	}
-	if token := client.Subscribe(driver_set_service_topic, 0, func(client mqttp.Client, msg mqttp.Message) {
-		m.requestServiceReply(options.ServiceHandle)(client, msg)
-	}); token.Wait() && token.Error() != nil {
-		return m, fmt.Errorf("mqtt client sub fail")
-	}
-	pool, err := ants.NewPool(WORKER_POOL)
-	if err != nil {
-		return nil, err
-	}
-	m.client = client
-	m.pool = pool
-	return m, nil
 }
 
 func NewMqtt(options *index.Options) (index.Client, error) {
@@ -131,145 +81,6 @@ func NewMqtt(options *index.Options) (index.Client, error) {
 	m.cacheClient = cache.Cache(deviceId)
 	m.pool = pool
 	return m, nil
-}
-
-// 订阅到消息之后的回调
-// 返回信息存储在 cache 里面
-func (m *mqttClient) recvPropertyReply(client mqttp.Client, msg mqttp.Message) {
-	topic := msg.Topic()
-	//qos := msg.Qos()
-	payload := msg.Payload()
-	fmt.Println("[sdk-go-sub-property] reply", topic, string(payload), time.Now().Unix())
-	reply := &index.Reply{}
-	err := json.Unmarshal(payload, reply)
-	if err != nil {
-		fmt.Errorf("recvPropertyReply err:%s", err.Error())
-		return
-	}
-	item, err := m.cacheClient.Value(reply.Id)
-	if err != nil {
-		fmt.Errorf("recvPropertyReply err:%s", err.Error())
-		return
-	}
-	if c, ok := item.Data().(index.ReplyChan); ok {
-		item.RemoveAboutToExpireCallback()
-		if err := m.pool.Submit(func() {
-			fmt.Println("[sdk-go-sub-property] reply success ", topic, string(payload))
-			c <- reply
-		}); err != nil {
-			fmt.Errorf("pool exec err:%s", err.Error())
-		}
-
-	}
-}
-
-func (m *mqttClient) recvEventReply(client mqttp.Client, msg mqttp.Message) {
-	topic := msg.Topic()
-	//qos := msg.Qos()
-	payload := msg.Payload()
-	fmt.Println("[sdk-go-sub-event]", topic, string(payload))
-	reply := &index.Reply{}
-	err := json.Unmarshal(payload, reply)
-	if err != nil {
-		fmt.Errorf("recvPropertyReply err:%s", err.Error())
-		return
-	}
-	item, err := m.cacheClient.Value(reply.Id)
-	if err != nil {
-		fmt.Errorf("recvPropertyReply err:%s", err.Error())
-		return
-	}
-	ch := item.Data()
-	if c, ok := ch.(chan *index.Reply); ok {
-		item.RemoveAboutToExpireCallback()
-		if err := m.pool.Submit(func() {
-			c <- reply
-		}); err != nil {
-			fmt.Errorf("pool exec err:%s", err.Error())
-		}
-
-	}
-}
-
-//recv
-func (m *mqttClient) setPropertyReply(setProperty index.SetProperty) func(mqttp.Client, mqttp.Message) {
-	return func(client mqttp.Client, msg mqttp.Message) {
-		var (
-			topic   = msg.Topic()
-			payload = msg.Payload()
-			result  = index.Metadata{}
-		)
-		//qos := msg.Qos()
-		fmt.Println("[sdk-go-set]", topic, string(payload))
-		message, err := parseMessage(payload)
-		if err != nil {
-			fmt.Errorf("requestServiceReply err:%s", err.Error())
-			return
-		}
-		reply := &index.Reply{
-			Id:   message.Id,
-			Code: index.RPC_SUCCESS,
-			Data: make(index.Metadata),
-		}
-		if setProperty != nil {
-			var err error
-			result, err = setProperty(message.Params)
-			if err != nil {
-				reply.Code = index.RPC_FAIL
-			}
-		}
-		reply.Data = result
-		data, err := json.Marshal(reply)
-		if err != nil {
-			fmt.Errorf("requestServiceReply err:%s", err.Error())
-			return
-		}
-		if token := m.client.Publish(topic+"_reply", byte(0), false, data); token.WaitTimeout(5*time.Second) && token.Error() != nil {
-			fmt.Errorf("requestServiceReply err:%s", token.Error())
-		} else {
-			fmt.Println("[requestServiceReply]", topic+"_reply", string(data))
-		}
-	}
-}
-
-func (m *mqttClient) requestServiceReply(serviceHandle index.ServiceHandle) func(mqttp.Client, mqttp.Message) {
-	return func(client mqttp.Client, msg mqttp.Message) {
-		var (
-			topic   = msg.Topic()
-			payload = msg.Payload()
-			result  = index.Metadata{}
-		)
-		name := parseServiceName(topic)
-		//qos := msg.Qos()
-		fmt.Println("[sdk-go-sub]", topic, string(payload))
-		message, err := parseMessage(payload)
-		if err != nil {
-			fmt.Errorf("requestServiceReply err:%s", err.Error())
-			return
-		}
-		reply := &index.Reply{
-			Id:   message.Id,
-			Code: index.RPC_SUCCESS,
-			Data: make(index.Metadata),
-		}
-		if serviceHandle != nil {
-			result, err = serviceHandle(name, message.Params)
-			if err != nil {
-				reply.Code = index.RPC_FAIL
-			}
-		}
-		reply.Data = result
-		data, err := json.Marshal(reply)
-		if err != nil {
-			fmt.Errorf("requestServiceReply err:%s", err.Error())
-			return
-		}
-		if token := m.client.Publish(topic+"_reply", byte(0), false, data); token.WaitTimeout(5*time.Second) && token.Error() != nil {
-			fmt.Errorf("requestServiceReply err:%s", token.Error())
-		} else {
-			fmt.Println("[requestServiceReply]", topic+"_reply", string(data))
-		}
-	}
 }
 
 // PubPropertySync 将消息 id 放入 cache 并设置过期时间，值为 chan reply，ctx 到期后返回
