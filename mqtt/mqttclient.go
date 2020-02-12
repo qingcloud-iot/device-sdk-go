@@ -200,16 +200,16 @@ func (m *mqttClient) PubTopicEvent(ctx context.Context, deviceId, thingId string
 	return nil, nil
 }
 
-// SubDeviceControlSync 同步订阅消息
+// SubDeviceControl 同步订阅消息
 func (m *mqttClient) SubDeviceControl() {
 	topic := buildServiceControlReply(m.thingId, m.deviceId, m.Identifier)
-	fmt.Printf("[SubDeviceControlSync] topic:%s\n", topic)
+	fmt.Printf("[SubDeviceControl] topic:%s\n", topic)
 	if token := m.client.Subscribe(topic, 0, nil); token.Wait() && token.Error() != nil {
-		fmt.Printf("SubDeviceControlSync err:%s", token.Error())
+		fmt.Printf("SubDeviceControl err:%s", token.Error())
 	}
 
 	<-m.UnSubScribeChan
-	fmt.Printf("[SubDeviceControlSync] closed, topic:%s\n", topic)
+	fmt.Printf("[SubDeviceControl] closed, topic:%s\n", topic)
 }
 
 func (m *mqttClient) UnSubDeviceControl() error {
@@ -218,7 +218,7 @@ func (m *mqttClient) UnSubDeviceControl() error {
 		close(m.UnSubScribeChan)
 	}()
 	topic := buildServiceControlReply(m.thingId, m.deviceId, m.Identifier)
-	fmt.Printf("[UnSubDeviceControlSync] topic:%s\n", topic)
+	fmt.Printf("[UnSubDeviceControl] topic:%s\n", topic)
 	token := m.client.Unsubscribe(topic)
 	token.Wait()
 	err := token.Error()
