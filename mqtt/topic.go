@@ -3,15 +3,12 @@ package mqtt
 import (
 	"encoding/json"
 	"fmt"
-	"git.internal.yunify.com/tools/device-sdk-go/index"
-	uuid "github.com/satori/go.uuid"
 	"time"
+
+	"git.internal.yunify.com/iot-sdk/device-sdk-go/index"
+	uuid "github.com/satori/go.uuid"
 )
 
-/**
-* @Author: hexing
-* @Date: 19-9-9 下午2:37
- */
 const (
 	post_property_topic       = "/sys/%s/%s/thing/event/property/post"       //down
 	post_property_topic_reply = "/sys/%s/%s/thing/event/property/post_reply" //down

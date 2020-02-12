@@ -2,10 +2,6 @@ package index
 
 import "context"
 
-/**
-* @Author: hexing
-* @Date: 19-9-9 上午11:32
- */
 type DownReply func(*Reply)
 type SetProperty func(meta Metadata) (Metadata, error)
 type ServiceHandle func(name string, meta Metadata) (Metadata, error)
@@ -27,7 +23,6 @@ type Event struct {
 type ThingPropertyMsg struct {
 	Id      string               `json:"id"`
 	Version string               `json:"version"`
-	Iotd    string               `json:"iotd"`
 	Params  map[string]*Property `json:"params"`
 }
 
@@ -35,7 +30,6 @@ type ThingPropertyMsg struct {
 type ThingEventMsg struct {
 	Id      string     `json:"id"`
 	Version string     `json:"version"`
-	Iotd    string     `json:"iotd"`
 	Params  *EventData `json:"params"`
 }
 type EventData struct {
@@ -54,17 +48,18 @@ type Message struct {
 	Params  Metadata `json:"params"`
 }
 type Client interface {
+	Connect() error
 	//device
-	PubPropertySync(ctx context.Context, meta Metadata) (*Reply, error) //post property sync
-	PubPropertyAsync(meta Metadata) (ReplyChan, error)                  //post property async
+	PubProperty(ctx context.Context, meta Metadata) (*Reply, error) //post property sync
+	PubPropertyAsync(meta Metadata) (ReplyChan, error)              //post property async
 	//PubPropertyAsyncEx(meta Metadata, t int64) (ReplyChan, error)                  //post property async
-	PubEventSync(ctx context.Context, event string, meta Metadata) (*Reply, error) //post property　sync
-	PubEventAsync(event string, meta Metadata) (ReplyChan, error)                  //post property　async
+	PubEvent(ctx context.Context, event string, meta Metadata) (*Reply, error) //post property　sync
+	PubEventAsync(event string, meta Metadata) (ReplyChan, error)              //post property　async
 	//driver
-	PubTopicPropertySync(ctx context.Context, deviceId, thingId string, meta Metadata) (*Reply, error)            //post property sync
-	PubTopicEventSync(ctx context.Context, deviceId, thingId string, event string, meta Metadata) (*Reply, error) //post property　sync
+	PubTopicProperty(ctx context.Context, deviceId, thingId string, meta Metadata) (*Reply, error)            //post property sync
+	PubTopicEvent(ctx context.Context, deviceId, thingId string, event string, meta Metadata) (*Reply, error) //post property　sync
 
 	// sub
-	SubDeviceControlSync()
-	UnSubDeviceControlSync() error
+	SubDeviceControl()
+	UnSubDeviceControl() error
 }

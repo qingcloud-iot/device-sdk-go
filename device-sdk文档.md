@@ -20,7 +20,7 @@ SDK 1.0
 
 go get -u -v https://git.internal.yunify.com/iot-sdk/device-sdk-go
 
-Branch: majun
+Branch: testing
 
 ### SDK 使用说明
 

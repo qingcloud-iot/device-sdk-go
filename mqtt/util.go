@@ -1,9 +1,5 @@
 package mqtt
 
-/**
-* @Author: hexing
-* @Date: 19-9-15 下午3:24
- */
 import (
 	"errors"
 	"fmt"
