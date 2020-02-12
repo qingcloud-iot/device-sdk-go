@@ -80,15 +80,125 @@
 
 2. 在青云iot平台创建模型
 
-    TODO:
+    ```go
+    {
+        "id": "iott-yVAwx9rb8j",
+        "name": "EdgeWize",
+        "type": 2,
+        "icon": "cpe",
+        "user_id": "usr-keAytmz1",
+        "description": "云锡：边缘模型",
+        "properties": {
+            "AlarmState": {
+                "property_id": "iotp-c7c90665-2d62-483b-aa7c-af5f2d1fbe93",
+                "property_name": "",
+                "identifier": "AlarmState",
+                "access": "all",
+                "type": "bool",
+                "define": {},
+                "description": "告警状态"
+            },
+            "MaxValue": {
+                "property_id": "iotp-14337e33-4772-410b-a3e0-55950ed758ee",
+                "property_name": "",
+                "identifier": "MaxValue",
+                "access": "all",
+                "type": "float",
+                "define": {},
+                "description": "最大值"
+            }
+        },
+        "events": {
+            "statistics": {
+                "event_id": "iote-790b0ea1-ac2c-4179-85f2-9c76f9982fc8",
+                "identifier": "statistics",
+                "event_name": "数值统计",
+                "description": "最大最小值统计",
+                "type": "info",
+                "output": [
+                    {
+                        "id": "a718a576-40ce-44b7-841d-30313b5cdbd5",
+                        "identifier": "max",
+                        "output_name": "最大值",
+                        "type": "float",
+                        "define": {}
+                    },
+                    {
+                        "id": "76f1ec21-2793-481c-87b0-3e94a21f33dd",
+                        "identifier": "min",
+                        "output_name": "最小值",
+                        "type": "float",
+                        "define": {}
+                    }
+                ]
+            },
+            "threshold": {
+                "event_id": "iote-f4e028dc-b6fc-437c-9bec-9a947c52f79b",
+                "identifier": "threshold",
+                "event_name": "阈值告警",
+                "description": "阈值告警事件",
+                "type": "info",
+                "output": [
+                    {
+                        "id": "c61c54b2-c3c4-460f-8eac-feabc24c60e1",
+                        "identifier": "identifier",
+                        "output_name": "告警点位",
+                        "type": "string",
+                        "define": {}
+                    },
+                    {
+                        "id": "e36bb956-dc18-447f-8ae9-f99312c27b3d",
+                        "identifier": "val",
+                        "output_name": "告警值",
+                        "type": "float",
+                        "define": {}
+                    }
+                ]
+            }
+        },
+        "actions": {
+            "connect": {
+                "action_id": "iots-23ff91e2-d8a3-4e8d-87d7-acd25c3e2dc6",
+                "identifier": "connect",
+                "action_name": "连接opc",
+                "description": "连接opc server",
+                "call_type": "sync",
+                "input": [],
+                "output": [
+                    {
+                        "id": "18ae0993-0b52-42af-b96b-b64b7f40cc65",
+                        "identifier": "reply",
+                        "name": "",
+                        "type": "string",
+                        "define": {}
+                    }
+                ]
+            },
+            "disconnect": {
+                "action_id": "iots-a0ad97a0-c16d-4ec1-a276-c5c0b9a95930",
+                "identifier": "disconnect",
+                "action_name": "断开opc连接",
+                "description": "断开opc连接",
+                "call_type": "sync",
+                "input": [],
+                "output": [
+                    {
+                        "id": "447ca1f6-472c-4f21-9e58-2777d112749e",
+                        "identifier": "reply",
+                        "name": "",
+                        "type": "string",
+                        "define": {}
+                    }
+                ]
+            }
+        }
+    }
+    ```
 
-    青云平台创建模型，获得属性名称
+    青云平台创建模型，可以得到属性名称、属性类型、事件identifier、控制identifier等；
 
 3. 在青云iot平台注册设备，绑定模型
-
-    TODO:
-
-    青云平台，获取设备凭证(token)，将上面创建的物模型和设备进行绑定
+    在青云平台注册设备，以及将上面创建的物模型和设备进行绑定，获取设备凭证(token)；
 
 #####  代码演示
 
@@ -199,70 +309,52 @@
 
     ![image.png](https://upload-images.jianshu.io/upload_images/7998142-a3834da7f90d116d.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
 
-    
 4. 设备控制(下行)
 
     ```go
-    func main() {
-    	options := &index.Options{
-    		Token:  "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJhY3IiOiIxIiwiYXVkIjoiaWFtIiwiYXpwIjoiaWFtIiwiY3VpZCI6ImlhbXItdW9nbjh3N3IiLCJlaXNrIjoiSi1hSHdySDgwTHVXWEI1bGJMQ2E3cm1uTFVfZ1RlbWhJd0FJdVN6T29qZz0iLCJleHAiOjE2MTI5MTk3MjAsImlhdCI6MTU4MTM4MzcyMCwiaXNzIjoic3RzIiwianRpIjoiVWpJNFdQQW9wNWdQNldPdHJIUU5rUyIsIm5iZiI6MCwib3JnaSI6ImlvdGQtYjViODJiYzMtZWEwYS00NDRjLTliYjMtNDkzOWE0YTgzMmRiIiwib3d1ciI6InVzci1rZUF5dG16MSIsInByZWYiOiJxcm46cWluZ2Nsb3VkOmlhbToiLCJydHlwIjoicm9sZSIsInN1YiI6InN0cyIsInRoaWQiOiJpb3R0LXlWQXd4OXJiOGoiLCJ0eXAiOiJJRCJ9.Hq6zIwQCpBV897fsVl-WHxBtgtH8xe8umcp5QIQ3p1lSHrYUV_ofrbJ5oZKasUKwYqxlhhcxjX2f3U9OCCvOj8yGjIyK8vrf8vJBbNwW48fkCiVnFOpoKui8k9Fg13qNl0AUD8TmOWAukn3uQTI7gKW6fhwmWkdZD8cLOraEBvkGkrL19Nlw-JuU-MWXeNB2p1F5CahUAvDD78zUHkPJTZ-X3v9d73YyUlSV2CrJvAJGpae6sHCXk4iS8KyPQ1GNjPmjD9qBdbzr5cdIA3LjIkuppaWb0i8vymhvLaqcfD5EnEfu8aKNNLGBedEI3c8BlXOLSgp5_BldOJuP2GnGfQ",
-    		Server: "tcp://192.168.14.120:8055",
-            Identifer: "start",
-    	}
-    
-    	m, err := mqtt.NewMqtt(options)
-    	if err != nil {
-    		panic(err)
-    	}
-    
-    	// 连接
-    	err = m.Connect()
-    	if err != nil {
-    		panic(err)
-    	}
-    
-    	go m.SubDeviceControl()
-    
-    	time.Sleep(15 * time.Second)
-    
-    	m.UnSubDeviceControl()
-    
-    	time.Sleep(3 * time.Second)
-    }
-    ```
-
-    Identifer：设备控制标识符
-
-    运行上述代码，在 mqttbox 中 **publish** 打印出来的 topic，在 payload 中输入数据模型：
-
-    ```go
-    {
-        "id": "123",
-        "version": "1.0",
-        "params": {
-            "label":"on",
-            "image":"23.6"
+    func deviceControl() {
+        options := &index.Options{
+            Token:     "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJhY3IiOiIxIiwiYXVkIjoiaWFtIiwiYXpwIjoiaWFtIiwiY3VpZCI6ImlhbXItdm9maW4wYmUiLCJlaXNrIjoiblV4MTJkZDNQWVU1c2RjMlhzcU40Z0I4enNreHVwbTl5R0FjVXFMVDB5az0iLCJleHAiOjE2MTMwMDY3MTUsImlhdCI6MTU4MTQ3MDcxNSwiaXNzIjoic3RzIiwianRpIjoiVWpJNFdQQW9wNWdQNldPdHJIUU82ZCIsIm5iZiI6MCwib3JnaSI6ImlvdGQtNTlmNjg1Y2UtNzBmOS00NDg1LTk5ODUtMjcxZDVkZmI5NDc1Iiwib3d1ciI6InVzci1rZUF5dG16MSIsInByZWYiOiJxcm46cWluZ2Nsb3VkOmlhbToiLCJydHlwIjoicm9sZSIsInN1YiI6InN0cyIsInRoaWQiOiJpb3R0LXlWQXd4OXJiOGoiLCJ0eXAiOiJJRCJ9.M03UZOE_llNCR80LYdmforG5_Bc_QTJN9A2BPLfYX5OZAeawaRoqzOOBIqjORk_HKMLk210ex5DTcQflrUSTNhXiVMilau8a3loi-qY5-13aB45Ra_-qaQpGKcIzCtSsOofNhnOBsshLgvLG0W_ThlY-L5i6FAsTDp9fWKs_hS4VMn1cb8iexi3Oljcy7255J-wWRSaAMcm4KzZNc3kS_HR7NdfGlu9zmjE22rnmlZS60OEvjhqU-SKJBsalHAiFbAWTemHuk5jlB7P2sFiM4JAxIuznq23s0WrNM0oQTRi6xb0bMglGuBmyvPkoh1jMAGklHStprNoxwY_S2aKiUA",
+            Server:    "tcp://192.168.14.120:8055", // 127.0.0.1:1883
+            Identifer: "connect",
         }
-    }
-    ```
 
-    **subscribe** 上述topic + "\_reply"，会获取如下数据结构：
-
-    ```go
-    {
-        "id": "123",
-        "code": 200,
-        "data": {
-            "label":"on",
-            "image":"23.6"
+        m, err := mqtt.NewMqtt(options)
+        if err != nil {
+            panic(err)
         }
+
+        // 连接
+        err = m.Connect()
+        if err != nil {
+            panic(err)
+        }
+
+        go m.SubDeviceControl()
+
+        time.Sleep(15 * time.Second)
+
+        select {}
+
+        m.UnSubDeviceControl()
+
+        time.Sleep(3 * time.Second)
     }
     ```
 
+    Identifer：设备控制标识符;
+    通过接口下发数据，并可以得到响应结果：
+    Identifer：设备标识符
+    id：设备id
+    Params：根据 准备工作1 中的青云物模型的设备控制模型 和 准备工作2 中新建的控制的数据模可以得到
+
+    ![image.png](https://upload-images.jianshu.io/upload_images/7998142-079de02295e411a6.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+
+    ![image.png](https://upload-images.jianshu.io/upload_images/7998142-b1d225dc7c3786d1.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
 
 
-## 历史版本清单
-
+### 历史版本清单
+-------------
 | **版本号** | **发布日期** | **下载链接** | **更新内容**                                                 |
 | :--------- | :----------- | :----------- | :----------------------------------------------------------- |
 | 1.0        | 2020/02/07   |              | 读取设备凭证：手动拷贝到设备上，替换示例程序中的变量；<br />端设备连接、收发消息消息、重连<br />边设备连接、收发消息消息、重连<br /> |
