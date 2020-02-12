@@ -12,7 +12,7 @@ const (
 	TOKEN_DEVICE_ID = "orgi"
 	TOKEN_THING_ID  = "thid"
 	WORKER_ID       = 1
-	MQTT_VERSION    = "v1.0.0"
+	MQTT_VERSION    = "1.0"
 	WORKER_POOL     = 10
 )
 

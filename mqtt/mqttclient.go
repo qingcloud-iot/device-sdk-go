@@ -52,7 +52,7 @@ func NewMqtt(options *index.Options) (index.Client, error) {
 		fmt.Println("connect success")
 	})
 	opts.SetDefaultPublishHandler(func(client mqttp.Client, msg mqttp.Message) {
-		fmt.Printf("[sdk-go] topic:%s, message:%s\n", msg.Topic(), string(msg.Payload()))
+		fmt.Printf("[sdk-go sub] topic:%s, message:%s\n", msg.Topic(), string(msg.Payload()))
 		switch {
 		case msg.Topic() == fmt.Sprintf(device_control_topic, thingId, deviceId, options.Identifer):
 			m.recvDeviceControlReply(client, msg)
@@ -159,7 +159,7 @@ func (m *mqttClient) PubEvent(ctx context.Context, event string, meta index.Meta
 		return reply, nil
 	}
 	topic := buildEvent(m.deviceId, m.thingId, event)
-	fmt.Printf("[PubEvent] topic:%s, message:%s\n", topic, string(data))
+	fmt.Printf("[PubEvent pub] topic:%s, message:%s\n", topic, string(data))
 	if token := m.client.Publish(topic, byte(0), false, data); token.WaitTimeout(5*time.Second) && token.Error() != nil {
 		reply.Code = index.RPC_TIMEOUT
 		return reply, nil
