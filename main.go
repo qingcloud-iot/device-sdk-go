@@ -3,6 +3,9 @@ package main
 import (
 	"context"
 	"fmt"
+	"io/ioutil"
+	"net/http"
+	"strings"
 	"time"
 
 	"git.internal.yunify.com/iot-sdk/device-sdk-go/index"
@@ -132,4 +135,36 @@ func deviceControl() {
 	m.UnSubDeviceControl()
 
 	time.Sleep(3 * time.Second)
+}
+
+// SendMessageToSDK 用于 deviceControl 的测试
+func SendMessageToSDK() {
+	client := &http.Client{}
+
+	params := `
+		{
+			"params":{
+				"reply":"this is control test"
+			},
+			"thing_id":"iott-yVAwx9rb8j"
+		}
+	`
+
+	requst, err := http.NewRequest("POST", "http://iot-api.qingcloud.com:8889/api/v1/devices/iotd-59f685ce-70f9-4485-9985-271d5dfb9475/call/connect", strings.NewReader(params))
+	if err != nil {
+		fmt.Println("NewRequest err:", err.Error())
+		return
+	}
+	requst.Header.Set("Authorization", " QCUUCDRNSJECJRCMOMPPHP:signaturea")
+
+	resp, err := client.Do(requst)
+	if err != nil {
+		fmt.Println("Do err:", err.Error())
+		return
+	}
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return
+	}
+	fmt.Println(string(body))
 }

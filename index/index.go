@@ -48,7 +48,8 @@ type Message struct {
 	Params  Metadata `json:"params"`
 }
 type Client interface {
-	Connect() error
+	Connect() error // 设备连接
+	DisConnect()    // 设备断开连接
 	//device
 	PubProperty(ctx context.Context, meta Metadata) (*Reply, error) //post property sync
 	PubPropertyAsync(meta Metadata) (ReplyChan, error)              //post property async
