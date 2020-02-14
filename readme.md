@@ -61,3 +61,7 @@ func(name string, meta Metadata) (Metadata, error)
 ```
 
 mqttbix 的 username 和 clientid 与 sdk 的一致才行
+
+TODO:
+1. autoconnect sub，sdk 将 topic 保存起来
+2. 消息的统计
