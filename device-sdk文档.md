@@ -7,6 +7,7 @@
 这篇文档介绍了如何安装和配置 设备sdk，以及提供了相关例子来演示如何使用 设备sdk 上报设备数据以及控制设备；
 
 支持MQTT 协议版本：3.1.1
+golang version：1.13及以上
 
 
 
@@ -74,11 +75,22 @@
 
 ##### 准备工作
 
-1. 了解青云的物模型
+1. 环境配置
+    - /etc/hosts 添加：
+        192.168.14.179     console-staging.qingcloud.com iot-staging.qingcloud.com
+        192.168.14.121     iot-api.qingcloud.com
+    - 连接公司 vpn
+    - 地址及账户
+        http://iot-staging.qingcloud.com
+        rainsong@yunify.com
+        zhu88jie
+
+2. 了解青云的物模型
 
     http://103.61.37.229:20080/document/index?document_id=22
 
-2. 在青云iot平台创建模型
+3. 在青云iot平台创建模型
+    本例中使用物模型：EdgeWise
 
     ```go
     {
@@ -197,14 +209,26 @@
 
     青云平台创建模型，可以得到属性名称、属性类型、事件identifier、控制identifier等；
 
-3. 在青云iot平台注册设备，绑定模型
+4. 在青云iot平台注册设备，绑定模型
+    本例使用设备：sdk-test2
     在青云平台注册设备，以及将上面创建的物模型和设备进行绑定，获取设备凭证(token)；
 
 #####  代码演示
 
-1. /设备连接
+1. 设备连接
 
     ```go
+    package main
+
+    import (
+        "context"
+        "fmt"
+        "time"
+
+        "git.internal.yunify.com/iot-sdk/device-sdk-go/index"
+        "git.internal.yunify.com/iot-sdk/device-sdk-go/mqtt"
+    )
+
     // 设备连接，token 为设备凭证，Server 为青云 iot 平台 ihub
     func main() {
         options := &index.Options{
@@ -226,13 +250,26 @@
         select {}
     }
     ```
-    设备连接后可在青云 iot 平台查看设备的连接状态
+    运行上述代码前后，即可在青云 iot 平台查看设备连接状态，如：
+
+    ![image.png](https://upload-images.jianshu.io/upload_images/7998142-dd7c5790db12afe5.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
 
     ![image.png](https://upload-images.jianshu.io/upload_images/7998142-25f110a214a9b64e.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
 
 2. 属性上报
-
+    用于将设备相关数据上报，可在青云iot 平台实时查看设备运行动态；
     ```go
+    package main
+
+    import (
+        "context"
+        "fmt"
+        "time"
+
+        "git.internal.yunify.com/iot-sdk/device-sdk-go/index"
+        "git.internal.yunify.com/iot-sdk/device-sdk-go/mqtt"
+    )
+
     func main() {
         options := &index.Options{
             Token:  "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJhY3IiOiIxIiwiYXVkIjoiaWFtIiwiYXpwIjoiaWFtIiwiY3VpZCI6ImlhbXItdm9maW4wYmUiLCJlaXNrIjoiblV4MTJkZDNQWVU1c2RjMlhzcU40Z0I4enNreHVwbTl5R0FjVXFMVDB5az0iLCJleHAiOjE2MTMwMDY3MTUsImlhdCI6MTU4MTQ3MDcxNSwiaXNzIjoic3RzIiwianRpIjoiVWpJNFdQQW9wNWdQNldPdHJIUU82ZCIsIm5iZiI6MCwib3JnaSI6ImlvdGQtNTlmNjg1Y2UtNzBmOS00NDg1LTk5ODUtMjcxZDVkZmI5NDc1Iiwib3d1ciI6InVzci1rZUF5dG16MSIsInByZWYiOiJxcm46cWluZ2Nsb3VkOmlhbToiLCJydHlwIjoicm9sZSIsInN1YiI6InN0cyIsInRoaWQiOiJpb3R0LXlWQXd4OXJiOGoiLCJ0eXAiOiJJRCJ9.M03UZOE_llNCR80LYdmforG5_Bc_QTJN9A2BPLfYX5OZAeawaRoqzOOBIqjORk_HKMLk210ex5DTcQflrUSTNhXiVMilau8a3loi-qY5-13aB45Ra_-qaQpGKcIzCtSsOofNhnOBsshLgvLG0W_ThlY-L5i6FAsTDp9fWKs_hS4VMn1cb8iexi3Oljcy7255J-wWRSaAMcm4KzZNc3kS_HR7NdfGlu9zmjE22rnmlZS60OEvjhqU-SKJBsalHAiFbAWTemHuk5jlB7P2sFiM4JAxIuznq23s0WrNM0oQTRi6xb0bMglGuBmyvPkoh1jMAGklHStprNoxwY_S2aKiUA",
@@ -275,6 +312,17 @@
 3. 事件上报
 
     ```go
+    package main
+
+    import (
+        "context"
+        "fmt"
+        "time"
+
+        "git.internal.yunify.com/iot-sdk/device-sdk-go/index"
+        "git.internal.yunify.com/iot-sdk/device-sdk-go/mqtt"
+    )
+
     func main() {
         options := &index.Options{
             Token:  "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJhY3IiOiIxIiwiYXVkIjoiaWFtIiwiYXpwIjoiaWFtIiwiY3VpZCI6ImlhbXItdm9maW4wYmUiLCJlaXNrIjoiblV4MTJkZDNQWVU1c2RjMlhzcU40Z0I4enNreHVwbTl5R0FjVXFMVDB5az0iLCJleHAiOjE2MTMwMDY3MTUsImlhdCI6MTU4MTQ3MDcxNSwiaXNzIjoic3RzIiwianRpIjoiVWpJNFdQQW9wNWdQNldPdHJIUU82ZCIsIm5iZiI6MCwib3JnaSI6ImlvdGQtNTlmNjg1Y2UtNzBmOS00NDg1LTk5ODUtMjcxZDVkZmI5NDc1Iiwib3d1ciI6InVzci1rZUF5dG16MSIsInByZWYiOiJxcm46cWluZ2Nsb3VkOmlhbToiLCJydHlwIjoicm9sZSIsInN1YiI6InN0cyIsInRoaWQiOiJpb3R0LXlWQXd4OXJiOGoiLCJ0eXAiOiJJRCJ9.M03UZOE_llNCR80LYdmforG5_Bc_QTJN9A2BPLfYX5OZAeawaRoqzOOBIqjORk_HKMLk210ex5DTcQflrUSTNhXiVMilau8a3loi-qY5-13aB45Ra_-qaQpGKcIzCtSsOofNhnOBsshLgvLG0W_ThlY-L5i6FAsTDp9fWKs_hS4VMn1cb8iexi3Oljcy7255J-wWRSaAMcm4KzZNc3kS_HR7NdfGlu9zmjE22rnmlZS60OEvjhqU-SKJBsalHAiFbAWTemHuk5jlB7P2sFiM4JAxIuznq23s0WrNM0oQTRi6xb0bMglGuBmyvPkoh1jMAGklHStprNoxwY_S2aKiUA",
@@ -312,6 +360,17 @@
 4. 设备控制(下行)
 
     ```go
+    package main
+
+    import (
+        "context"
+        "fmt"
+        "time"
+
+        "git.internal.yunify.com/iot-sdk/device-sdk-go/index"
+        "git.internal.yunify.com/iot-sdk/device-sdk-go/mqtt"
+    )
+
     func deviceControl() {
         options := &index.Options{
             Token:     "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJhY3IiOiIxIiwiYXVkIjoiaWFtIiwiYXpwIjoiaWFtIiwiY3VpZCI6ImlhbXItdm9maW4wYmUiLCJlaXNrIjoiblV4MTJkZDNQWVU1c2RjMlhzcU40Z0I4enNreHVwbTl5R0FjVXFMVDB5az0iLCJleHAiOjE2MTMwMDY3MTUsImlhdCI6MTU4MTQ3MDcxNSwiaXNzIjoic3RzIiwianRpIjoiVWpJNFdQQW9wNWdQNldPdHJIUU82ZCIsIm5iZiI6MCwib3JnaSI6ImlvdGQtNTlmNjg1Y2UtNzBmOS00NDg1LTk5ODUtMjcxZDVkZmI5NDc1Iiwib3d1ciI6InVzci1rZUF5dG16MSIsInByZWYiOiJxcm46cWluZ2Nsb3VkOmlhbToiLCJydHlwIjoicm9sZSIsInN1YiI6InN0cyIsInRoaWQiOiJpb3R0LXlWQXd4OXJiOGoiLCJ0eXAiOiJJRCJ9.M03UZOE_llNCR80LYdmforG5_Bc_QTJN9A2BPLfYX5OZAeawaRoqzOOBIqjORk_HKMLk210ex5DTcQflrUSTNhXiVMilau8a3loi-qY5-13aB45Ra_-qaQpGKcIzCtSsOofNhnOBsshLgvLG0W_ThlY-L5i6FAsTDp9fWKs_hS4VMn1cb8iexi3Oljcy7255J-wWRSaAMcm4KzZNc3kS_HR7NdfGlu9zmjE22rnmlZS60OEvjhqU-SKJBsalHAiFbAWTemHuk5jlB7P2sFiM4JAxIuznq23s0WrNM0oQTRi6xb0bMglGuBmyvPkoh1jMAGklHStprNoxwY_S2aKiUA",
@@ -351,6 +410,14 @@
     ![image.png](https://upload-images.jianshu.io/upload_images/7998142-079de02295e411a6.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
 
     ![image.png](https://upload-images.jianshu.io/upload_images/7998142-b1d225dc7c3786d1.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+
+    或使用命令行命令 curl：
+    ```go
+    curl -X POST "http://iot-api.qingcloud.com:8889/api/v1/devices/iotd-59f685ce-70f9-4485-9985-271d5dfb9475/call/connect" -H "accept: application/json" -H "Authorization: QCUUCDRNSJECJRCMOMPPHP:signaturea" -H "Content-Type: application/json" -d "{ \"params\": { \"reply\":\"this is control test\" }, \"thing_id\": \"iott-yVAwx9rb8j\"}"
+
+    reply: {"code":"0","data":{"reply":"this is control test"}}
+    ```
+    便可在程序端收到下行消息
 
 
 ### 历史版本清单
