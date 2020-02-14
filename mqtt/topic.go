@@ -27,6 +27,7 @@ const (
 const (
 	MQTT_HUB     = "tcp://127.0.0.1:1883"
 	RPC_TIME_OUT = 5 * time.Second
+	QUIESCE      = 30000 // milliseconds
 )
 
 func buildPropertyMessage(meta index.Metadata) *index.ThingPropertyMsg {

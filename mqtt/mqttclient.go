@@ -84,7 +84,7 @@ func (m *mqttClient) Connect() error {
 
 // DisConnect 断开连接 ihub 或 ehub
 func (m *mqttClient) DisConnect() {
-	m.client.Disconnect(5)
+	m.client.Disconnect(QUIESCE)
 }
 
 // PubProperty 将消息 id 放入 cache 并设置过期时间，值为 chan reply，ctx 到期后返回
