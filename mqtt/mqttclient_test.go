@@ -7,109 +7,48 @@ import (
 	"testing"
 	"time"
 
-	"git.internal.yunify.com/tools/device-sdk-go/index"
+	"git.internal.yunify.com/iot-sdk/device-sdk-go/index"
 	cache "github.com/muesli/cache2go"
 	"github.com/stretchr/testify/assert"
 )
 
-/**
-* @Author: hexing
-* @Date: 19-9-9 下午12:19
- */
 func TestNewMqtt(t *testing.T) {
 	options := &index.Options{
-		Token: "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJhY3IiOiIxIiwiYXVkIjoiaWFtIiwiYXpwIjoiaWFtIiwiY3VpZCI6ImlhbXItaDJjMjl2OXIiLCJlaXNrIjoiVjRSd3NoNjRpcXJhSTVJTHlnZ2xHZFhnV3E1S1JGWWxFYnRwakkxZk9Raz0iLCJleHAiOjE2MDQ1NDc0ODYsImlhdCI6MTU3MzAxMTQ4NiwiaXNzIjoic3RzIiwianRpIjoiVWpJNFdQQW9wNWdQNldPdHJIUTRlQiIsIm5iZiI6MCwib3JnaSI6ImlvdGQtMjk5MDY2MDktNzNiYS00NzBkLWE2ZmQtMGUxYzE3MTkwZmQwIiwib3d1ciI6InVzci1rTFZWQkRxZCIsInByZWYiOiJxcm46cWluZ2Nsb3VkOmlhbToiLCJydHlwIjoicm9sZSIsInN1YiI6InN0cyIsInRoaWQiOiJpb3R0LWZUeXRjS1BWTlEiLCJ0eXAiOiJJRCJ9.C1oCwaviLAsmb42mDXX4mXw2h0ccXYV8Kd5mAGkCpxpOFM7Rd7lOL2kGMJpvv_I5caOTlSNiFwMe2L2eXiA_dsZPBEW08dmzghLZXpVABFG7KJOrxT5t6WBYzVCOezt4CynSXheIs0NjSMZ5VBTdiEjj8GIi5iAIWUaYrEeFOlj3IZPp7ddr82rkog9OIDnHDvyXDK2MruKAb7xZ2QZFa0Wg1GKixFUhfT0iU37pQZbsGAduj-kB9z4o_ZwtP8gFko6AkW8WuBzzXhs35cQty2vXJ3ohxKnXtoiwChNfIQmNr8Cc7VJmQTmrQPrgmK3uMnxi02SQXsF2vd0HmpA_7A",
+		Token: "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJhY3IiOiIxIiwiYXVkIjoiaWFtIiwiYXpwIjoiaWFtIiwiY3VpZCI6ImlhbXItdW9nbjh3N3IiLCJlaXNrIjoiSi1hSHdySDgwTHVXWEI1bGJMQ2E3cm1uTFVfZ1RlbWhJd0FJdVN6T29qZz0iLCJleHAiOjE2MTI5MTk3MjAsImlhdCI6MTU4MTM4MzcyMCwiaXNzIjoic3RzIiwianRpIjoiVWpJNFdQQW9wNWdQNldPdHJIUU5rUyIsIm5iZiI6MCwib3JnaSI6ImlvdGQtYjViODJiYzMtZWEwYS00NDRjLTliYjMtNDkzOWE0YTgzMmRiIiwib3d1ciI6InVzci1rZUF5dG16MSIsInByZWYiOiJxcm46cWluZ2Nsb3VkOmlhbToiLCJydHlwIjoicm9sZSIsInN1YiI6InN0cyIsInRoaWQiOiJpb3R0LXlWQXd4OXJiOGoiLCJ0eXAiOiJJRCJ9.Hq6zIwQCpBV897fsVl-WHxBtgtH8xe8umcp5QIQ3p1lSHrYUV_ofrbJ5oZKasUKwYqxlhhcxjX2f3U9OCCvOj8yGjIyK8vrf8vJBbNwW48fkCiVnFOpoKui8k9Fg13qNl0AUD8TmOWAukn3uQTI7gKW6fhwmWkdZD8cLOraEBvkGkrL19Nlw-JuU-MWXeNB2p1F5CahUAvDD78zUHkPJTZ-X3v9d73YyUlSV2CrJvAJGpae6sHCXk4iS8KyPQ1GNjPmjD9qBdbzr5cdIA3LjIkuppaWb0i8vymhvLaqcfD5EnEfu8aKNNLGBedEI3c8BlXOLSgp5_BldOJuP2GnGfQ",
 		//DeviceId: "iotd-78c675f2-3495-4734-af5b-bb31f83f764c",
-		Server: "tcp://127.0.0.1:1883", // 192.168.14.120:8055
-		SetProperty: func(meta index.Metadata) (index.Metadata, error) {
-			fmt.Println("SetProperty", meta)
-			data := make(index.Metadata)
-			return data, nil
-		},
-		ServiceHandle: func(name string, meta index.Metadata) (index.Metadata, error) {
-			fmt.Println("ServiceHandle", name, meta)
-			data := make(index.Metadata)
-			data["test"] = "xxxx"
-			return data, nil
-		},
+		Server: "tcp://192.168.14.120:8055", // 192.168.14.120:8055
 	}
 	m, err := NewMqtt(options)
 	assert.Nil(t, err)
-	assert.Nil(t, m)
-	time.Sleep(5 * time.Second)
-	// data := index.Metadata{
-	// 	"target":  "car",
-	// 	"color":   "red",
-	// 	"license": "120",
-	// 	"address": "http://iot.qingcloud.com/test.jpg",
-	// }
-	// data := index.Metadata{
-	// 	"target": "left",
-	// 	"cause":  "fail",
-	// }
-	// for {
-	// 	reply, err := m.PubEventSync(context.Background(), "FailureReport", data)
-	// 	assert.Nil(t, err)
-	// 	fmt.Println(reply)
-	// 	time.Sleep(1 * time.Second)
-	// }
-	go func() {
-		var i int64 = 1539362482000
-		for {
-			data := index.Metadata{
-				"CO2Concentration": RandInt64(1, 100),
-				"humidity":         RandInt64(1, 100),
-			}
-			//tm := (time.Now().Unix() - int64(i*60*60)) * 1000
-			ch, err := m.PubPropertyAsync(data)
-			//ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
-			//reply, err := m.PubPropertySync(ctx, data)
-			//cancel()
-			assert.Nil(t, err)
-			select {
-			case value := <-ch:
-				fmt.Println(value)
-			}
-			//data = index.Metadata{
-			//	"int32":  10,
-			//	"string": "hexing-string",
-			//	"float":  rand.Float32(),
-			//	"double": rand.Float64(),
-			//}
-			//reply, err = m.PubEventSync(context.Background(), "he-event1", data)
-			//assert.Nil(t, err)
-			//fmt.Println(reply)
-			i = i + 60000
-			if i > 1570898482000 {
-				i = 1539362482000
-			}
-			time.Sleep(10000 * time.Millisecond)
-		}
-		//os.Exit(0)
-	}()
-	select {}
-	//name := "test"
-	//reply = m.PubEvent(ctx, name, data)
-	//t.Log(reply)
-}
-func TestNewHubMqtt(t *testing.T) {
-	options := &index.Options{
-		SetProperty: func(meta index.Metadata) (index.Metadata, error) {
-			fmt.Println("SetProperty", meta)
-			data := make(index.Metadata)
-			return data, nil
-		},
-		ServiceHandle: func(name string, meta index.Metadata) (index.Metadata, error) {
-			fmt.Println("ServiceHandle", name, meta)
-			data := make(index.Metadata)
-			return data, nil
-		},
-	}
-	m, err := NewHubMqtt(options)
+	err = m.Connect()
 	assert.Nil(t, err)
-	assert.Nil(t, m)
 	time.Sleep(5 * time.Second)
+
+	// go func() {
+	// 	var i int64 = 1539362482000
+	// 	for {
+	// 		data := index.Metadata{
+	// 			"CO2Concentration": RandInt64(1, 100),
+	// 			"humidity":         RandInt64(1, 100),
+	// 		}
+	// 		ch, err := m.PubPropertyAsync(data)
+	// 		assert.Nil(t, err)
+
+	// 		select {
+	// 		case value := <-ch:
+	// 			fmt.Println(value)
+	// 		}
+
+	// 		i = i + 60000
+	// 		if i > 1570898482000 {
+	// 			i = 1539362482000
+	// 		}
+	// 		time.Sleep(10000 * time.Millisecond)
+	// 	}
+	// }()
+	select {}
 }
+
 func TestTask(t *testing.T) {
 	cache := cache.Cache("xxxx")
 	cache.Add("a", 3*time.Second, "xxx")
@@ -119,7 +58,7 @@ func TestTask(t *testing.T) {
 // ----------------------------------------------------------------
 
 /*
-	发送消息的几种方式: async sync event
+	发送消息的几种方式: async sync，一般用 sync
 	async: 异步，借助 cache 的handler，t 为当前时间
 	sync: 同步，t 为入参
 	event: 整个 meta 塞进结构体
@@ -130,17 +69,6 @@ func TestPubPropertyAsync(t *testing.T) {
 		Token: "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJhY3IiOiIxIiwiYXVkIjoiaWFtIiwiYXpwIjoiaWFtIiwiY3VpZCI6ImlhbXItaDJjMjl2OXIiLCJlaXNrIjoiVjRSd3NoNjRpcXJhSTVJTHlnZ2xHZFhnV3E1S1JGWWxFYnRwakkxZk9Raz0iLCJleHAiOjE2MDQ1NDc0ODYsImlhdCI6MTU3MzAxMTQ4NiwiaXNzIjoic3RzIiwianRpIjoiVWpJNFdQQW9wNWdQNldPdHJIUTRlQiIsIm5iZiI6MCwib3JnaSI6ImlvdGQtMjk5MDY2MDktNzNiYS00NzBkLWE2ZmQtMGUxYzE3MTkwZmQwIiwib3d1ciI6InVzci1rTFZWQkRxZCIsInByZWYiOiJxcm46cWluZ2Nsb3VkOmlhbToiLCJydHlwIjoicm9sZSIsInN1YiI6InN0cyIsInRoaWQiOiJpb3R0LWZUeXRjS1BWTlEiLCJ0eXAiOiJJRCJ9.C1oCwaviLAsmb42mDXX4mXw2h0ccXYV8Kd5mAGkCpxpOFM7Rd7lOL2kGMJpvv_I5caOTlSNiFwMe2L2eXiA_dsZPBEW08dmzghLZXpVABFG7KJOrxT5t6WBYzVCOezt4CynSXheIs0NjSMZ5VBTdiEjj8GIi5iAIWUaYrEeFOlj3IZPp7ddr82rkog9OIDnHDvyXDK2MruKAb7xZ2QZFa0Wg1GKixFUhfT0iU37pQZbsGAduj-kB9z4o_ZwtP8gFko6AkW8WuBzzXhs35cQty2vXJ3ohxKnXtoiwChNfIQmNr8Cc7VJmQTmrQPrgmK3uMnxi02SQXsF2vd0HmpA_7A",
 		//DeviceId: "iotd-78c675f2-3495-4734-af5b-bb31f83f764c",
 		Server: "tcp://127.0.0.1:1883", // tcp://192.168.14.120:1883 tcp://192.168.14.120:8055
-		SetProperty: func(meta index.Metadata) (index.Metadata, error) {
-			fmt.Println("SetProperty", meta)
-			data := make(index.Metadata)
-			return data, nil
-		},
-		ServiceHandle: func(name string, meta index.Metadata) (index.Metadata, error) {
-			fmt.Println("ServiceHandle", name, meta)
-			data := make(index.Metadata)
-			data["test"] = "xxxx"
-			return data, nil
-		},
 	}
 	m, err := NewMqtt(options)
 	assert.Nil(t, err)
@@ -154,7 +82,6 @@ func TestPubPropertyAsync(t *testing.T) {
 				"CO2Concentration": RandInt64(1, 100),
 				"humidity":         RandInt64(1, 100),
 			}
-			//tm := (time.Now().Unix() - int64(i*60*60)) * 1000
 
 			/*
 				data =>	message{
@@ -168,57 +95,30 @@ func TestPubPropertyAsync(t *testing.T) {
 			*/
 
 			ch, err := m.PubPropertyAsync(data)
-			// ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
-			// reply, err := m.PubPropertySync(ctx, data)
-			// cancel()
 			assert.Nil(t, err)
 			select {
 			case value := <-ch:
 				fmt.Println("expired value:", value)
 			}
-			// data = index.Metadata{
-			// 	"int32":  10,
-			// 	"string": "hexing-string",
-			// 	"float":  rand.Float32(),
-			// 	"double": rand.Float64(),
-			// }
-			// reply, err = m.PubEventSync(context.Background(), "he-event1", data)
-			// assert.Nil(t, err)
-			// fmt.Println(reply)
+
 			i = i + 60000
 			if i > 1570898482000 {
 				i = 1539362482000
 			}
 			time.Sleep(10000 * time.Millisecond)
 		}
-		//os.Exit(0)
 	}()
 
 	select {}
-	//name := "test"
-	//reply = m.PubEvent(ctx, name, data)
-	//t.Log(reply)
 }
 
 func TestPubPropertySync(t *testing.T) {
 	options := &index.Options{
-		Token: "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJhY3IiOiIxIiwiYXVkIjoiaWFtIiwiYXpwIjoiaWFtIiwiY3VpZCI6ImlhbXItbDZjdGJoZjAiLCJlaXNrIjoiR2VuazUxbm5BLXZyOUJaSnJQQ1gwNnNPSnBabElFZmw4eGlkVEFNbWRjQT0iLCJleHAiOjE2MDU5Njg2MTQsImlhdCI6MTU3NDQzMjYxNCwiaXNzIjoic3RzIiwianRpIjoiVWpJNFdQQW9wNWdQNldPdHJIUTc5USIsIm5iZiI6MCwib3JnaSI6ImlvdGQtZDhjYmEzOTItYWU0NC00MGRmLTk2YzgtNmQ3MWMzMmI4NjZlIiwib3d1ciI6InVzci16eUt5UFNmRyIsInByZWYiOiJxcm46cWluZ2Nsb3VkOmlhbToiLCJydHlwIjoicm9sZSIsInN1YiI6InN0cyIsInRoaWQiOiJpb3R0LVdDcnQ5bk1hUFMiLCJ0eXAiOiJJRCJ9.V0hqewKk6cwwlWzUpBY1HFpMcEvElurmKHh_HtAD816oVsEvl58kK4zpfs1jslASfBLw11OHBE-BD1Zp9FfGicRgTulQ2OUI4t9UiDbmnxGGKODknuP-0lEAb30n6JqLWWZh-rlZlN0tQVixelMC45ftf4LR0OmRH1T250RWO1MNNqqNgral9juTZ8mI9qcvX0yN3Ro7hM_JndeFWc4j9uj_QLus-Sv0mhleMh4i_5uoji7p8XReykwC82Lm2o61EGZZ3T7RCW9GCrSFngIsXnFUxk9mGqUiyW4aqKNkvpcCg-lm3t4fuszc6YW9_YzU53uic14ERRswREf3Wj3vJg",
-		//DeviceId: "iotd-78c675f2-3495-4734-af5b-bb31f83f764c",
+		Token:  "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJhY3IiOiIxIiwiYXVkIjoiaWFtIiwiYXpwIjoiaWFtIiwiY3VpZCI6ImlhbXItbDZjdGJoZjAiLCJlaXNrIjoiR2VuazUxbm5BLXZyOUJaSnJQQ1gwNnNPSnBabElFZmw4eGlkVEFNbWRjQT0iLCJleHAiOjE2MDU5Njg2MTQsImlhdCI6MTU3NDQzMjYxNCwiaXNzIjoic3RzIiwianRpIjoiVWpJNFdQQW9wNWdQNldPdHJIUTc5USIsIm5iZiI6MCwib3JnaSI6ImlvdGQtZDhjYmEzOTItYWU0NC00MGRmLTk2YzgtNmQ3MWMzMmI4NjZlIiwib3d1ciI6InVzci16eUt5UFNmRyIsInByZWYiOiJxcm46cWluZ2Nsb3VkOmlhbToiLCJydHlwIjoicm9sZSIsInN1YiI6InN0cyIsInRoaWQiOiJpb3R0LVdDcnQ5bk1hUFMiLCJ0eXAiOiJJRCJ9.V0hqewKk6cwwlWzUpBY1HFpMcEvElurmKHh_HtAD816oVsEvl58kK4zpfs1jslASfBLw11OHBE-BD1Zp9FfGicRgTulQ2OUI4t9UiDbmnxGGKODknuP-0lEAb30n6JqLWWZh-rlZlN0tQVixelMC45ftf4LR0OmRH1T250RWO1MNNqqNgral9juTZ8mI9qcvX0yN3Ro7hM_JndeFWc4j9uj_QLus-Sv0mhleMh4i_5uoji7p8XReykwC82Lm2o61EGZZ3T7RCW9GCrSFngIsXnFUxk9mGqUiyW4aqKNkvpcCg-lm3t4fuszc6YW9_YzU53uic14ERRswREf3Wj3vJg",
 		Server: "tcp://127.0.0.1:1883", //192.168.14.120:1883
-		SetProperty: func(meta index.Metadata) (index.Metadata, error) {
-			fmt.Println("SetProperty", meta)
-			data := make(index.Metadata)
-			return data, nil
-		},
-		ServiceHandle: func(name string, meta index.Metadata) (index.Metadata, error) {
-			fmt.Println("ServiceHandle", name, meta)
-			data := make(index.Metadata)
-			return data, nil
-		},
 	}
 
 	m, err := NewMqtt(options)
-
 	assert.Nil(t, err)
 	assert.Nil(t, m)
 	time.Sleep(5 * time.Second)
@@ -232,7 +132,7 @@ func TestPubPropertySync(t *testing.T) {
 			}
 
 			ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
-			reply, err := m.PubPropertySync(ctx, data)
+			reply, err := m.PubProperty(ctx, data)
 			cancel()
 			assert.Nil(t, err)
 
@@ -250,19 +150,8 @@ func TestPubPropertySync(t *testing.T) {
 
 func TestPubEventSync(t *testing.T) {
 	options := &index.Options{
-		Token: "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJhY3IiOiIxIiwiYXVkIjoiaWFtIiwiYXpwIjoiaWFtIiwiY3VpZCI6ImlhbXItbDZjdGJoZjAiLCJlaXNrIjoiR2VuazUxbm5BLXZyOUJaSnJQQ1gwNnNPSnBabElFZmw4eGlkVEFNbWRjQT0iLCJleHAiOjE2MDU5Njg2MTQsImlhdCI6MTU3NDQzMjYxNCwiaXNzIjoic3RzIiwianRpIjoiVWpJNFdQQW9wNWdQNldPdHJIUTc5USIsIm5iZiI6MCwib3JnaSI6ImlvdGQtZDhjYmEzOTItYWU0NC00MGRmLTk2YzgtNmQ3MWMzMmI4NjZlIiwib3d1ciI6InVzci16eUt5UFNmRyIsInByZWYiOiJxcm46cWluZ2Nsb3VkOmlhbToiLCJydHlwIjoicm9sZSIsInN1YiI6InN0cyIsInRoaWQiOiJpb3R0LVdDcnQ5bk1hUFMiLCJ0eXAiOiJJRCJ9.V0hqewKk6cwwlWzUpBY1HFpMcEvElurmKHh_HtAD816oVsEvl58kK4zpfs1jslASfBLw11OHBE-BD1Zp9FfGicRgTulQ2OUI4t9UiDbmnxGGKODknuP-0lEAb30n6JqLWWZh-rlZlN0tQVixelMC45ftf4LR0OmRH1T250RWO1MNNqqNgral9juTZ8mI9qcvX0yN3Ro7hM_JndeFWc4j9uj_QLus-Sv0mhleMh4i_5uoji7p8XReykwC82Lm2o61EGZZ3T7RCW9GCrSFngIsXnFUxk9mGqUiyW4aqKNkvpcCg-lm3t4fuszc6YW9_YzU53uic14ERRswREf3Wj3vJg",
-		//DeviceId: "iotd-78c675f2-3495-4734-af5b-bb31f83f764c",
+		Token:  "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJhY3IiOiIxIiwiYXVkIjoiaWFtIiwiYXpwIjoiaWFtIiwiY3VpZCI6ImlhbXItbDZjdGJoZjAiLCJlaXNrIjoiR2VuazUxbm5BLXZyOUJaSnJQQ1gwNnNPSnBabElFZmw4eGlkVEFNbWRjQT0iLCJleHAiOjE2MDU5Njg2MTQsImlhdCI6MTU3NDQzMjYxNCwiaXNzIjoic3RzIiwianRpIjoiVWpJNFdQQW9wNWdQNldPdHJIUTc5USIsIm5iZiI6MCwib3JnaSI6ImlvdGQtZDhjYmEzOTItYWU0NC00MGRmLTk2YzgtNmQ3MWMzMmI4NjZlIiwib3d1ciI6InVzci16eUt5UFNmRyIsInByZWYiOiJxcm46cWluZ2Nsb3VkOmlhbToiLCJydHlwIjoicm9sZSIsInN1YiI6InN0cyIsInRoaWQiOiJpb3R0LVdDcnQ5bk1hUFMiLCJ0eXAiOiJJRCJ9.V0hqewKk6cwwlWzUpBY1HFpMcEvElurmKHh_HtAD816oVsEvl58kK4zpfs1jslASfBLw11OHBE-BD1Zp9FfGicRgTulQ2OUI4t9UiDbmnxGGKODknuP-0lEAb30n6JqLWWZh-rlZlN0tQVixelMC45ftf4LR0OmRH1T250RWO1MNNqqNgral9juTZ8mI9qcvX0yN3Ro7hM_JndeFWc4j9uj_QLus-Sv0mhleMh4i_5uoji7p8XReykwC82Lm2o61EGZZ3T7RCW9GCrSFngIsXnFUxk9mGqUiyW4aqKNkvpcCg-lm3t4fuszc6YW9_YzU53uic14ERRswREf3Wj3vJg",
 		Server: "tcp://127.0.0.1:1883", // 192.168.14.120:1883
-		SetProperty: func(meta index.Metadata) (index.Metadata, error) {
-			fmt.Println("SetProperty", meta)
-			data := make(index.Metadata)
-			return data, nil
-		},
-		ServiceHandle: func(name string, meta index.Metadata) (index.Metadata, error) {
-			fmt.Println("ServiceHandle", name, meta)
-			data := make(index.Metadata)
-			return data, nil
-		},
 	}
 	m, err := NewMqtt(options)
 	assert.Nil(t, err)
@@ -272,14 +161,13 @@ func TestPubEventSync(t *testing.T) {
 	go func() {
 		var i int64 = 1539362482000
 		for {
-
 			data := index.Metadata{
 				"int32":  10,
 				"string": "hexing-string",
 				"float":  rand.Float32(),
 				"double": rand.Float64(),
 			}
-			reply, err := m.PubEventSync(context.Background(), "he-event1", data)
+			reply, err := m.PubEvent(context.Background(), "he-event1", data)
 			assert.Nil(t, err)
 			fmt.Println(reply)
 			i = i + 60000
@@ -296,17 +184,6 @@ func TestPubEventAsync(t *testing.T) {
 	options := &index.Options{
 		Token:  "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJhY3IiOiIxIiwiYXVkIjoiaWFtIiwiYXpwIjoiaWFtIiwiY3VpZCI6ImlhbXItaDJjMjl2OXIiLCJlaXNrIjoiVjRSd3NoNjRpcXJhSTVJTHlnZ2xHZFhnV3E1S1JGWWxFYnRwakkxZk9Raz0iLCJleHAiOjE2MDQ1NDc0ODYsImlhdCI6MTU3MzAxMTQ4NiwiaXNzIjoic3RzIiwianRpIjoiVWpJNFdQQW9wNWdQNldPdHJIUTRlQiIsIm5iZiI6MCwib3JnaSI6ImlvdGQtMjk5MDY2MDktNzNiYS00NzBkLWE2ZmQtMGUxYzE3MTkwZmQwIiwib3d1ciI6InVzci1rTFZWQkRxZCIsInByZWYiOiJxcm46cWluZ2Nsb3VkOmlhbToiLCJydHlwIjoicm9sZSIsInN1YiI6InN0cyIsInRoaWQiOiJpb3R0LWZUeXRjS1BWTlEiLCJ0eXAiOiJJRCJ9.C1oCwaviLAsmb42mDXX4mXw2h0ccXYV8Kd5mAGkCpxpOFM7Rd7lOL2kGMJpvv_I5caOTlSNiFwMe2L2eXiA_dsZPBEW08dmzghLZXpVABFG7KJOrxT5t6WBYzVCOezt4CynSXheIs0NjSMZ5VBTdiEjj8GIi5iAIWUaYrEeFOlj3IZPp7ddr82rkog9OIDnHDvyXDK2MruKAb7xZ2QZFa0Wg1GKixFUhfT0iU37pQZbsGAduj-kB9z4o_ZwtP8gFko6AkW8WuBzzXhs35cQty2vXJ3ohxKnXtoiwChNfIQmNr8Cc7VJmQTmrQPrgmK3uMnxi02SQXsF2vd0HmpA_7A",
 		Server: "tcp://127.0.0.1:1883", // tcp://192.168.14.120:1883 tcp://192.168.14.120:8055
-		SetProperty: func(meta index.Metadata) (index.Metadata, error) {
-			fmt.Println("SetProperty", meta)
-			data := make(index.Metadata)
-			return data, nil
-		},
-		ServiceHandle: func(name string, meta index.Metadata) (index.Metadata, error) {
-			fmt.Println("ServiceHandle", name, meta)
-			data := make(index.Metadata)
-			data["test"] = "xxxx"
-			return data, nil
-		},
 	}
 	m, err := NewMqtt(options)
 	assert.Nil(t, err)
@@ -340,32 +217,44 @@ func TestPubEventAsync(t *testing.T) {
 }
 
 // sub
-func TestSubDeviceControlAsync(t *testing.T) {
+/*
+	运行 ehub
+	运行 mqttbox
+	在 mqttbox 中向 topic 发布消息，订阅 topic_reply 消息
+	{
+    "id": "123",
+    "version": "1.0",
+    "params": {
+        "label":"on",
+        "image":"23.6"
+    	}
+	}
+
+	获得：
+	{
+    "code":200,
+    "id":"123",
+    "data":{
+        "image":"23.6",
+        "label":"on"
+    	}
+	}
+*/
+func TestSubDeviceControlSync(t *testing.T) {
 	options := &index.Options{
-		Token:  "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJhY3IiOiIxIiwiYXVkIjoiaWFtIiwiYXpwIjoiaWFtIiwiY3VpZCI6ImlhbXItaDJjMjl2OXIiLCJlaXNrIjoiVjRSd3NoNjRpcXJhSTVJTHlnZ2xHZFhnV3E1S1JGWWxFYnRwakkxZk9Raz0iLCJleHAiOjE2MDQ1NDc0ODYsImlhdCI6MTU3MzAxMTQ4NiwiaXNzIjoic3RzIiwianRpIjoiVWpJNFdQQW9wNWdQNldPdHJIUTRlQiIsIm5iZiI6MCwib3JnaSI6ImlvdGQtMjk5MDY2MDktNzNiYS00NzBkLWE2ZmQtMGUxYzE3MTkwZmQwIiwib3d1ciI6InVzci1rTFZWQkRxZCIsInByZWYiOiJxcm46cWluZ2Nsb3VkOmlhbToiLCJydHlwIjoicm9sZSIsInN1YiI6InN0cyIsInRoaWQiOiJpb3R0LWZUeXRjS1BWTlEiLCJ0eXAiOiJJRCJ9.C1oCwaviLAsmb42mDXX4mXw2h0ccXYV8Kd5mAGkCpxpOFM7Rd7lOL2kGMJpvv_I5caOTlSNiFwMe2L2eXiA_dsZPBEW08dmzghLZXpVABFG7KJOrxT5t6WBYzVCOezt4CynSXheIs0NjSMZ5VBTdiEjj8GIi5iAIWUaYrEeFOlj3IZPp7ddr82rkog9OIDnHDvyXDK2MruKAb7xZ2QZFa0Wg1GKixFUhfT0iU37pQZbsGAduj-kB9z4o_ZwtP8gFko6AkW8WuBzzXhs35cQty2vXJ3ohxKnXtoiwChNfIQmNr8Cc7VJmQTmrQPrgmK3uMnxi02SQXsF2vd0HmpA_7A",
-		Server: "tcp://127.0.0.1:1883", // tcp://192.168.14.120:1883 tcp://192.168.14.120:8055
-		SetProperty: func(meta index.Metadata) (index.Metadata, error) {
-			fmt.Println("SetProperty", meta)
-			data := make(index.Metadata)
-			return data, nil
-		},
-		ServiceHandle: func(name string, meta index.Metadata) (index.Metadata, error) {
-			fmt.Println("ServiceHandle", name, meta)
-			data := make(index.Metadata)
-			data["test"] = "xxxx"
-			return data, nil
-		},
+		Token:     "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJhY3IiOiIxIiwiYXVkIjoiaWFtIiwiYXpwIjoiaWFtIiwiY3VpZCI6ImlhbXItaDJjMjl2OXIiLCJlaXNrIjoiVjRSd3NoNjRpcXJhSTVJTHlnZ2xHZFhnV3E1S1JGWWxFYnRwakkxZk9Raz0iLCJleHAiOjE2MDQ1NDc0ODYsImlhdCI6MTU3MzAxMTQ4NiwiaXNzIjoic3RzIiwianRpIjoiVWpJNFdQQW9wNWdQNldPdHJIUTRlQiIsIm5iZiI6MCwib3JnaSI6ImlvdGQtMjk5MDY2MDktNzNiYS00NzBkLWE2ZmQtMGUxYzE3MTkwZmQwIiwib3d1ciI6InVzci1rTFZWQkRxZCIsInByZWYiOiJxcm46cWluZ2Nsb3VkOmlhbToiLCJydHlwIjoicm9sZSIsInN1YiI6InN0cyIsInRoaWQiOiJpb3R0LWZUeXRjS1BWTlEiLCJ0eXAiOiJJRCJ9.C1oCwaviLAsmb42mDXX4mXw2h0ccXYV8Kd5mAGkCpxpOFM7Rd7lOL2kGMJpvv_I5caOTlSNiFwMe2L2eXiA_dsZPBEW08dmzghLZXpVABFG7KJOrxT5t6WBYzVCOezt4CynSXheIs0NjSMZ5VBTdiEjj8GIi5iAIWUaYrEeFOlj3IZPp7ddr82rkog9OIDnHDvyXDK2MruKAb7xZ2QZFa0Wg1GKixFUhfT0iU37pQZbsGAduj-kB9z4o_ZwtP8gFko6AkW8WuBzzXhs35cQty2vXJ3ohxKnXtoiwChNfIQmNr8Cc7VJmQTmrQPrgmK3uMnxi02SQXsF2vd0HmpA_7A",
+		Server:    "tcp://127.0.0.1:1883", // tcp://192.168.14.120:1883 tcp://192.168.14.120:8055
 		Identifer: "start",
 	}
 	m, err := NewMqtt(options)
 	assert.Nil(t, err)
 
-	go m.SubDeviceControlSync()
+	go m.SubDeviceControl()
 	fmt.Println("run")
 
-	time.Sleep(7 * time.Second)
+	time.Sleep(15 * time.Second)
 
-	m.UnSubDeviceControlSync()
+	m.UnSubDeviceControl()
 
 	time.Sleep(3 * time.Second)
 }

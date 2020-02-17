@@ -1,6 +1,6 @@
-module git.internal.yunify.com/tools/device-sdk-go
+module git.internal.yunify.com/iot-sdk/device-sdk-go
 
-go 1.12
+go 1.13
 
 require (
 	github.com/Workiva/go-datastructures v1.0.50
