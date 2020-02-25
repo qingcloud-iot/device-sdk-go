@@ -19,8 +19,8 @@ const (
 // return token payload
 func parseToken(deviceToken string) (string, string, error) {
 	var (
-		deviceId string
-		thingId  string
+		entityID string
+		modelID  string
 		err      error
 	)
 	defer func() {
@@ -36,17 +36,17 @@ func parseToken(deviceToken string) (string, string, error) {
 		if err := payload.Valid(); err != nil {
 			return "", "", err
 		}
-		deviceId, ok = payload[TOKEN_DEVICE_ID].(string)
+		entityID, ok = payload[TOKEN_DEVICE_ID].(string)
 		if !ok {
 			return "", "", errors.New("device id type error")
 		}
-		thingId, ok = payload[TOKEN_THING_ID].(string)
+		modelID, ok = payload[TOKEN_THING_ID].(string)
 		if !ok {
 			return "", "", errors.New("device id type error")
 		}
-		return deviceId, thingId, nil
+		return entityID, modelID, nil
 	} else {
-		return deviceId, thingId, errors.New("token error")
+		return entityID, modelID, errors.New("token error")
 	}
 }
 func parseServiceName(topic string) string {
@@ -57,8 +57,8 @@ func parseServiceName(topic string) string {
 	return kv[6]
 }
 
-func isServiceTopic(thingId, deviceId, topic string) bool {
-	temp := fmt.Sprintf("/sys/%s/%s/thing/service", thingId, deviceId)
+func isServiceTopic(modelID, entityID, topic string) bool {
+	temp := fmt.Sprintf("/sys/%s/%s/thing/service", modelID, entityID)
 	return strings.HasPrefix(topic, temp)
 }
 func RandInt64(min, max int64) int64 {

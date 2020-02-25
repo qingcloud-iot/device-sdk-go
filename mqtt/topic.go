@@ -10,7 +10,7 @@ import (
 )
 
 const (
-	post_property_topic       = "/sys/%s/%s/thing/event/property/post"       //down
+	post_property_topic       = "/sys/%s/%s/thing/property/%s/post"          // 属性上报 topic
 	post_property_topic_reply = "/sys/%s/%s/thing/event/property/post_reply" //down
 	post_event_topic          = "/sys/%s/%s/thing/event/%s/post"             //down
 	post_topic_reply          = "/sys/%s/%s/thing/event/+/post_reply"        //down
@@ -30,28 +30,36 @@ const (
 	QUIESCE      = 30000 // milliseconds
 )
 
-func buildPropertyMessage(meta index.Metadata) *index.ThingPropertyMsg {
-	id := uuid.NewV4().String()
-	params := make(map[string]*index.Property)
+func buildPropertyMessage(meta index.PropertyKV, m *mqttClient) *index.ThingPropertyMsg {
+	timeNow := time.Now().Unix() * 1000
+	params := make(map[string]*index.PropertyValueAndTime)
 	for k, v := range meta {
-		property := &index.Property{
+		property := &index.PropertyValueAndTime{
 			Value: v,
-			Time:  time.Now().Unix() * 1000,
+			Time:  timeNow,
 		}
 		params[k] = property
 	}
 	message := &index.ThingPropertyMsg{
-		Id:      id,
+		Id:      m.MessageID,
 		Version: MQTT_VERSION,
+		Type:    index.PROPERTY_TYPE,
 		Params:  params,
+		MetaData: index.MetaData{
+			"modelId":   m.ModelId,
+			"entityId":  m.EntityId,
+			"epochTime": timeNow,
+			"source":    []string{m.EntityId},
+		},
 	}
 	return message
 }
-func buildPropertyMessageEx(meta index.Metadata, t int64) *index.ThingPropertyMsg {
+
+func buildPropertyMessageEx(meta index.PropertyKV, t int64) *index.ThingPropertyMsg {
 	id := uuid.NewV4().String()
-	params := make(map[string]*index.Property)
+	params := make(map[string]*index.PropertyValueAndTime)
 	for k, v := range meta {
-		property := &index.Property{
+		property := &index.PropertyValueAndTime{
 			Value: v,
 			Time:  t,
 		}
@@ -64,14 +72,22 @@ func buildPropertyMessageEx(meta index.Metadata, t int64) *index.ThingPropertyMs
 	}
 	return message
 }
-func buildEventMessage(meta index.Metadata) *index.ThingEventMsg {
-	id := uuid.NewV4().String()
+func buildEventMessage(meta index.PropertyKV, m *mqttClient) *index.ThingEventMsg {
+	timeNow := time.Now().Unix() * 1000
+
 	message := &index.ThingEventMsg{
-		Id:      id,
+		Id:      m.MessageID,
 		Version: MQTT_VERSION,
+		Type:    fmt.Sprintf("thing.event.%s.post", m.EventIdentifier),
+		MetaData: index.MetaData{
+			"modelId":   m.ModelId,
+			"entityId":  m.EntityId,
+			"epochTime": timeNow,
+			"source":    []string{m.EntityId},
+		},
 		Params: &index.EventData{
 			Value: meta,
-			Time:  time.Now().Unix() * 1000,
+			Time:  timeNow,
 		},
 	}
 	return message
@@ -85,20 +101,20 @@ func parseMessage(payload []byte) (*index.Message, error) {
 	}
 	return message, nil
 }
-func buildProperty(deviceId, thingId string) string {
-	return fmt.Sprintf(post_property_topic, thingId, deviceId)
+func buildPropertyTopic(entityID, modelID, propertyType string) string {
+	return fmt.Sprintf(post_property_topic, modelID, entityID, propertyType)
 }
-func buildEvent(deviceId, thingId, name string) string {
-	return fmt.Sprintf(post_event_topic, thingId, deviceId, name)
-}
-
-func buildPropertyReply(deviceId, thingId string) string {
-	return fmt.Sprintf(set_property_topic_reply, thingId, deviceId)
-}
-func buildServiceReply(name, deviceId, thingId string) string {
-	return fmt.Sprintf(set_service_topic_reply, thingId, deviceId, name)
+func buildEventTopic(entityID, modelID, name string) string {
+	return fmt.Sprintf(post_event_topic, modelID, entityID, name)
 }
 
-func buildServiceControlReply(thingId, deviceId, identifer string) string {
-	return fmt.Sprintf(device_control_topic, thingId, deviceId, identifer)
+func buildPropertyReply(entityID, modelID string) string {
+	return fmt.Sprintf(set_property_topic_reply, modelID, entityID)
+}
+func buildServiceReply(name, entityID, modelID string) string {
+	return fmt.Sprintf(set_service_topic_reply, modelID, entityID, name)
+}
+
+func buildServiceControlReply(modelID, entityID, identifer string) string {
+	return fmt.Sprintf(device_control_topic, modelID, entityID, identifer)
 }

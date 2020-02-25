@@ -60,7 +60,7 @@ func(name string, meta Metadata) (Metadata, error)
     fmt.Println(reply)
 ```
 
-mqttbix 的 username 和 clientid 与 sdk 的一致才行
+mqttbox 的 username 和 clientid 与 sdk 的一致才行
 
 TODO:
 1. autoconnect sub，sdk 将 topic 保存起来
