@@ -30,7 +30,7 @@ const (
 	QUIESCE      = 30000 // milliseconds
 )
 
-func buildPropertyMessage(meta index.PropertyKV, m *mqttClient) *index.ThingPropertyMsg {
+func buildPropertyMessage(meta index.PropertyKV, m *MqttClient) *index.ThingPropertyMsg {
 	timeNow := time.Now().Unix() * 1000
 	params := make(map[string]*index.PropertyValueAndTime)
 	for k, v := range meta {
@@ -72,7 +72,8 @@ func buildPropertyMessageEx(meta index.PropertyKV, t int64) *index.ThingProperty
 	}
 	return message
 }
-func buildEventMessage(meta index.PropertyKV, m *mqttClient) *index.ThingEventMsg {
+
+func buildEventMessage(meta index.PropertyKV, m *MqttClient) *index.ThingEventMsg {
 	timeNow := time.Now().Unix() * 1000
 
 	message := &index.ThingEventMsg{

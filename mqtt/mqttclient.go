@@ -13,8 +13,8 @@ import (
 	"github.com/panjf2000/ants"
 )
 
-type mqttClient struct {
-	client      mqttp.Client
+type MqttClient struct {
+	Client      mqttp.Client
 	EntityId    string
 	ModelId     string
 	cacheClient *cache.CacheTable
@@ -25,6 +25,10 @@ type mqttClient struct {
 	MessageID       string
 	EventIdentifier string
 	UnSubScribeChan chan bool
+
+	PubPropertyTopic      string
+	PubEventTopic         string
+	SubDeviceControlTopic string
 }
 
 // NewMqtt 创建客户端实例
@@ -34,7 +38,7 @@ func NewMqtt(options *index.Options) (index.Client, error) {
 		modelID  string
 		err      error
 	)
-	m := &mqttClient{
+	m := &MqttClient{
 		UnSubScribeChan: make(chan bool),
 	}
 	if entityID, modelID, err = parseToken(options.Token); err != nil {
@@ -68,7 +72,7 @@ func NewMqtt(options *index.Options) (index.Client, error) {
 	if err != nil {
 		return nil, err
 	}
-	m.client = client
+	m.Client = client
 	m.EntityId = entityID
 	m.ModelId = modelID
 	m.Identifier = options.Identifer
@@ -87,20 +91,20 @@ func NewMqtt(options *index.Options) (index.Client, error) {
 }
 
 // Connect 连接 ihub 或 ehub
-func (m *mqttClient) Connect() error {
-	if token := m.client.Connect(); !token.WaitTimeout(5*time.Second) || token.Error() != nil {
+func (m *MqttClient) Connect() error {
+	if token := m.Client.Connect(); !token.WaitTimeout(5*time.Second) || token.Error() != nil {
 		return fmt.Errorf("mqtt client connect fail")
 	}
 	return nil
 }
 
 // DisConnect 断开连接 ihub 或 ehub
-func (m *mqttClient) DisConnect() {
-	m.client.Disconnect(QUIESCE)
+func (m *MqttClient) DisConnect() {
+	m.Client.Disconnect(QUIESCE)
 }
 
 // PubProperty 将消息 id 放入 cache 并设置过期时间，值为 chan reply，ctx 到期后返回
-func (m *mqttClient) PubProperty(ctx context.Context, meta index.PropertyKV) (*index.Reply, error) {
+func (m *MqttClient) PubProperty(ctx context.Context, meta index.PropertyKV) (*index.Reply, error) {
 	reply := &index.Reply{
 		Code: index.RPC_SUCCESS,
 	}
@@ -113,15 +117,16 @@ func (m *mqttClient) PubProperty(ctx context.Context, meta index.PropertyKV) (*i
 		return reply, nil
 	}
 	topic := buildPropertyTopic(m.EntityId, m.ModelId, m.PropertyType)
+	m.PubPropertyTopic = topic
 	fmt.Printf("[PubProperty] topic:%s, message:%s\n", topic, string(data))
-	if token := m.client.Publish(topic, byte(0), false, data); token.WaitTimeout(5*time.Second) && token.Error() != nil {
+	if token := m.Client.Publish(topic, byte(0), false, data); token.WaitTimeout(5*time.Second) && token.Error() != nil {
 		reply.Code = index.RPC_TIMEOUT
 		return reply, nil
 	}
 	return reply, nil
 }
 
-func (m *mqttClient) PubPropertyAsync(meta index.PropertyKV) (index.ReplyChan, error) {
+func (m *MqttClient) PubPropertyAsync(meta index.PropertyKV) (index.ReplyChan, error) {
 	ch := make(index.ReplyChan)
 	reply := &index.Reply{
 		Code: index.RPC_SUCCESS,
@@ -136,7 +141,7 @@ func (m *mqttClient) PubPropertyAsync(meta index.PropertyKV) (index.ReplyChan, e
 	}
 	topic := buildPropertyTopic(m.EntityId, m.ModelId, m.PropertyType)
 	fmt.Printf("[PubPropertyAsync] topic:%s, message:%s\n", topic, string(data))
-	if token := m.client.Publish(topic, byte(0), false, data); token.WaitTimeout(5*time.Second) && token.Error() != nil {
+	if token := m.Client.Publish(topic, byte(0), false, data); token.WaitTimeout(5*time.Second) && token.Error() != nil {
 		reply.Code = index.RPC_TIMEOUT
 		return ch, token.Error()
 	}
@@ -152,7 +157,7 @@ func (m *mqttClient) PubPropertyAsync(meta index.PropertyKV) (index.ReplyChan, e
 }
 
 // PubEventSync event 就是将整个 meta 放到 中
-func (m *mqttClient) PubEvent(ctx context.Context, meta index.PropertyKV) (*index.Reply, error) {
+func (m *MqttClient) PubEvent(ctx context.Context, meta index.PropertyKV) (*index.Reply, error) {
 	reply := &index.Reply{
 		Code: index.RPC_SUCCESS,
 	}
@@ -166,15 +171,16 @@ func (m *mqttClient) PubEvent(ctx context.Context, meta index.PropertyKV) (*inde
 		return reply, nil
 	}
 	topic := buildEventTopic(m.EntityId, m.ModelId, m.EventIdentifier)
+	m.PubEventTopic = topic
 	fmt.Printf("[PubEvent pub] topic:%s, message:%s\n", topic, string(data))
-	if token := m.client.Publish(topic, byte(0), false, data); token.WaitTimeout(5*time.Second) && token.Error() != nil {
+	if token := m.Client.Publish(topic, byte(0), false, data); token.WaitTimeout(5*time.Second) && token.Error() != nil {
 		reply.Code = index.RPC_TIMEOUT
 		return reply, nil
 	}
 	return reply, nil
 }
 
-func (m *mqttClient) PubEventAsync(event string, meta index.PropertyKV) (index.ReplyChan, error) {
+func (m *MqttClient) PubEventAsync(event string, meta index.PropertyKV) (index.ReplyChan, error) {
 	ch := make(index.ReplyChan)
 	if len(meta) == 0 {
 		return ch, errors.New("param length is zero")
@@ -186,7 +192,7 @@ func (m *mqttClient) PubEventAsync(event string, meta index.PropertyKV) (index.R
 	}
 	topic := buildEventTopic(m.EntityId, m.ModelId, event)
 	fmt.Println(topic, string(data))
-	if token := m.client.Publish(topic, byte(0), false, data); token.WaitTimeout(5*time.Second) && token.Error() != nil {
+	if token := m.Client.Publish(topic, byte(0), false, data); token.WaitTimeout(5*time.Second) && token.Error() != nil {
 		return ch, err
 	}
 	item := m.cacheClient.Add(message.Id, RPC_TIME_OUT, ch)
@@ -200,18 +206,19 @@ func (m *mqttClient) PubEventAsync(event string, meta index.PropertyKV) (index.R
 }
 
 //driver
-func (m *mqttClient) PubTopicProperty(ctx context.Context, entityID, modelID string, meta index.PropertyKV) (*index.Reply, error) {
+func (m *MqttClient) PubTopicProperty(ctx context.Context, entityID, modelID string, meta index.PropertyKV) (*index.Reply, error) {
 	return nil, nil
 }
-func (m *mqttClient) PubTopicEvent(ctx context.Context, entityID, modelID string, event string, meta index.PropertyKV) (*index.Reply, error) {
+func (m *MqttClient) PubTopicEvent(ctx context.Context, entityID, modelID string, event string, meta index.PropertyKV) (*index.Reply, error) {
 	return nil, nil
 }
 
 // SubDeviceControl 同步订阅消息
-func (m *mqttClient) SubDeviceControl() {
+func (m *MqttClient) SubDeviceControl() {
 	topic := buildServiceControlReply(m.ModelId, m.EntityId, m.Identifier)
+	m.SubDeviceControlTopic = topic
 	fmt.Printf("[SubDeviceControl] topic:%s\n", topic)
-	if token := m.client.Subscribe(topic, 0, nil); token.Wait() && token.Error() != nil {
+	if token := m.Client.Subscribe(topic, 0, nil); token.Wait() && token.Error() != nil {
 		fmt.Printf("SubDeviceControl err:%s", token.Error())
 	}
 
@@ -219,14 +226,14 @@ func (m *mqttClient) SubDeviceControl() {
 	fmt.Printf("[SubDeviceControl] closed, topic:%s\n", topic)
 }
 
-func (m *mqttClient) UnSubDeviceControl() error {
+func (m *MqttClient) UnSubDeviceControl() error {
 	// defer m.client.Disconnect(250)
 	defer func() {
 		close(m.UnSubScribeChan)
 	}()
-	topic := buildServiceControlReply(m.ModelId, m.EntityId, m.Identifier)
+	topic := m.SubDeviceControlTopic
 	fmt.Printf("[UnSubDeviceControl] topic:%s\n", topic)
-	token := m.client.Unsubscribe(topic)
+	token := m.Client.Unsubscribe(topic)
 	token.Wait()
 	err := token.Error()
 	if err != nil {
@@ -236,7 +243,7 @@ func (m *mqttClient) UnSubDeviceControl() error {
 }
 
 // recvDeviceControlReply 订阅消息后的回调函数
-func (m *mqttClient) recvDeviceControlReply(client mqttp.Client, msg mqttp.Message) {
+func (m *MqttClient) recvDeviceControlReply(client mqttp.Client, msg mqttp.Message) {
 
 	topic := msg.Topic()
 	payload := msg.Payload()
@@ -264,7 +271,7 @@ func (m *mqttClient) recvDeviceControlReply(client mqttp.Client, msg mqttp.Messa
 		fmt.Printf("[recvDeviceControlReply] err:%s\n", err.Error())
 		return
 	}
-	if token := m.client.Publish(topic+"_reply", byte(0), false, data); token.WaitTimeout(5*time.Second) && token.Error() != nil {
+	if token := m.Client.Publish(topic+"_reply", byte(0), false, data); token.WaitTimeout(5*time.Second) && token.Error() != nil {
 		fmt.Printf("[recvDeviceControlReply] err:%s", token.Error())
 	} else {
 		fmt.Println("[recvDeviceControlReply]", topic+"_reply", string(data))

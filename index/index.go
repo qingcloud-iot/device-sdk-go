@@ -1,6 +1,8 @@
 package index
 
-import "context"
+import (
+	"context"
+)
 
 const (
 	PROPERTY_TYPE_BASE     = "base"
