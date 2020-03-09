@@ -20,18 +20,20 @@ func main() {
 	// pubDeviceProperty()
 
 	// 上报设备事件
-	pubDeviceEvent()
+	// pubDeviceEvent()
 
 	// 设备控制
-	// deviceControl()
-
-	// SendMessageToSDK()
+	{
+		go deviceControl()
+		time.Sleep(time.Second * 5)
+		SendMessageToSDK()
+	}
 }
 
 // 设备连接
 func deviceConnect() {
 	options := &index.Options{
-		Token:  "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJhY3IiOiIxIiwiYXVkIjoiaWFtIiwiYXpwIjoiaWFtIiwiY3VpZCI6ImlhbXItdm9maW4wYmUiLCJlaXNrIjoiblV4MTJkZDNQWVU1c2RjMlhzcU40Z0I4enNreHVwbTl5R0FjVXFMVDB5az0iLCJleHAiOjE2MTMwMDY3MTUsImlhdCI6MTU4MTQ3MDcxNSwiaXNzIjoic3RzIiwianRpIjoiVWpJNFdQQW9wNWdQNldPdHJIUU82ZCIsIm5iZiI6MCwib3JnaSI6ImlvdGQtNTlmNjg1Y2UtNzBmOS00NDg1LTk5ODUtMjcxZDVkZmI5NDc1Iiwib3d1ciI6InVzci1rZUF5dG16MSIsInByZWYiOiJxcm46cWluZ2Nsb3VkOmlhbToiLCJydHlwIjoicm9sZSIsInN1YiI6InN0cyIsInRoaWQiOiJpb3R0LXlWQXd4OXJiOGoiLCJ0eXAiOiJJRCJ9.M03UZOE_llNCR80LYdmforG5_Bc_QTJN9A2BPLfYX5OZAeawaRoqzOOBIqjORk_HKMLk210ex5DTcQflrUSTNhXiVMilau8a3loi-qY5-13aB45Ra_-qaQpGKcIzCtSsOofNhnOBsshLgvLG0W_ThlY-L5i6FAsTDp9fWKs_hS4VMn1cb8iexi3Oljcy7255J-wWRSaAMcm4KzZNc3kS_HR7NdfGlu9zmjE22rnmlZS60OEvjhqU-SKJBsalHAiFbAWTemHuk5jlB7P2sFiM4JAxIuznq23s0WrNM0oQTRi6xb0bMglGuBmyvPkoh1jMAGklHStprNoxwY_S2aKiUA",
+		Token:  "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJhY3IiOiIxIiwiYXVkIjoiaWFtIiwiYXpwIjoiaWFtIiwiY3VpZCI6ImlhbXItajI3ZXAzZmciLCJlaXNrIjoiVXd1YXktY0s2X2xiTUdwcXJmaTNoQlk3anZoTlA4N0NCeHRjN1BLbzYwdz0iLCJleHAiOjE2MDk0ODQxOTQsImlhdCI6MTU3Nzk0ODE5NCwiaXNzIjoic3RzIiwianRpIjoiVWpJNFdQQW9wNWdQNldPdHJIUUlBVSIsIm5iZiI6MCwib3JnaSI6ImlvdGQtNGQ1NTUyZTAtYWUyNy00OTc1LTllMmEtYjk2NTRhZjI1NjM2Iiwib3d1ciI6InVzci1rZUF5dG16MSIsInByZWYiOiJxcm46cWluZ2Nsb3VkOmlhbToiLCJydHlwIjoicm9sZSIsInN1YiI6InN0cyIsInRoaWQiOiJpb3R0LXlWQXd4OXJiOGoiLCJ0eXAiOiJJRCJ9.NDId6MS_Fi-9mCuUaBeS4sufhoWPCihz5TSgyscD1LMdvSs6KKXaND2fmDhlJcFi3-nbTZS32LR_fx8cYS8_8pHNF2pdyfXStYsm1sbBg6G7mfCXmXLywVfzUUxSgJbXJ7Px1oIIPjcuPCmlEK4BtDyK5a5Ncxw9NO0aZxKviNqPKMOqQAPP8_2Ev6MGQ4SwsLuZP3dE75bTp02XID1xCGY_0ABIPhHQrypqs2T-_h1DE-5MZegSL5sUjjgha4AVH_2xzPcgLKO709e77tWhu5BpJXUmUfTlZwUp3PoDG4eNYC3gqVEgAkZtUxjoCvGXypqV7lV8YudYmrN7BBuXmw",
 		Server: "tcp://192.168.14.120:8055", // 127.0.0.1:1883
 	}
 
@@ -51,7 +53,7 @@ func deviceConnect() {
 
 func pubDeviceProperty() {
 	options := &index.Options{
-		Token:        "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJhY3IiOiIxIiwiYXVkIjoiaWFtIiwiYXpwIjoiaWFtIiwiY3VpZCI6ImlhbXItdm9maW4wYmUiLCJlaXNrIjoiblV4MTJkZDNQWVU1c2RjMlhzcU40Z0I4enNreHVwbTl5R0FjVXFMVDB5az0iLCJleHAiOjE2MTMwMDY3MTUsImlhdCI6MTU4MTQ3MDcxNSwiaXNzIjoic3RzIiwianRpIjoiVWpJNFdQQW9wNWdQNldPdHJIUU82ZCIsIm5iZiI6MCwib3JnaSI6ImlvdGQtNTlmNjg1Y2UtNzBmOS00NDg1LTk5ODUtMjcxZDVkZmI5NDc1Iiwib3d1ciI6InVzci1rZUF5dG16MSIsInByZWYiOiJxcm46cWluZ2Nsb3VkOmlhbToiLCJydHlwIjoicm9sZSIsInN1YiI6InN0cyIsInRoaWQiOiJpb3R0LXlWQXd4OXJiOGoiLCJ0eXAiOiJJRCJ9.M03UZOE_llNCR80LYdmforG5_Bc_QTJN9A2BPLfYX5OZAeawaRoqzOOBIqjORk_HKMLk210ex5DTcQflrUSTNhXiVMilau8a3loi-qY5-13aB45Ra_-qaQpGKcIzCtSsOofNhnOBsshLgvLG0W_ThlY-L5i6FAsTDp9fWKs_hS4VMn1cb8iexi3Oljcy7255J-wWRSaAMcm4KzZNc3kS_HR7NdfGlu9zmjE22rnmlZS60OEvjhqU-SKJBsalHAiFbAWTemHuk5jlB7P2sFiM4JAxIuznq23s0WrNM0oQTRi6xb0bMglGuBmyvPkoh1jMAGklHStprNoxwY_S2aKiUA",
+		Token:        "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJhY3IiOiIxIiwiYXVkIjoiaWFtIiwiYXpwIjoiaWFtIiwiY3VpZCI6ImlhbXItajI3ZXAzZmciLCJlaXNrIjoiVXd1YXktY0s2X2xiTUdwcXJmaTNoQlk3anZoTlA4N0NCeHRjN1BLbzYwdz0iLCJleHAiOjE2MDk0ODQxOTQsImlhdCI6MTU3Nzk0ODE5NCwiaXNzIjoic3RzIiwianRpIjoiVWpJNFdQQW9wNWdQNldPdHJIUUlBVSIsIm5iZiI6MCwib3JnaSI6ImlvdGQtNGQ1NTUyZTAtYWUyNy00OTc1LTllMmEtYjk2NTRhZjI1NjM2Iiwib3d1ciI6InVzci1rZUF5dG16MSIsInByZWYiOiJxcm46cWluZ2Nsb3VkOmlhbToiLCJydHlwIjoicm9sZSIsInN1YiI6InN0cyIsInRoaWQiOiJpb3R0LXlWQXd4OXJiOGoiLCJ0eXAiOiJJRCJ9.NDId6MS_Fi-9mCuUaBeS4sufhoWPCihz5TSgyscD1LMdvSs6KKXaND2fmDhlJcFi3-nbTZS32LR_fx8cYS8_8pHNF2pdyfXStYsm1sbBg6G7mfCXmXLywVfzUUxSgJbXJ7Px1oIIPjcuPCmlEK4BtDyK5a5Ncxw9NO0aZxKviNqPKMOqQAPP8_2Ev6MGQ4SwsLuZP3dE75bTp02XID1xCGY_0ABIPhHQrypqs2T-_h1DE-5MZegSL5sUjjgha4AVH_2xzPcgLKO709e77tWhu5BpJXUmUfTlZwUp3PoDG4eNYC3gqVEgAkZtUxjoCvGXypqV7lV8YudYmrN7BBuXmw",
 		Server:       "tcp://192.168.14.120:8055", // 127.0.0.1:1883 192.168.14.120:1883
 		PropertyType: index.PROPERTY_TYPE_BASE,
 		MessageID:    "message-device.1",
@@ -85,9 +87,9 @@ func pubDeviceProperty() {
 
 func pubDeviceEvent() {
 	options := &index.Options{
-		Token:           "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJhY3IiOiIxIiwiYXVkIjoiaWFtIiwiYXpwIjoiaWFtIiwiY3VpZCI6ImlhbXItdm9maW4wYmUiLCJlaXNrIjoiblV4MTJkZDNQWVU1c2RjMlhzcU40Z0I4enNreHVwbTl5R0FjVXFMVDB5az0iLCJleHAiOjE2MTMwMDY3MTUsImlhdCI6MTU4MTQ3MDcxNSwiaXNzIjoic3RzIiwianRpIjoiVWpJNFdQQW9wNWdQNldPdHJIUU82ZCIsIm5iZiI6MCwib3JnaSI6ImlvdGQtNTlmNjg1Y2UtNzBmOS00NDg1LTk5ODUtMjcxZDVkZmI5NDc1Iiwib3d1ciI6InVzci1rZUF5dG16MSIsInByZWYiOiJxcm46cWluZ2Nsb3VkOmlhbToiLCJydHlwIjoicm9sZSIsInN1YiI6InN0cyIsInRoaWQiOiJpb3R0LXlWQXd4OXJiOGoiLCJ0eXAiOiJJRCJ9.M03UZOE_llNCR80LYdmforG5_Bc_QTJN9A2BPLfYX5OZAeawaRoqzOOBIqjORk_HKMLk210ex5DTcQflrUSTNhXiVMilau8a3loi-qY5-13aB45Ra_-qaQpGKcIzCtSsOofNhnOBsshLgvLG0W_ThlY-L5i6FAsTDp9fWKs_hS4VMn1cb8iexi3Oljcy7255J-wWRSaAMcm4KzZNc3kS_HR7NdfGlu9zmjE22rnmlZS60OEvjhqU-SKJBsalHAiFbAWTemHuk5jlB7P2sFiM4JAxIuznq23s0WrNM0oQTRi6xb0bMglGuBmyvPkoh1jMAGklHStprNoxwY_S2aKiUA",
+		Token:           "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJhY3IiOiIxIiwiYXVkIjoiaWFtIiwiYXpwIjoiaWFtIiwiY3VpZCI6ImlhbXItajI3ZXAzZmciLCJlaXNrIjoiVXd1YXktY0s2X2xiTUdwcXJmaTNoQlk3anZoTlA4N0NCeHRjN1BLbzYwdz0iLCJleHAiOjE2MDk0ODQxOTQsImlhdCI6MTU3Nzk0ODE5NCwiaXNzIjoic3RzIiwianRpIjoiVWpJNFdQQW9wNWdQNldPdHJIUUlBVSIsIm5iZiI6MCwib3JnaSI6ImlvdGQtNGQ1NTUyZTAtYWUyNy00OTc1LTllMmEtYjk2NTRhZjI1NjM2Iiwib3d1ciI6InVzci1rZUF5dG16MSIsInByZWYiOiJxcm46cWluZ2Nsb3VkOmlhbToiLCJydHlwIjoicm9sZSIsInN1YiI6InN0cyIsInRoaWQiOiJpb3R0LXlWQXd4OXJiOGoiLCJ0eXAiOiJJRCJ9.NDId6MS_Fi-9mCuUaBeS4sufhoWPCihz5TSgyscD1LMdvSs6KKXaND2fmDhlJcFi3-nbTZS32LR_fx8cYS8_8pHNF2pdyfXStYsm1sbBg6G7mfCXmXLywVfzUUxSgJbXJ7Px1oIIPjcuPCmlEK4BtDyK5a5Ncxw9NO0aZxKviNqPKMOqQAPP8_2Ev6MGQ4SwsLuZP3dE75bTp02XID1xCGY_0ABIPhHQrypqs2T-_h1DE-5MZegSL5sUjjgha4AVH_2xzPcgLKO709e77tWhu5BpJXUmUfTlZwUp3PoDG4eNYC3gqVEgAkZtUxjoCvGXypqV7lV8YudYmrN7BBuXmw",
 		Server:          "tcp://192.168.14.120:8055", // 127.0.0.1:1883  192.168.14.120:8055
-		EventIdentifier: "statistics",
+		EventIdentifier: "serviceStatus",
 		MessageID:       "message-device.1",
 	}
 
@@ -104,8 +106,8 @@ func pubDeviceEvent() {
 
 	// output
 	data := index.PropertyKV{
-		"max": 125.2,
-		"min": 10.1,
+		"ServiceName":   "qqq",
+		"ServiceStatus": "aaa",
 	}
 	reply, err := m.PubEvent(context.Background(), data)
 	if err != nil {
@@ -117,7 +119,7 @@ func pubDeviceEvent() {
 
 func deviceControl() {
 	options := &index.Options{
-		Token:     "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJhY3IiOiIxIiwiYXVkIjoiaWFtIiwiYXpwIjoiaWFtIiwiY3VpZCI6ImlhbXItdm9maW4wYmUiLCJlaXNrIjoiblV4MTJkZDNQWVU1c2RjMlhzcU40Z0I4enNreHVwbTl5R0FjVXFMVDB5az0iLCJleHAiOjE2MTMwMDY3MTUsImlhdCI6MTU4MTQ3MDcxNSwiaXNzIjoic3RzIiwianRpIjoiVWpJNFdQQW9wNWdQNldPdHJIUU82ZCIsIm5iZiI6MCwib3JnaSI6ImlvdGQtNTlmNjg1Y2UtNzBmOS00NDg1LTk5ODUtMjcxZDVkZmI5NDc1Iiwib3d1ciI6InVzci1rZUF5dG16MSIsInByZWYiOiJxcm46cWluZ2Nsb3VkOmlhbToiLCJydHlwIjoicm9sZSIsInN1YiI6InN0cyIsInRoaWQiOiJpb3R0LXlWQXd4OXJiOGoiLCJ0eXAiOiJJRCJ9.M03UZOE_llNCR80LYdmforG5_Bc_QTJN9A2BPLfYX5OZAeawaRoqzOOBIqjORk_HKMLk210ex5DTcQflrUSTNhXiVMilau8a3loi-qY5-13aB45Ra_-qaQpGKcIzCtSsOofNhnOBsshLgvLG0W_ThlY-L5i6FAsTDp9fWKs_hS4VMn1cb8iexi3Oljcy7255J-wWRSaAMcm4KzZNc3kS_HR7NdfGlu9zmjE22rnmlZS60OEvjhqU-SKJBsalHAiFbAWTemHuk5jlB7P2sFiM4JAxIuznq23s0WrNM0oQTRi6xb0bMglGuBmyvPkoh1jMAGklHStprNoxwY_S2aKiUA",
+		Token:     "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJhY3IiOiIxIiwiYXVkIjoiaWFtIiwiYXpwIjoiaWFtIiwiY3VpZCI6ImlhbXItajI3ZXAzZmciLCJlaXNrIjoiVXd1YXktY0s2X2xiTUdwcXJmaTNoQlk3anZoTlA4N0NCeHRjN1BLbzYwdz0iLCJleHAiOjE2MDk0ODQxOTQsImlhdCI6MTU3Nzk0ODE5NCwiaXNzIjoic3RzIiwianRpIjoiVWpJNFdQQW9wNWdQNldPdHJIUUlBVSIsIm5iZiI6MCwib3JnaSI6ImlvdGQtNGQ1NTUyZTAtYWUyNy00OTc1LTllMmEtYjk2NTRhZjI1NjM2Iiwib3d1ciI6InVzci1rZUF5dG16MSIsInByZWYiOiJxcm46cWluZ2Nsb3VkOmlhbToiLCJydHlwIjoicm9sZSIsInN1YiI6InN0cyIsInRoaWQiOiJpb3R0LXlWQXd4OXJiOGoiLCJ0eXAiOiJJRCJ9.NDId6MS_Fi-9mCuUaBeS4sufhoWPCihz5TSgyscD1LMdvSs6KKXaND2fmDhlJcFi3-nbTZS32LR_fx8cYS8_8pHNF2pdyfXStYsm1sbBg6G7mfCXmXLywVfzUUxSgJbXJ7Px1oIIPjcuPCmlEK4BtDyK5a5Ncxw9NO0aZxKviNqPKMOqQAPP8_2Ev6MGQ4SwsLuZP3dE75bTp02XID1xCGY_0ABIPhHQrypqs2T-_h1DE-5MZegSL5sUjjgha4AVH_2xzPcgLKO709e77tWhu5BpJXUmUfTlZwUp3PoDG4eNYC3gqVEgAkZtUxjoCvGXypqV7lV8YudYmrN7BBuXmw",
 		Server:    "tcp://192.168.14.120:8055", // 127.0.0.1:1883
 		Identifer: "connect",
 	}
@@ -157,7 +159,7 @@ func SendMessageToSDK() {
 		}
 	`
 
-	requst, err := http.NewRequest("POST", "http://iot-api.qingcloud.com:8889/api/v1/devices/iotd-59f685ce-70f9-4485-9985-271d5dfb9475/call/connect", strings.NewReader(params))
+	requst, err := http.NewRequest("POST", "http://iot-api.qingcloud.com:8889/api/v1/devices/iotd-4d5552e0-ae27-4975-9e2a-b9654af25636/call/connect", strings.NewReader(params))
 	if err != nil {
 		fmt.Println("NewRequest err:", err.Error())
 		return
@@ -169,9 +171,8 @@ func SendMessageToSDK() {
 		fmt.Println("Do err:", err.Error())
 		return
 	}
-	body, err := ioutil.ReadAll(resp.Body)
+	_, err = ioutil.ReadAll(resp.Body)
 	if err != nil {
 		return
 	}
-	fmt.Println(string(body))
 }
