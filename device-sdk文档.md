@@ -90,7 +90,7 @@ golang version：1.13及以上
     http://103.61.37.229:20080/document/index?document_id=22
 
 3. 在青云iot平台创建模型
-    本例中使用物模型：EdgeWise
+    本例中使用物模型：EdgeWize
 
     ```go
     {
