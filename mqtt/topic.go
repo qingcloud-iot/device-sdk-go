@@ -73,13 +73,13 @@ func buildPropertyMessageEx(meta index.PropertyKV, t int64) *index.ThingProperty
 	return message
 }
 
-func buildEventMessage(meta index.PropertyKV, m *MqttClient) *index.ThingEventMsg {
+func buildEventMessage(meta index.PropertyKV, m *MqttClient, eventIdentifier string) *index.ThingEventMsg {
 	timeNow := time.Now().Unix() * 1000
 
 	message := &index.ThingEventMsg{
 		Id:      m.MessageID,
 		Version: MQTT_VERSION,
-		Type:    fmt.Sprintf("thing.event.%s.post", m.EventIdentifier),
+		Type:    fmt.Sprintf("thing.event.%s.post", eventIdentifier),
 		MetaData: index.MetaData{
 			"modelId":   m.ModelId,
 			"entityId":  m.EntityId,
@@ -93,7 +93,7 @@ func buildEventMessage(meta index.PropertyKV, m *MqttClient) *index.ThingEventMs
 	}
 	return message
 }
-func parseMessage(payload []byte) (*index.Message, error) {
+func ParseMessage(payload []byte) (*index.Message, error) {
 	message := &index.Message{}
 	err := json.Unmarshal(payload, message)
 	if err != nil {
@@ -116,6 +116,6 @@ func buildServiceReply(name, entityID, modelID string) string {
 	return fmt.Sprintf(set_service_topic_reply, modelID, entityID, name)
 }
 
-func buildServiceControlReply(modelID, entityID, identifer string) string {
+func BuildServiceControlReply(modelID, entityID, identifer string) string {
 	return fmt.Sprintf(device_control_topic, modelID, entityID, identifer)
 }

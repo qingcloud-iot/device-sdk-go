@@ -17,7 +17,7 @@ const (
 )
 
 // return token payload
-func parseToken(deviceToken string) (string, string, error) {
+func ParseToken(deviceToken string) (string, string, error) {
 	var (
 		entityID string
 		modelID  string

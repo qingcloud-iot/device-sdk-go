@@ -1,0 +1,119 @@
+{
+    "id": "iott-1Oh5xSSdSa",
+    "name": "自定义数据模型",
+    "type": 1,
+    "icon": "raspberry-pi",
+    "is_system": 2,
+    "description": "将来用做终端示例模型",
+    "properties": [
+        {
+            "id": "iotp-73c1b5e0-604d-40b3-807b-a8ff6547ad2f",
+            "name": "温度",
+            "identifier": "temp",
+            "access": "all",
+            "type": "double",
+            "sys_type": 2,
+            "define": {
+                "max": 100,
+                "min": 0,
+                "step": 0,
+                "unit": "°",
+                "unitName": "度"
+            },
+            "description": ""
+        }
+    ],
+    "events": [
+        {
+            "id": "iote-34abac4c-59c1-4b93-ad8f-8d7b44637246",
+            "identifier": "temperatureEvent",
+            "name": "温度过高",
+            "description": "",
+            "type": "WARNING",
+            "sys_type": 2,
+            "output": [
+                {
+                    "id": "b28c59d9-b0bd-48ee-8279-4a22e538114e",
+                    "identifier": "temperature",
+                    "name": "温度",
+                    "type": "double",
+                    "define": {
+                        "max": 100,
+                        "min": 0,
+                        "step": 0,
+                        "unit": "°",
+                        "unitName": "度"
+                    }
+                },
+                {
+                    "id": "56936213-172a-4f1e-bd0f-9cc97d972e57",
+                    "identifier": "region",
+                    "name": "位置",
+                    "type": "string",
+                    "define": {
+                        "max": 1024
+                    }
+                },
+                {
+                    "id": "6aaae4b3-bf8b-4f52-8da5-2d44a36ae885",
+                    "identifier": "name",
+                    "name": "名称",
+                    "type": "string",
+                    "define": {
+                        "max": 1024
+                    }
+                }
+            ]
+        }
+    ],
+    "services": [
+        {
+            "id": "iots-d5f18236-be65-44d3-9b32-0794b868245a",
+            "identifier": "setTemperature",
+            "name": "调节温度",
+            "sys_type": 2,
+            "description": "",
+            "type": "sync",
+            "input": [
+                {
+                    "id": "977f8ecc-4a86-4158-90a2-f81093893c70",
+                    "identifier": "temperature",
+                    "name": "温度",
+                    "type": "int32",
+                    "define": {
+                        "max": 100,
+                        "min": 0,
+                        "step": 1,
+                        "unit": "°C",
+                        "unitName": "摄氏度"
+                    }
+                }
+            ],
+            "output": [
+                {
+                    "id": "b479a0e8-0295-4b27-90a2-41aa934a6cf6",
+                    "identifier": "temperature",
+                    "name": "调节结果",
+                    "type": "bool",
+                    "define": {
+                        "0": "失败",
+                        "1": "成功"
+                    }
+                },
+                {
+                    "id": "5c4d0bed-7de8-479a-9658-25b92f1e7cfc",
+                    "identifier": "temperature",
+                    "name": "设备温度",
+                    "type": "int32",
+                    "define": {
+                        "max": 100,
+                        "min": 0,
+                        "step": 1,
+                        "unit": "°C",
+                        "unitName": "摄氏度"
+                    }
+                }
+            ]
+        }
+    ]
+}

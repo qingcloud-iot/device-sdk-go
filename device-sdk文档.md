@@ -85,132 +85,17 @@ golang version：1.13及以上
         rainsong@yunify.com
         zhu88jie
 
-2. 了解青云的物模型
+2. 了解青云的数据模型
 
     http://103.61.37.229:20080/document/index?document_id=22
 
 3. 在青云iot平台创建模型
-    本例中使用物模型：EdgeWize
-
-    ```go
-    {
-        "id": "iott-yVAwx9rb8j",
-        "name": "EdgeWize",
-        "type": 2,
-        "icon": "cpe",
-        "user_id": "usr-keAytmz1",
-        "description": "云锡：边缘模型",
-        "properties": {
-            "AlarmState": {
-                "property_id": "iotp-c7c90665-2d62-483b-aa7c-af5f2d1fbe93",
-                "property_name": "",
-                "identifier": "AlarmState",
-                "access": "all",
-                "type": "bool",
-                "define": {},
-                "description": "告警状态"
-            },
-            "MaxValue": {
-                "property_id": "iotp-14337e33-4772-410b-a3e0-55950ed758ee",
-                "property_name": "",
-                "identifier": "MaxValue",
-                "access": "all",
-                "type": "float",
-                "define": {},
-                "description": "最大值"
-            }
-        },
-        "events": {
-            "statistics": {
-                "event_id": "iote-790b0ea1-ac2c-4179-85f2-9c76f9982fc8",
-                "identifier": "statistics",
-                "event_name": "数值统计",
-                "description": "最大最小值统计",
-                "type": "info",
-                "output": [
-                    {
-                        "id": "a718a576-40ce-44b7-841d-30313b5cdbd5",
-                        "identifier": "max",
-                        "output_name": "最大值",
-                        "type": "float",
-                        "define": {}
-                    },
-                    {
-                        "id": "76f1ec21-2793-481c-87b0-3e94a21f33dd",
-                        "identifier": "min",
-                        "output_name": "最小值",
-                        "type": "float",
-                        "define": {}
-                    }
-                ]
-            },
-            "threshold": {
-                "event_id": "iote-f4e028dc-b6fc-437c-9bec-9a947c52f79b",
-                "identifier": "threshold",
-                "event_name": "阈值告警",
-                "description": "阈值告警事件",
-                "type": "info",
-                "output": [
-                    {
-                        "id": "c61c54b2-c3c4-460f-8eac-feabc24c60e1",
-                        "identifier": "identifier",
-                        "output_name": "告警点位",
-                        "type": "string",
-                        "define": {}
-                    },
-                    {
-                        "id": "e36bb956-dc18-447f-8ae9-f99312c27b3d",
-                        "identifier": "val",
-                        "output_name": "告警值",
-                        "type": "float",
-                        "define": {}
-                    }
-                ]
-            }
-        },
-        "actions": {
-            "connect": {
-                "action_id": "iots-23ff91e2-d8a3-4e8d-87d7-acd25c3e2dc6",
-                "identifier": "connect",
-                "action_name": "连接opc",
-                "description": "连接opc server",
-                "call_type": "sync",
-                "input": [],
-                "output": [
-                    {
-                        "id": "18ae0993-0b52-42af-b96b-b64b7f40cc65",
-                        "identifier": "reply",
-                        "name": "",
-                        "type": "string",
-                        "define": {}
-                    }
-                ]
-            },
-            "disconnect": {
-                "action_id": "iots-a0ad97a0-c16d-4ec1-a276-c5c0b9a95930",
-                "identifier": "disconnect",
-                "action_name": "断开opc连接",
-                "description": "断开opc连接",
-                "call_type": "sync",
-                "input": [],
-                "output": [
-                    {
-                        "id": "447ca1f6-472c-4f21-9e58-2777d112749e",
-                        "identifier": "reply",
-                        "name": "",
-                        "type": "string",
-                        "define": {}
-                    }
-                ]
-            }
-        }
-    }
-    ```
-
+    本例中使用物模型：自定义数据模型
+    具体定义：demo.json
     青云平台创建模型，可以得到属性名称、属性类型、事件identifier、控制identifier等；
 
 4. 在青云iot平台注册设备，绑定模型
-    本例使用设备：TestEdge
+    本例使用设备：test-endpoint-yt
     在青云平台注册设备，以及将上面创建的物模型和设备进行绑定，获取设备凭证(token)；
 
 #####  代码演示
