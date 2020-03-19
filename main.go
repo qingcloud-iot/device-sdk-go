@@ -136,7 +136,7 @@ func PubPropertyFunc() {
 		// fmt.Println("PubPropertySync reply", reply)
 		time.Sleep(2 * time.Second)
 		VALUE++
-		if VALUE <= 0 || VALUE >= 100 {
+		if VALUE < 0 || VALUE > 100 {
 			VALUE = float64(rand.Int63n(int64(HIGH) - int64(LOW)))
 		}
 		data["temp"] = VALUE
@@ -245,7 +245,7 @@ func ServiceDeviceControlFunc() {
 			}
 			// fmt.Println("PubPropertySync reply", reply)
 			VALUE++
-			if VALUE <= 0 || VALUE >= 100 {
+			if VALUE < 0 || VALUE > 100 {
 				VALUE = float64(rand.Int63n(int64(HIGH) - int64(LOW)))
 			}
 			data["temp"] = VALUE
@@ -300,25 +300,24 @@ func PropertyAndEventAndServiceFunc() {
 		panic(err)
 	}
 
-	data := index.PropertyKV{
-		"temp": VALUE,
-	}
-
 	// 上报属性
 	go func() {
 		for {
+			data := index.PropertyKV{
+				"temp": VALUE,
+			}
 			ctx, _ := context.WithTimeout(context.Background(), 3*time.Second)
 			_, err := m.PubProperty(ctx, data)
 			if err != nil {
 				panic(err)
 			}
 			// fmt.Println("PubPropertySync reply", reply)
-			time.Sleep(2 * time.Second)
 			VALUE++
-			if VALUE <= 15 || VALUE >= 65 {
+			if VALUE < 0 || VALUE > 100 {
 				VALUE = float64(rand.Int63n(int64(HIGH) - int64(LOW)))
 			}
 			data["temp"] = VALUE
+			time.Sleep(2 * time.Second)
 		}
 	}()
 
@@ -373,6 +372,15 @@ func RecvDeviceControlReply(client mqtt.Client, msg mqtt.Message) {
 		fmt.Printf("[recvDeviceControlReply] err:%s\n", err.Error())
 		return
 	}
+	/*
+		{
+		    "code":200,
+		    "id":"49be65b8-2746-41e8-b314-afd724f2213e",
+		    "data":{
+		        "temperature":30
+		    }
+		}
+	*/
 	token := client.Publish(topic+"_reply", byte(0), false, data)
 	if token.Error() != nil {
 		fmt.Printf("[recvDeviceControlReply] err:%s\n", err.Error())
