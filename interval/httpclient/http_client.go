@@ -10,6 +10,7 @@ import (
 
 const (
 	DefaultRetryTimes = 3
+	DefaultTimeout    = 5 * time.Second
 )
 
 type HttpClient struct {
@@ -53,15 +54,17 @@ func (c *HttpClient) Post() (*Data, error) {
 	if c.retry == 0 {
 		c.retry = DefaultRetryTimes
 	}
+	if c.client.Timeout == 0 {
+		c.client.Timeout = DefaultTimeout
+	}
 
 	for i = 0; i < c.retry; i++ {
 		resp, err = post(c)
 		if err == nil {
-
 			break
 		}
 	}
-	if i == c.retry-1 && err != nil {
+	if i == c.retry && err != nil {
 		return nil, err
 	}
 	defer resp.Body.Close()
