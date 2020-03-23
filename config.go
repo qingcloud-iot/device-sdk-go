@@ -15,6 +15,9 @@ type Config struct {
 	Mqttbroker struct {
 		Addr string `yaml:"addr"`
 	}
+	Taskinfo struct {
+		MiddleCredentials []string `yaml:"middle_credentials"`
+	}
 }
 
 func InitConfig() *Config {

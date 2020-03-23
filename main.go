@@ -10,6 +10,7 @@ import (
 
 	"git.internal.yunify.com/iot-sdk/device-sdk-go/index"
 	"git.internal.yunify.com/iot-sdk/device-sdk-go/mqtt"
+	"git.internal.yunify.com/iot-sdk/device-sdk-go/register"
 	mqttp "github.com/eclipse/paho.mqtt.golang"
 )
 
@@ -28,6 +29,8 @@ var (
 	pubEvent      bool // 上报事件
 	serviceContol bool // 设备控制
 	all           bool // 上线、上报属性、上报事件、设备控制
+
+	reg bool // 动态注册
 )
 
 func init() {
@@ -40,6 +43,7 @@ func init() {
 	flag.BoolVar(&pubEvent, "e", false, "")
 	flag.BoolVar(&serviceContol, "s", false, "")
 	flag.BoolVar(&all, "all", false, "")
+	flag.BoolVar(&reg, "r", false, "")
 	flag.Parse()
 
 	InitConfig()
@@ -64,6 +68,10 @@ func main() {
 
 	if all {
 		PropertyAndEventAndServiceFunc()
+	}
+
+	if reg {
+		DynamicRegistry()
 	}
 }
 
@@ -386,5 +394,20 @@ func RecvDeviceControlReply(client mqtt.Client, msg mqtt.Message) {
 		fmt.Printf("[recvDeviceControlReply] err:%s\n", err.Error())
 	} else {
 		fmt.Printf("[recvDeviceControlReply] success\n")
+	}
+}
+
+// DynamicRegistry 设备的动态注册
+func DynamicRegistry() {
+	r := register.Register{}
+	fmt.Println(conf.Taskinfo.MiddleCredentials)
+	for _, midCredential := range conf.Taskinfo.MiddleCredentials {
+		resp, err := r.DynamicRegistry(midCredential)
+		if err != nil {
+			fmt.Printf("%s dynamic registry failed, error: %s\n", midCredential, err.Error())
+			continue
+		}
+		fmt.Printf("%s dynamic registry success, token: %s\n", midCredential, resp.Token)
+		fmt.Println("=====")
 	}
 }
