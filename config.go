@@ -16,7 +16,7 @@ type Config struct {
 		Addr string `yaml:"addr"`
 	}
 	Taskinfo struct {
-		MiddleCredentials []string `yaml:"middle_credentials"`
+		MiddleCredential string `yaml:"middle_credential"`
 	}
 }
 

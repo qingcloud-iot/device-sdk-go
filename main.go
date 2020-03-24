@@ -400,14 +400,11 @@ func RecvDeviceControlReply(client mqtt.Client, msg mqtt.Message) {
 // DynamicRegistry 设备的动态注册
 func DynamicRegistry() {
 	r := register.Register{}
-	fmt.Println(conf.Taskinfo.MiddleCredentials)
-	for _, midCredential := range conf.Taskinfo.MiddleCredentials {
-		resp, err := r.DynamicRegistry(midCredential)
-		if err != nil {
-			fmt.Printf("%s dynamic registry failed, error: %s\n", midCredential, err.Error())
-			continue
-		}
-		fmt.Printf("%s dynamic registry success, token: %s\n", midCredential, resp.Token)
-		fmt.Println("=====")
+	midCredential := conf.Taskinfo.MiddleCredential
+	resp, err := r.DynamicRegistry(midCredential)
+	if err != nil {
+		fmt.Printf("%s dynamic registry failed, error: %s\n", midCredential, err.Error())
+		return
 	}
+	fmt.Printf("%s dynamic registry success, ID:%s, device_name:%s, token:%s\n", midCredential, resp.ID, resp.DeviceName, resp.Token)
 }

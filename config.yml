@@ -3,6 +3,4 @@ device:
 mqttbroker:
     addr: tcp://192.168.14.120:8055
 taskinfo:
-    middle_credentials: 
-        - ae50eb14-f826-4760-88ad-4a7fadcf0e64
-        - 5530398f-25b7-44c1-a807-8888b8db2d6c
+    middle_credential: ae50eb14-f826-4760-88ad-4a7fadcf0e64
