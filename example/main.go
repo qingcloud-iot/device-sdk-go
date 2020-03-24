@@ -353,7 +353,7 @@ func PropertyAndEventAndServiceFunc() {
 	m.SubDeviceControl(serviceIdentifer)
 }
 
-// recvDeviceControlReply 订阅消息后的回调函数，实现具体业务逻辑
+// RecvDeviceControlReply 订阅消息后的回调函数，实现具体业务逻辑
 func RecvDeviceControlReply(client mqtt.Client, msg mqtt.Message) {
 
 	topic := msg.Topic()
