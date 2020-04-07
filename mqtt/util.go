@@ -13,7 +13,6 @@ const (
 	TOKEN_THING_ID  = "thid"
 	WORKER_ID       = 1
 	MQTT_VERSION    = "1.0"
-	WORKER_POOL     = 10
 )
 
 // return token payload

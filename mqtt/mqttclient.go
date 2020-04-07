@@ -9,7 +9,6 @@ import (
 
 	"git.internal.yunify.com/iot-sdk/device-sdk-go/index"
 	mqttp "github.com/eclipse/paho.mqtt.golang"
-	"github.com/panjf2000/ants"
 )
 
 // type MessageHandler func(mqttp.Client, mqttp.Message)
@@ -52,7 +51,6 @@ type MqttClient struct {
 
 	EntityId string
 	ModelId  string
-	pool     *ants.Pool
 
 	PropertyType    string
 	MessageID       string
