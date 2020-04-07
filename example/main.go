@@ -198,8 +198,6 @@ func PubEventFunc() {
 			eventData := index.PropertyKV{
 				"temperature": float64(DeviceTemprature),
 				"reason":      reason,
-				"region":      "北京",
-				"name":        "锅炉",
 			}
 			reply, err := m.PubEvent(context.Background(), eventData, eventIdentifier)
 			if err != nil {
@@ -356,8 +354,6 @@ func PropertyAndEventAndServiceFunc() {
 				eventData := index.PropertyKV{
 					"temperature": float64(DeviceTemprature),
 					"reason":      reason,
-					"region":      "北京",
-					"name":        "锅炉",
 				}
 				reply, err := m.PubEvent(context.Background(), eventData, eventIdentifier)
 				if err != nil {
@@ -388,7 +384,7 @@ func RecvDeviceControlReply(client mqtt.Client, msg mqtt.Message) {
 	DeviceTemprature = message.Params["temperature"].(float64)
 
 	reply := &index.Reply{
-		Id:   message.Id,
+		ID:   message.ID,
 		Code: index.RPC_SUCCESS,
 		Data: make(index.PropertyKV),
 	}

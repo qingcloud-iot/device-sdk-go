@@ -5,48 +5,47 @@ import (
 )
 
 const (
-	PROPERTY_TYPE_BASE     = "base"
-	PROPERTY_TYPE_PLATFORM = "platform"
-)
+	// 上报系统属性时，用于构造 topic
+	PROPERTY_TYPE_BASE = "base"
 
-const (
+	// 上报设备属性时，用于构造 topic
+	PROPERTY_TYPE_PLATFORM = "platform"
+
+	// 属性上报时的 type 字段值
 	PROPERTY_TYPE = "thing.property.post"
 )
 
-type DownReply func(*Reply)
-type SetProperty func(meta PropertyKV) (PropertyKV, error)
-type ServiceHandle func(name string, meta PropertyKV) (PropertyKV, error)
-
-type ReplyChan chan *Reply
+// PropertyKV 事件 kv 健值对
 type PropertyKV map[string]interface{}
+
+// PropertyValueAndTime 属性
 type PropertyValueAndTime struct {
 	Value interface{} `json:"value"`
 	Time  int64       `json:"time"`
 }
 
+// MetaData 上报元数据
 type MetaData map[string]interface{}
 
-type Event struct {
-	Value PropertyKV `json:"value"`
-	Time  int64      `json:"time"`
-}
-
+// ThingPropertyMsg 上报属性的数据结构
 type ThingPropertyMsg struct {
-	Id       string                           `json:"id"`
+	ID       string                           `json:"id"`
 	Version  string                           `json:"version"`
 	Params   map[string]*PropertyValueAndTime `json:"params"`
 	Type     string                           `json:"type"`
 	MetaData MetaData                         `json:"metaData"`
 }
 
-//up event
+// ThingEventMsg 上报事件的数据结构
 type ThingEventMsg struct {
-	Id       string     `json:"id"`
+	ID       string     `json:"id"`
 	Version  string     `json:"version"`
 	Params   *EventData `json:"params"`
 	Type     string     `json:"type"`
 	MetaData MetaData   `json:"metaData"`
 }
+
+// EventData 事件参数及time
 type EventData struct {
 	Value PropertyKV `json:"value"`
 	Time  int64      `json:"time"`
@@ -54,30 +53,35 @@ type EventData struct {
 
 type Reply struct {
 	Code int         `json:"code"`
-	Id   string      `json:"id"`
+	ID   string      `json:"id"`
 	Data interface{} `json:"data"`
 }
+
 type Message struct {
-	Id      string     `json:"id"`
+	ID      string     `json:"id"`
 	Version string     `json:"version"`
 	Type    string     `json:"type"`
 	Params  PropertyKV `json:"params"`
 }
-type Client interface {
-	Connect() error // 设备连接
-	DisConnect()    // 设备断开连接
-	//device
-	PubProperty(ctx context.Context, meta PropertyKV) (*Reply, error) //post property sync
-	PubPropertyAsync(meta PropertyKV) (ReplyChan, error)              //post property async
-	//PubPropertyAsyncEx(meta Metadata, t int64) (ReplyChan, error)                  //post property async
-	PubEvent(ctx context.Context, meta PropertyKV, eventIdentifier string) (*Reply, error) //post property　sync
-	PubEventAsync(event string, meta PropertyKV) (ReplyChan, error)                        //post property　async
-	//driver
-	PubTopicProperty(ctx context.Context, entityID, modelID string, meta PropertyKV) (*Reply, error)            //post property sync
-	PubTopicEvent(ctx context.Context, entityID, modelID string, event string, meta PropertyKV) (*Reply, error) //post property　sync
 
-	// sub
+// Client
+type Client interface {
+	// Connect 设备连接物联网平台
+	Connect() error
+
+	// DisConnect 设备取消连接物联网平台
+	DisConnect()
+
+	// PubProperty 推送设备属性
+	PubProperty(ctx context.Context, meta PropertyKV) (*Reply, error)
+
+	// PubEvent 推送设备事件
+	PubEvent(ctx context.Context, meta PropertyKV, eventIdentifier string) (*Reply, error)
+
+	// SubDeviceControl 订阅 topic，获取下行数据，对设备进行调节
 	SubDeviceControl(serviceIdentifier string)
+
+	// UnSubDeviceControl 取消订阅
 	UnSubDeviceControl(serviceIdentifier string) error
 
 	// normal publish

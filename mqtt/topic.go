@@ -41,7 +41,7 @@ func buildPropertyMessage(meta index.PropertyKV, m *MqttClient) *index.ThingProp
 		params[k] = property
 	}
 	message := &index.ThingPropertyMsg{
-		Id:      m.MessageID,
+		ID:      m.MessageID,
 		Version: MQTT_VERSION,
 		Type:    index.PROPERTY_TYPE,
 		Params:  params,
@@ -66,7 +66,7 @@ func buildPropertyMessageEx(meta index.PropertyKV, t int64) *index.ThingProperty
 		params[k] = property
 	}
 	message := &index.ThingPropertyMsg{
-		Id:      id,
+		ID:      id,
 		Version: MQTT_VERSION,
 		Params:  params,
 	}
@@ -77,7 +77,7 @@ func buildEventMessage(meta index.PropertyKV, m *MqttClient, eventIdentifier str
 	timeNow := time.Now().Unix() * 1000
 
 	message := &index.ThingEventMsg{
-		Id:      m.MessageID,
+		ID:      m.MessageID,
 		Version: MQTT_VERSION,
 		Type:    fmt.Sprintf("thing.event.%s.post", eventIdentifier),
 		MetaData: index.MetaData{

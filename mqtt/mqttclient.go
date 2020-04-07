@@ -136,37 +136,6 @@ func (m *MqttClient) PubProperty(ctx context.Context, meta index.PropertyKV) (*i
 	return reply, nil
 }
 
-func (m *MqttClient) PubPropertyAsync(meta index.PropertyKV) (index.ReplyChan, error) {
-	// ch := make(index.ReplyChan)
-	// reply := &index.Reply{
-	// 	Code: index.RPC_SUCCESS,
-	// }
-	// if len(meta) == 0 {
-	// 	return ch, errors.New("param length is zero")
-	// }
-	// message := buildPropertyMessage(meta, m)
-	// data, err := json.Marshal(message)
-	// if err != nil {
-	// 	return ch, err
-	// }
-	// topic := buildPropertyTopic(m.EntityId, m.ModelId, m.PropertyType)
-	// fmt.Printf("[PubPropertyAsync] topic:%s, message:%s\n", topic, string(data))
-	// if token := m.Client.Publish(topic, byte(0), false, data); token.WaitTimeout(5*time.Second) && token.Error() != nil {
-	// 	reply.Code = index.RPC_TIMEOUT
-	// 	return ch, token.Error()
-	// }
-	// item := m.cacheClient.Add(message.Id, RPC_TIME_OUT, ch)
-	// item.SetAboutToExpireCallback(func(i interface{}) {
-	// 	fmt.Printf("[PubPropertyAsync] i:%+v,timeout topic:%s,data:%s", i, topic, string(data))
-	// 	reply := &index.Reply{
-	// 		Code: index.RPC_TIMEOUT,
-	// 	}
-	// 	ch <- reply
-	// })
-	// return ch, nil
-	return nil, nil
-}
-
 // PubEventSync event 就是将整个 meta 放到 中
 func (m *MqttClient) PubEvent(ctx context.Context, meta index.PropertyKV, eventIdentifier string) (*index.Reply, error) {
 	reply := &index.Reply{
@@ -178,7 +147,6 @@ func (m *MqttClient) PubEvent(ctx context.Context, meta index.PropertyKV, eventI
 
 	message := buildEventMessage(meta, m, eventIdentifier)
 	data, err := json.Marshal(message)
-	fmt.Println("========", string(data))
 	if err != nil {
 		return reply, nil
 	}
@@ -189,40 +157,6 @@ func (m *MqttClient) PubEvent(ctx context.Context, meta index.PropertyKV, eventI
 		return reply, nil
 	}
 	return reply, nil
-}
-
-func (m *MqttClient) PubEventAsync(event string, meta index.PropertyKV) (index.ReplyChan, error) {
-	// ch := make(index.ReplyChan)
-	// if len(meta) == 0 {
-	// 	return ch, errors.New("param length is zero")
-	// }
-	// message := buildEventMessage(meta, m)
-	// data, err := json.Marshal(message)
-	// if err != nil {
-	// 	return ch, err
-	// }
-	// topic := buildEventTopic(m.EntityId, m.ModelId, event)
-	// fmt.Println(topic, string(data))
-	// if token := m.Client.Publish(topic, byte(0), false, data); token.WaitTimeout(5*time.Second) && token.Error() != nil {
-	// 	return ch, err
-	// }
-	// item := m.cacheClient.Add(message.Id, RPC_TIME_OUT, ch)
-	// item.AddAboutToExpireCallback(func(i interface{}) {
-	// 	reply := &index.Reply{
-	// 		Code: index.RPC_TIMEOUT,
-	// 	}
-	// 	ch <- reply
-	// })
-	// return ch, nil
-	return nil, nil
-}
-
-//driver
-func (m *MqttClient) PubTopicProperty(ctx context.Context, entityID, modelID string, meta index.PropertyKV) (*index.Reply, error) {
-	return nil, nil
-}
-func (m *MqttClient) PubTopicEvent(ctx context.Context, entityID, modelID string, event string, meta index.PropertyKV) (*index.Reply, error) {
-	return nil, nil
 }
 
 // SubDeviceControl 同步订阅消息
@@ -285,7 +219,7 @@ func (m *MqttClient) recvDeviceControlReply(client mqttp.Client, msg mqttp.Messa
 	fmt.Printf("[recvDeviceControlReply] topic:%s payload:%s\n", topic, string(payload))
 
 	reply := &index.Reply{
-		Id:   message.Id,
+		ID:   message.ID,
 		Code: index.RPC_SUCCESS,
 		Data: make(index.PropertyKV),
 	}
