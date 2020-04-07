@@ -13,9 +13,10 @@ type Config struct {
 		Token string `yaml:"token"`
 	}
 	Mqttbroker struct {
-		Addr string `yaml:"addr"`
+		Address string `yaml:"address"`
 	}
-	Taskinfo struct {
+	Registry struct {
+		ServiceAddress   string `yaml:"service_address"`
 		MiddleCredential string `yaml:"middle_credential"`
 	}
 }

@@ -3,18 +3,22 @@ package register
 import "git.internal.yunify.com/iot-sdk/device-sdk-go/interval/httpclient"
 
 const (
-	REGISTER_URL = "http://192.168.14.121:8889/api/register/devices"
+	REGISTER_API = "/api/register/devices"
 )
 
 type Register struct {
+	ServiceAddress string
 }
 
-func NewTaskInfo() *Register {
-	return &Register{}
+func NewRegister(addr string) *Register {
+	return &Register{
+		ServiceAddress: addr,
+	}
 }
 
+// DynamicRegistry 大批量设备的动态注册
 func (t *Register) DynamicRegistry(midCredential string) (*httpclient.Data, error) {
-	url := REGISTER_URL + "/" + midCredential
+	url := "http://" + t.ServiceAddress + REGISTER_API + "/" + midCredential
 	client := httpclient.NewHttpClient(url)
 	data, err := client.Post()
 	if err != nil {

@@ -15,11 +15,14 @@ import (
 )
 
 const (
-	LOW  float64 = 30 // 设备温度下限
-	HIGH float64 = 50 // 设备温度上限
+	// LOW 设备温度下限
+	LOW float64 = 30
+	// HIGH 设备温度上限
+	HIGH float64 = 50
 )
 
-var VALUE float64 = 30 // 模拟设备值
+// DeviceTemprature 模拟设备温度值
+var DeviceTemprature float64 = 30
 
 var (
 	configPath string
@@ -85,7 +88,7 @@ func ConnectFunc() {
 
 	options := &mqtt.Options{
 		Token:     token,
-		Server:    conf.Mqttbroker.Addr, // 127.0.0.1:1883 192.168.14.120:1883
+		Server:    conf.Mqttbroker.Address,
 		MessageID: "message-device.1",
 		EntityId:  entityID,
 		ModelId:   modelID,
@@ -113,7 +116,7 @@ func PubPropertyFunc() {
 
 	options := &mqtt.Options{
 		Token:        token,
-		Server:       conf.Mqttbroker.Addr, // 127.0.0.1:1883 192.168.14.120:1883
+		Server:       conf.Mqttbroker.Address,
 		MessageID:    "message-device.1",
 		PropertyType: index.PROPERTY_TYPE_BASE,
 		EntityId:     entityID,
@@ -131,7 +134,7 @@ func PubPropertyFunc() {
 	}
 
 	data := index.PropertyKV{
-		"temp": VALUE,
+		"temp": DeviceTemprature,
 	}
 
 	// 上报属性
@@ -141,13 +144,12 @@ func PubPropertyFunc() {
 		if err != nil {
 			panic(err)
 		}
-		// fmt.Println("PubPropertySync reply", reply)
 		time.Sleep(2 * time.Second)
-		VALUE++
-		if VALUE < 0 || VALUE > 100 {
-			VALUE = float64(rand.Int63n(int64(HIGH) - int64(LOW)))
+		DeviceTemprature++
+		if DeviceTemprature < 0 || DeviceTemprature > 100 {
+			DeviceTemprature = float64(rand.Int63n(int64(HIGH) - int64(LOW)))
 		}
-		data["temp"] = VALUE
+		data["temp"] = DeviceTemprature
 	}
 }
 
@@ -161,7 +163,7 @@ func PubEventFunc() {
 
 	options := &mqtt.Options{
 		Token:     token,
-		Server:    conf.Mqttbroker.Addr, // 127.0.0.1:1883 192.168.14.120:1883
+		Server:    conf.Mqttbroker.Address,
 		MessageID: "message-device.1",
 		EntityId:  entityID,
 		ModelId:   modelID,
@@ -181,12 +183,21 @@ func PubEventFunc() {
 
 	// 上报事件
 	for {
-		VALUE = float64(rand.Intn(50)) + LOW - 15
+		DeviceTemprature = float64(rand.Intn(50)) + LOW - 15
 
 		// 当温度低于 30 超过 50 时，上报事件
-		if VALUE < 30 || VALUE > 50 {
+		if DeviceTemprature < 30 || DeviceTemprature > 50 {
+			var reason int
+			if DeviceTemprature < 30 {
+				reason = 0
+			}
+			if DeviceTemprature > 50 {
+				reason = 1
+			}
+
 			eventData := index.PropertyKV{
-				"temperature": float64(VALUE),
+				"temperature": float64(DeviceTemprature),
+				"reason":      reason,
 				"region":      "北京",
 				"name":        "锅炉",
 			}
@@ -212,7 +223,7 @@ func ServiceDeviceControlFunc() {
 
 	options := &mqtt.Options{
 		Token:        token,
-		Server:       conf.Mqttbroker.Addr, // 127.0.0.1:1883 192.168.14.120:1883
+		Server:       conf.Mqttbroker.Address,
 		PropertyType: index.PROPERTY_TYPE_BASE,
 		MessageID:    "message-device.1",
 		EntityId:     entityID,
@@ -244,19 +255,19 @@ func ServiceDeviceControlFunc() {
 	go func() {
 		for {
 			data := index.PropertyKV{
-				"temp": VALUE,
+				"temp": DeviceTemprature,
 			}
 			ctx, _ := context.WithTimeout(context.Background(), 3*time.Second)
 			_, err := m.PubProperty(ctx, data)
 			if err != nil {
 				panic(err)
 			}
-			// fmt.Println("PubPropertySync reply", reply)
-			VALUE++
-			if VALUE < 0 || VALUE > 100 {
-				VALUE = float64(rand.Int63n(int64(HIGH) - int64(LOW)))
+
+			DeviceTemprature++
+			if DeviceTemprature < 0 || DeviceTemprature > 100 {
+				DeviceTemprature = float64(rand.Int63n(int64(HIGH) - int64(LOW)))
 			}
-			data["temp"] = VALUE
+			data["temp"] = DeviceTemprature
 			time.Sleep(2 * time.Second)
 		}
 	}()
@@ -280,7 +291,7 @@ func PropertyAndEventAndServiceFunc() {
 
 	options := &mqtt.Options{
 		Token:        token,
-		Server:       conf.Mqttbroker.Addr, // 127.0.0.1:1883 192.168.14.120:1883
+		Server:       conf.Mqttbroker.Address,
 		PropertyType: index.PROPERTY_TYPE_BASE,
 		MessageID:    "message-device.1",
 		EntityId:     entityID,
@@ -312,19 +323,19 @@ func PropertyAndEventAndServiceFunc() {
 	go func() {
 		for {
 			data := index.PropertyKV{
-				"temp": VALUE,
+				"temp": DeviceTemprature,
 			}
 			ctx, _ := context.WithTimeout(context.Background(), 3*time.Second)
 			_, err := m.PubProperty(ctx, data)
 			if err != nil {
 				panic(err)
 			}
-			// fmt.Println("PubPropertySync reply", reply)
-			VALUE++
-			if VALUE < 0 || VALUE > 100 {
-				VALUE = float64(rand.Int63n(int64(HIGH) - int64(LOW)))
+
+			DeviceTemprature++
+			if DeviceTemprature < 0 || DeviceTemprature > 100 {
+				DeviceTemprature = float64(rand.Int63n(int64(HIGH) - int64(LOW)))
 			}
-			data["temp"] = VALUE
+			data["temp"] = DeviceTemprature
 			time.Sleep(2 * time.Second)
 		}
 	}()
@@ -333,9 +344,18 @@ func PropertyAndEventAndServiceFunc() {
 	go func() {
 		for {
 			// 当温度低于 30 超过 50 时，上报事件
-			if VALUE < 30 || VALUE > 50 {
+			if DeviceTemprature < 30 || DeviceTemprature > 50 {
+				var reason int
+				if DeviceTemprature < 30 {
+					reason = 0 // 温度过低
+				}
+				if DeviceTemprature > 50 {
+					reason = 1 // 温度过高
+				}
+
 				eventData := index.PropertyKV{
-					"temperature": float64(VALUE),
+					"temperature": float64(DeviceTemprature),
+					"reason":      reason,
 					"region":      "北京",
 					"name":        "锅炉",
 				}
@@ -365,7 +385,7 @@ func RecvDeviceControlReply(client mqtt.Client, msg mqtt.Message) {
 		fmt.Printf("recvDeviceControlReply err:%s", err.Error())
 		return
 	}
-	VALUE = message.Params["temperature"].(float64)
+	DeviceTemprature = message.Params["temperature"].(float64)
 
 	reply := &index.Reply{
 		Id:   message.Id,
@@ -399,8 +419,9 @@ func RecvDeviceControlReply(client mqtt.Client, msg mqtt.Message) {
 
 // DynamicRegistry 设备的动态注册
 func DynamicRegistry() {
-	r := register.Register{}
-	midCredential := conf.Taskinfo.MiddleCredential
+	midCredential := conf.Registry.MiddleCredential
+
+	r := register.NewRegister(conf.Registry.ServiceAddress)
 	resp, err := r.DynamicRegistry(midCredential)
 	if err != nil {
 		fmt.Printf("%s dynamic registry failed, error: %s\n", midCredential, err.Error())

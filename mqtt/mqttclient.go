@@ -68,7 +68,7 @@ func NewMqtt(options *Options) (index.Client, error) {
 	}
 
 	opts := mqttp.NewClientOptions()
-	opts.AddBroker(options.Server)
+	opts.AddBroker("tcp://" + options.Server)
 	if options.EntityId != "" {
 		opts.SetClientID(options.EntityId)
 		opts.SetUsername(options.EntityId)
@@ -178,6 +178,7 @@ func (m *MqttClient) PubEvent(ctx context.Context, meta index.PropertyKV, eventI
 
 	message := buildEventMessage(meta, m, eventIdentifier)
 	data, err := json.Marshal(message)
+	fmt.Println("========", string(data))
 	if err != nil {
 		return reply, nil
 	}
