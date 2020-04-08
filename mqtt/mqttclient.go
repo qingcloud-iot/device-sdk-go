@@ -11,8 +11,6 @@ import (
 	mqttp "github.com/eclipse/paho.mqtt.golang"
 )
 
-// type MessageHandler func(mqttp.Client, mqttp.Message)
-
 type DeviceControlHandler func(mqttp.Client, mqttp.Message)
 
 type Options struct {
@@ -114,7 +112,7 @@ func (m *MqttClient) DisConnect() {
 	m.Client.Disconnect(QUIESCE)
 }
 
-// PubProperty 将消息 id 放入 cache 并设置过期时间，值为 chan reply，ctx 到期后返回
+// PubProperty 上报属性
 func (m *MqttClient) PubProperty(ctx context.Context, meta index.PropertyKV) (*index.Reply, error) {
 	reply := &index.Reply{
 		Code: index.RPC_SUCCESS,
@@ -136,7 +134,7 @@ func (m *MqttClient) PubProperty(ctx context.Context, meta index.PropertyKV) (*i
 	return reply, nil
 }
 
-// PubEventSync event 就是将整个 meta 放到 中
+// PubEvent 上报事件
 func (m *MqttClient) PubEvent(ctx context.Context, meta index.PropertyKV, eventIdentifier string) (*index.Reply, error) {
 	reply := &index.Reply{
 		Code: index.RPC_SUCCESS,
