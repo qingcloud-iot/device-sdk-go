@@ -5,9 +5,11 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"git.internal.yunify.com/iot-sdk/device-sdk-go/internal/client"
+	"git.internal.yunify.com/iot-sdk/device-sdk-go/internal/constant"
+	"git.internal.yunify.com/iot-sdk/device-sdk-go/internal/define"
 	"time"
 
-	"git.internal.yunify.com/iot-sdk/device-sdk-go/index"
 	mqttp "github.com/eclipse/paho.mqtt.golang"
 )
 
@@ -56,7 +58,7 @@ type MqttClient struct {
 }
 
 // NewMqtt 创建客户端实例
-func NewMqtt(options *Options) (index.Client, error) {
+func NewMqtt(options *Options) (client.Client, error) {
 	var (
 		err error
 	)
@@ -113,9 +115,9 @@ func (m *MqttClient) DisConnect() {
 }
 
 // PubProperty 上报属性
-func (m *MqttClient) PubProperty(ctx context.Context, meta index.PropertyKV) (*index.Reply, error) {
-	reply := &index.Reply{
-		Code: index.RPC_SUCCESS,
+func (m *MqttClient) PubProperty(ctx context.Context, meta define.PropertyKV) (*define.Reply, error) {
+	reply := &define.Reply{
+		Code: constant.RPC_SUCCESS,
 	}
 	if len(meta) == 0 {
 		return reply, errors.New("param length is zero")
@@ -128,16 +130,16 @@ func (m *MqttClient) PubProperty(ctx context.Context, meta index.PropertyKV) (*i
 	topic := buildPropertyTopic(m.EntityId, m.ModelId, m.PropertyType)
 	fmt.Printf("[PubProperty] topic:%s, message:%s\n", topic, string(data))
 	if token := m.Client.Publish(topic, byte(0), false, data); token.WaitTimeout(5*time.Second) && token.Error() != nil {
-		reply.Code = index.RPC_TIMEOUT
+		reply.Code = constant.RPC_TIMEOUT
 		return reply, nil
 	}
 	return reply, nil
 }
 
 // PubEvent 上报事件
-func (m *MqttClient) PubEvent(ctx context.Context, meta index.PropertyKV, eventIdentifier string) (*index.Reply, error) {
-	reply := &index.Reply{
-		Code: index.RPC_SUCCESS,
+func (m *MqttClient) PubEvent(ctx context.Context, meta define.PropertyKV, eventIdentifier string) (*define.Reply, error) {
+	reply := &define.Reply{
+		Code: constant.RPC_SUCCESS,
 	}
 	if len(meta) == 0 {
 		return reply, errors.New("param length is zero")
@@ -151,7 +153,7 @@ func (m *MqttClient) PubEvent(ctx context.Context, meta index.PropertyKV, eventI
 	topic := buildEventTopic(m.EntityId, m.ModelId, eventIdentifier)
 	fmt.Printf("[PubEvent pub] topic:%s, message:%s\n", topic, string(data))
 	if token := m.Client.Publish(topic, byte(0), false, data); token.WaitTimeout(5*time.Second) && token.Error() != nil {
-		reply.Code = index.RPC_TIMEOUT
+		reply.Code = constant.RPC_TIMEOUT
 		return reply, nil
 	}
 	return reply, nil
@@ -216,10 +218,10 @@ func (m *MqttClient) recvDeviceControlReply(client mqttp.Client, msg mqttp.Messa
 
 	fmt.Printf("[recvDeviceControlReply] topic:%s payload:%s\n", topic, string(payload))
 
-	reply := &index.Reply{
+	reply := &define.Reply{
 		ID:   message.ID,
-		Code: index.RPC_SUCCESS,
-		Data: make(index.PropertyKV),
+		Code: constant.RPC_SUCCESS,
+		Data: make(define.PropertyKV),
 	}
 
 	reply.Data = message.Params

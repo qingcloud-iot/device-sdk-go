@@ -5,10 +5,11 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
+	"git.internal.yunify.com/iot-sdk/device-sdk-go/internal/constant"
+	"git.internal.yunify.com/iot-sdk/device-sdk-go/internal/define"
 	"math/rand"
 	"time"
 
-	"git.internal.yunify.com/iot-sdk/device-sdk-go/index"
 	"git.internal.yunify.com/iot-sdk/device-sdk-go/mqtt"
 	"git.internal.yunify.com/iot-sdk/device-sdk-go/register"
 	mqttp "github.com/eclipse/paho.mqtt.golang"
@@ -125,7 +126,7 @@ func PubPropertyFunc() {
 		Token:        token,
 		Server:       conf.Mqttbroker.Address,
 		MessageID:    uuid.NewV4().String(),
-		PropertyType: index.PROPERTY_TYPE_BASE,
+		PropertyType: constant.PROPERTY_TYPE_BASE,
 		EntityId:     entityID,
 		ModelId:      modelID,
 	}
@@ -140,7 +141,7 @@ func PubPropertyFunc() {
 		panic(err)
 	}
 
-	data := index.PropertyKV{
+	data := define.PropertyKV{
 		"temp": DeviceTemprature,
 	}
 
@@ -202,7 +203,7 @@ func PubEventFunc() {
 				reason = 1
 			}
 
-			eventData := index.PropertyKV{
+			eventData := define.PropertyKV{
 				"temperature": float64(DeviceTemprature),
 				"reason":      reason,
 			}
@@ -229,7 +230,7 @@ func ServiceDeviceControlFunc() {
 	options := &mqtt.Options{
 		Token:        token,
 		Server:       conf.Mqttbroker.Address,
-		PropertyType: index.PROPERTY_TYPE_BASE,
+		PropertyType: constant.PROPERTY_TYPE_BASE,
 		MessageID:    uuid.NewV4().String(),
 		EntityId:     entityID,
 		ModelId:      modelID,
@@ -259,7 +260,7 @@ func ServiceDeviceControlFunc() {
 	// 上报属性
 	go func() {
 		for {
-			data := index.PropertyKV{
+			data := define.PropertyKV{
 				"temp": DeviceTemprature,
 			}
 			ctx, _ := context.WithTimeout(context.Background(), 3*time.Second)
@@ -297,7 +298,7 @@ func PropertyAndEventAndServiceFunc() {
 	options := &mqtt.Options{
 		Token:        token,
 		Server:       conf.Mqttbroker.Address,
-		PropertyType: index.PROPERTY_TYPE_BASE,
+		PropertyType: constant.PROPERTY_TYPE_BASE,
 		MessageID:    uuid.NewV4().String(),
 		EntityId:     entityID,
 		ModelId:      modelID,
@@ -327,7 +328,7 @@ func PropertyAndEventAndServiceFunc() {
 	// 上报属性
 	go func() {
 		for {
-			data := index.PropertyKV{
+			data := define.PropertyKV{
 				"temp": DeviceTemprature,
 			}
 			ctx, _ := context.WithTimeout(context.Background(), 3*time.Second)
@@ -358,7 +359,7 @@ func PropertyAndEventAndServiceFunc() {
 					reason = 1 // 温度过高
 				}
 
-				eventData := index.PropertyKV{
+				eventData := define.PropertyKV{
 					"temperature": float64(DeviceTemprature),
 					"reason":      reason,
 				}
@@ -392,10 +393,10 @@ func RecvDeviceControlReply(client mqtt.Client, msg mqtt.Message) {
 	// 将设备温度调节为服务下发的温度值
 	DeviceTemprature = message.Params["temperature"].(float64)
 
-	reply := &index.Reply{
+	reply := &define.Reply{
 		ID:   message.ID,
-		Code: index.RPC_SUCCESS,
-		Data: make(index.PropertyKV),
+		Code: constant.RPC_SUCCESS,
+		Data: make(define.PropertyKV),
 	}
 
 	reply.Data = message.Params

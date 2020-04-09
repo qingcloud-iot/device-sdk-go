@@ -1,19 +1,8 @@
-package index
+package define
 
-import (
-	"context"
-)
-
-const (
-	// 上报系统属性时，用于构造 topic
-	PROPERTY_TYPE_BASE = "base"
-
-	// 上报设备属性时，用于构造 topic
-	PROPERTY_TYPE_PLATFORM = "platform"
-
-	// 属性上报时的 type 字段值
-	PROPERTY_TYPE = "thing.property.post"
-)
+/*
+	定义消息结构对应的 go 类型
+*/
 
 // PropertyKV 事件 kv 健值对
 type PropertyKV map[string]interface{}
@@ -62,28 +51,4 @@ type Message struct {
 	Version string     `json:"version"`
 	Type    string     `json:"type"`
 	Params  PropertyKV `json:"params"`
-}
-
-// Client
-type Client interface {
-	// Connect 设备连接物联网平台
-	Connect() error
-
-	// DisConnect 设备取消连接物联网平台
-	DisConnect()
-
-	// PubProperty 推送设备属性
-	PubProperty(ctx context.Context, meta PropertyKV) (*Reply, error)
-
-	// PubEvent 推送设备事件
-	PubEvent(ctx context.Context, meta PropertyKV, eventIdentifier string) (*Reply, error)
-
-	// SubDeviceControl 订阅 topic，获取下行数据，对设备进行调节
-	SubDeviceControl(serviceIdentifier string)
-
-	// UnSubDeviceControl 取消订阅
-	UnSubDeviceControl(serviceIdentifier string) error
-
-	// normal publish
-	// Publish(topic string, data []byte) (*Reply, error)
 }
