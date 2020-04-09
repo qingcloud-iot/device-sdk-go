@@ -2,10 +2,9 @@ package mqtt
 
 import (
 	"errors"
-	"fmt"
-	"github.com/dgrijalva/jwt-go"
 	"math/rand"
-	"strings"
+
+	"github.com/dgrijalva/jwt-go"
 )
 
 const (
@@ -15,7 +14,7 @@ const (
 	MQTT_VERSION    = "1.0"
 )
 
-// return token payload
+// ParseToken return token payload
 func ParseToken(deviceToken string) (string, string, error) {
 	var (
 		entityID string
@@ -48,18 +47,7 @@ func ParseToken(deviceToken string) (string, string, error) {
 		return entityID, modelID, errors.New("token error")
 	}
 }
-func parseServiceName(topic string) string {
-	kv := strings.Split(topic, "/")
-	if len(kv) != 8 {
-		return ""
-	}
-	return kv[6]
-}
 
-func isServiceTopic(modelID, entityID, topic string) bool {
-	temp := fmt.Sprintf("/sys/%s/%s/thing/service", modelID, entityID)
-	return strings.HasPrefix(topic, temp)
-}
 func RandInt64(min, max int64) int64 {
 	if min >= max || min == 0 || max == 0 {
 		return max

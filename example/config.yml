@@ -3,5 +3,5 @@ device:
 mqttbroker:
     address: 192.168.21.29:1883
 registry:
-    service_address: 192.168.14.121:8889
-    middle_credential: e2586090-32a7-4171-ad79-753f090e8e5a
+    service_address: 192.168.21.22:8889
+    middle_credential: 0d9ff70b-8a3a-4372-a5fa-6c59a5fe2829

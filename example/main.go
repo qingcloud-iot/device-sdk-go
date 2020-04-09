@@ -12,6 +12,7 @@ import (
 	"git.internal.yunify.com/iot-sdk/device-sdk-go/mqtt"
 	"git.internal.yunify.com/iot-sdk/device-sdk-go/register"
 	mqttp "github.com/eclipse/paho.mqtt.golang"
+	uuid "github.com/satori/go.uuid"
 )
 
 const (
@@ -33,11 +34,11 @@ var (
 	serviceContol bool // 设备控制
 	all           bool // 上线、上报属性、上报事件、设备控制
 
-	reg bool // 动态注册
+	reg           bool // 动态注册
+	regAndConnect bool // 动态注册并上线设备
 )
 
 func init() {
-	// 加载配置文件
 
 	// 通过命令行参数运行不同功能
 	flag.StringVar(&configPath, "conf", "./config.yml", "")
@@ -47,8 +48,11 @@ func init() {
 	flag.BoolVar(&serviceContol, "s", false, "")
 	flag.BoolVar(&all, "all", false, "")
 	flag.BoolVar(&reg, "r", false, "")
+	flag.BoolVar(&regAndConnect, "rc", false, "")
+
 	flag.Parse()
 
+	// 加载配置文件
 	InitConfig()
 }
 
@@ -76,6 +80,9 @@ func main() {
 	if reg {
 		DynamicRegistry()
 	}
+
+	if regAndConnect {
+	}
 }
 
 // ConnectFunc 提供设备上线功能
@@ -89,7 +96,7 @@ func ConnectFunc() {
 	options := &mqtt.Options{
 		Token:     token,
 		Server:    conf.Mqttbroker.Address,
-		MessageID: "message-device.1",
+		MessageID: uuid.NewV4().String(),
 		EntityId:  entityID,
 		ModelId:   modelID,
 	}
@@ -117,7 +124,7 @@ func PubPropertyFunc() {
 	options := &mqtt.Options{
 		Token:        token,
 		Server:       conf.Mqttbroker.Address,
-		MessageID:    "message-device.1",
+		MessageID:    uuid.NewV4().String(),
 		PropertyType: index.PROPERTY_TYPE_BASE,
 		EntityId:     entityID,
 		ModelId:      modelID,
@@ -164,7 +171,7 @@ func PubEventFunc() {
 	options := &mqtt.Options{
 		Token:     token,
 		Server:    conf.Mqttbroker.Address,
-		MessageID: "message-device.1",
+		MessageID: uuid.NewV4().String(),
 		EntityId:  entityID,
 		ModelId:   modelID,
 	}
@@ -223,7 +230,7 @@ func ServiceDeviceControlFunc() {
 		Token:        token,
 		Server:       conf.Mqttbroker.Address,
 		PropertyType: index.PROPERTY_TYPE_BASE,
-		MessageID:    "message-device.1",
+		MessageID:    uuid.NewV4().String(),
 		EntityId:     entityID,
 		ModelId:      modelID,
 	}
@@ -291,7 +298,7 @@ func PropertyAndEventAndServiceFunc() {
 		Token:        token,
 		Server:       conf.Mqttbroker.Address,
 		PropertyType: index.PROPERTY_TYPE_BASE,
-		MessageID:    "message-device.1",
+		MessageID:    uuid.NewV4().String(),
 		EntityId:     entityID,
 		ModelId:      modelID,
 	}
@@ -381,6 +388,8 @@ func RecvDeviceControlReply(client mqtt.Client, msg mqtt.Message) {
 		fmt.Printf("recvDeviceControlReply err:%s", err.Error())
 		return
 	}
+
+	// 将设备温度调节为服务下发的温度值
 	DeviceTemprature = message.Params["temperature"].(float64)
 
 	reply := &index.Reply{
@@ -424,4 +433,9 @@ func DynamicRegistry() {
 		return
 	}
 	fmt.Printf("%s dynamic registry success, ID:%s, device_name:%s, token:%s\n", midCredential, resp.ID, resp.DeviceName, resp.Token)
+}
+
+// DynamicRegistryAndConnect 设备的动态注册并上线
+func DynamicRegistryAndConnect() {
+
 }
