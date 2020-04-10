@@ -11,7 +11,7 @@ import (
 	"time"
 
 	"git.internal.yunify.com/iot-sdk/device-sdk-go/mqtt"
-	"git.internal.yunify.com/iot-sdk/device-sdk-go/register"
+	"git.internal.yunify.com/iot-sdk/device-sdk-go/internal/register"
 	mqttp "github.com/eclipse/paho.mqtt.golang"
 	uuid "github.com/satori/go.uuid"
 )
