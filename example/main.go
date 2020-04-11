@@ -2,17 +2,16 @@ package main
 
 import (
 	"context"
-	"encoding/json"
 	"flag"
 	"fmt"
-	"git.internal.yunify.com/iot-sdk/device-sdk-go/internal/constant"
-	"git.internal.yunify.com/iot-sdk/device-sdk-go/internal/define"
 	"math/rand"
 	"time"
 
-	"git.internal.yunify.com/iot-sdk/device-sdk-go/mqtt"
+	"git.internal.yunify.com/iot-sdk/device-sdk-go/internal/constant"
+	"git.internal.yunify.com/iot-sdk/device-sdk-go/internal/define"
+
 	"git.internal.yunify.com/iot-sdk/device-sdk-go/internal/register"
-	mqttp "github.com/eclipse/paho.mqtt.golang"
+	"git.internal.yunify.com/iot-sdk/device-sdk-go/mqtt"
 	uuid "github.com/satori/go.uuid"
 )
 
@@ -83,25 +82,19 @@ func main() {
 	}
 
 	if regAndConnect {
+		DynamicRegistryAndConnect()
 	}
 }
 
 // ConnectFunc 提供设备上线功能
 func ConnectFunc() {
-	token := conf.Device.Token
-	entityID, modelID, err := mqtt.ParseToken(token)
-	if err != nil {
-		panic("Parse token error: " + err.Error())
-	}
-
 	options := &mqtt.Options{
-		Token:     token,
+		Token:     conf.Device.Token,
 		Server:    conf.Mqttbroker.Address,
 		MessageID: uuid.NewV4().String(),
-		EntityID:  entityID,
-		ModelID:   modelID,
 	}
-	m, err := mqtt.NewMqtt(options)
+
+	m, err := mqtt.InitWithToken(options)
 	if err != nil {
 		panic(err)
 	}
@@ -116,21 +109,14 @@ func ConnectFunc() {
 
 // PubPropertyFunc 在 0 ～ 100 范围内上报温度属性值
 func PubPropertyFunc() {
-	token := conf.Device.Token
-	entityID, modelID, err := mqtt.ParseToken(token)
-	if err != nil {
-		panic("Parse token error: " + err.Error())
-	}
-
 	options := &mqtt.Options{
-		Token:        token,
+		Token:        conf.Device.Token,
 		Server:       conf.Mqttbroker.Address,
 		MessageID:    uuid.NewV4().String(),
 		PropertyType: constant.PROPERTY_TYPE_BASE,
-		EntityID:     entityID,
-		ModelID:      modelID,
 	}
-	m, err := mqtt.NewMqtt(options)
+
+	m, err := mqtt.InitWithToken(options)
 	if err != nil {
 		panic(err)
 	}
@@ -163,20 +149,14 @@ func PubPropertyFunc() {
 
 // PubEventFunc 上报事件
 func PubEventFunc() {
-	token := conf.Device.Token
-	entityID, modelID, err := mqtt.ParseToken(token)
-	if err != nil {
-		panic("Parse token error: " + err.Error())
+	options := &mqtt.Options{
+		Token:        conf.Device.Token,
+		Server:       conf.Mqttbroker.Address,
+		MessageID:    uuid.NewV4().String(),
+		PropertyType: constant.PROPERTY_TYPE_BASE,
 	}
 
-	options := &mqtt.Options{
-		Token:     token,
-		Server:    conf.Mqttbroker.Address,
-		MessageID: uuid.NewV4().String(),
-		EntityID:  entityID,
-		ModelID:   modelID,
-	}
-	m, err := mqtt.NewMqtt(options)
+	m, err := mqtt.InitWithToken(options)
 	if err != nil {
 		panic(err)
 	}
@@ -219,34 +199,26 @@ func PubEventFunc() {
 
 // ServiceDeviceControlFunc 设备控制
 func ServiceDeviceControlFunc() {
-	token := conf.Device.Token
-
-	entityID, modelID, err := mqtt.ParseToken(token)
-	if err != nil {
-		panic("Parse token error: " + err.Error())
-	}
-	serviceIdentifer := "setTemperature" // 服务调用的 服务 identifer
 
 	options := &mqtt.Options{
-		Token:        token,
+		Token:        conf.Device.Token,
 		Server:       conf.Mqttbroker.Address,
 		PropertyType: constant.PROPERTY_TYPE_BASE,
 		MessageID:    uuid.NewV4().String(),
-		EntityID:     entityID,
-		ModelID:      modelID,
 	}
+	serviceIdentifer := "setTemperature" // 服务调用的 服务 identifer
 
 	// 供设备控制使用
-	options.SetDeviceControlHandler(func(client mqttp.Client, msg mqttp.Message) {
-		fmt.Printf("[sdk-go sub] topic:%s, message:%s\n", msg.Topic(), string(msg.Payload()))
-		switch {
-		case msg.Topic() == mqtt.BuildServiceControlReply(modelID, entityID, serviceIdentifer):
-			RecvDeviceControlReply(client, msg)
-		default:
-		}
-	})
+	// options.SetDeviceControlHandler(func(client mqttp.Client, msg mqttp.Message) {
+	// 	fmt.Printf("[sdk-go sub] topic:%s, message:%s\n", msg.Topic(), string(msg.Payload()))
+	// 	switch {
+	// 	case msg.Topic() == mqtt.BuildServiceControlReply(modelID, entityID, serviceIdentifer):
+	// 		RecvDeviceControlReply(client, msg)
+	// 	default:
+	// 	}
+	// })
 
-	m, err := mqtt.NewMqtt(options)
+	m, err := mqtt.InitWithToken(options)
 	if err != nil {
 		panic(err)
 	}
@@ -285,36 +257,27 @@ func ServiceDeviceControlFunc() {
 
 // PropertyAndEventAndServiceFunc 提供全功能 demo
 func PropertyAndEventAndServiceFunc() {
-	token := conf.Device.Token
-
-	entityID, modelID, err := mqtt.ParseToken(token)
-	if err != nil {
-		panic("Parse token error: " + err.Error())
-	}
 
 	eventIdentifier := "temperatureEvent" // 上报事件的 事件 identifer
 	serviceIdentifer := "setTemperature"  // 服务调用的 服务 identifer
+	inputIdentifier := "temperature"      // 执行服务调用改变的参数值
 
 	options := &mqtt.Options{
-		Token:        token,
+		Token:        conf.Device.Token,
 		Server:       conf.Mqttbroker.Address,
 		PropertyType: constant.PROPERTY_TYPE_BASE,
 		MessageID:    uuid.NewV4().String(),
-		EntityID:     entityID,
-		ModelID:      modelID,
+
+		DeviceHandlers: []mqtt.DeviceControlHandler{
+			mqtt.DeviceControlHandler{
+				ServiceIdentifer: serviceIdentifer,
+				InputIdentifier:  inputIdentifier,
+				ServiceHandler:   DeviceControlCallback,
+			},
+		},
 	}
 
-	// 供设备控制使用的回调函数
-	options.SetDeviceControlHandler(func(client mqttp.Client, msg mqttp.Message) {
-		fmt.Printf("[sdk-go sub] topic:%s, message:%s\n", msg.Topic(), string(msg.Payload()))
-		switch {
-		case msg.Topic() == mqtt.BuildServiceControlReply(modelID, entityID, serviceIdentifer):
-			RecvDeviceControlReply(client, msg)
-		default:
-		}
-	})
-
-	m, err := mqtt.NewMqtt(options)
+	m, err := mqtt.InitWithToken(options)
 	if err != nil {
 		panic(err)
 	}
@@ -377,51 +340,20 @@ func PropertyAndEventAndServiceFunc() {
 	m.SubDeviceControl(serviceIdentifer)
 }
 
-// RecvDeviceControlReply 订阅消息后的回调函数，实现具体业务逻辑
-func RecvDeviceControlReply(client mqtt.Client, msg mqtt.Message) {
+// DeviceControlCallback 设备控制的回调函数
+func DeviceControlCallback(inputIdentifier string, msg *define.Message) error {
+	for k, v := range msg.Params {
+		if k == inputIdentifier {
 
-	topic := msg.Topic()
-	payload := msg.Payload()
-
-	fmt.Printf("[recvDeviceControlReply] topic:%s payload:%s\n", topic, string(payload))
-	message, err := mqtt.ParseMessage(payload)
-	if err != nil {
-		fmt.Printf("recvDeviceControlReply err:%s", err.Error())
-		return
-	}
-
-	// 将设备温度调节为服务下发的温度值
-	DeviceTemprature = message.Params["temperature"].(float64)
-
-	reply := &define.Reply{
-		ID:   message.ID,
-		Code: constant.RPC_SUCCESS,
-		Data: make(define.PropertyKV),
-	}
-
-	reply.Data = message.Params
-
-	data, err := json.Marshal(reply)
-	if err != nil {
-		fmt.Printf("[recvDeviceControlReply] err:%s\n", err.Error())
-		return
-	}
-	/*
-		{
-		    "code":200,
-		    "id":"49be65b8-2746-41e8-b314-afd724f2213e",
-		    "data":{
-		        "temperature":30
-		    }
+			// 将设备温度调节为服务下发的温度值
+			// float64 为 input 对应的类型
+			DeviceTemprature = v.(float64)
 		}
-	*/
-	token := client.Publish(topic+"_reply", byte(0), false, data)
-	if token.Error() != nil {
-		fmt.Printf("[recvDeviceControlReply] err:%s\n", err.Error())
-	} else {
-		fmt.Printf("[recvDeviceControlReply] success\n")
 	}
+	return nil
 }
+
+// -------------------------
 
 // DynamicRegistry 设备的动态注册
 func DynamicRegistry() {
@@ -438,5 +370,25 @@ func DynamicRegistry() {
 
 // DynamicRegistryAndConnect 设备的动态注册并上线
 func DynamicRegistryAndConnect() {
+	// ConnectFunc 提供设备上线功能
 
+	options := &mqtt.Options{
+		MiddleCredential:       conf.Registry.MiddleCredential,
+		DynamocRegisterAddress: conf.Registry.ServiceAddress,
+
+		Server:       conf.Mqttbroker.Address,
+		PropertyType: constant.PROPERTY_TYPE_BASE,
+		MessageID:    uuid.NewV4().String(),
+	}
+	m, err := mqtt.InitWithMiddleCredential(options)
+	if err != nil {
+		panic(err)
+	}
+
+	// 连接
+	err = m.Connect()
+	if err != nil {
+		panic(err)
+	}
+	select {}
 }

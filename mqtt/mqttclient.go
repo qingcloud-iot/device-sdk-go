@@ -5,43 +5,38 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"git.internal.yunify.com/iot-sdk/device-sdk-go/internal/register"
 	"time"
 
-	"git.internal.yunify.com/iot-sdk/device-sdk-go/internal/client"
+	iClient "git.internal.yunify.com/iot-sdk/device-sdk-go/internal/client"
 	"git.internal.yunify.com/iot-sdk/device-sdk-go/internal/constant"
 	"git.internal.yunify.com/iot-sdk/device-sdk-go/internal/define"
 
 	mqttp "github.com/eclipse/paho.mqtt.golang"
 )
 
-type DeviceControlHandler func(mqttp.Client, mqttp.Message)
+//
+type Handler func(inputIdentifier string, msg *define.Message) error
+
+// DeviceControlHandler 设备控制结构体，用于处理下行数据的业务逻辑
+type DeviceControlHandler struct {
+	ServiceIdentifer string
+	InputIdentifier  string
+	ServiceHandler   Handler
+}
 
 type Options struct {
-	Token         string               // 权限验证，及获取 ModelID、EntityID
-	Server        string               // mqtt server
-	PropertyType  string               // 属性分组（系统属性platform、基础属性base）
-	MessageID     string               // 消息ID，设备内自增
-	DeviceControl mqttp.MessageHandler // 设备控制的回调函数
-	EntityID      string               // 设备 id
-	ModelID       string               // 模型 id
-}
+	Token string // 权限验证，及获取 ModelID、EntityID
 
-type Client interface {
-	mqttp.Client
-}
+	MiddleCredential       string // 批量设备注册的中间凭证
+	DynamocRegisterAddress string // 动态注册的服务地址
 
-type Message interface {
-	Duplicate() bool
-	Qos() byte
-	Retained() bool
-	Topic() string
-	MessageID() uint16
-	Payload() []byte
-	Ack()
-}
-
-func (o *Options) SetDeviceControlHandler(deviceControl mqttp.MessageHandler) {
-	o.DeviceControl = deviceControl
+	Server         string                 // mqtt server
+	PropertyType   string                 // 属性分组（系统属性platform、基础属性base）
+	MessageID      string                 // 消息ID，设备内自增
+	DeviceHandlers []DeviceControlHandler // 设备控制的回调函数
+	EntityID       string                 // 设备 id
+	ModelID        string                 // 模型 id
 }
 
 type MqttClient struct {
@@ -55,15 +50,7 @@ type MqttClient struct {
 	UnSubScribeChan chan bool
 }
 
-// NewMqtt 创建客户端实例
-func NewMqtt(options *Options) (client.Client, error) {
-	var (
-		err error
-	)
-
-	m := &MqttClient{
-		UnSubScribeChan: make(chan bool),
-	}
+func initMQTTClient(options *Options) mqttp.Client {
 
 	opts := mqttp.NewClientOptions()
 	opts.AddBroker("tcp://" + options.Server)
@@ -81,22 +68,94 @@ func NewMqtt(options *Options) (client.Client, error) {
 	opts.SetOnConnectHandler(func(client mqttp.Client) {
 		fmt.Println("connect ehub/ihub success!")
 	})
-	opts.SetDefaultPublishHandler(options.DeviceControl)
 
-	client := mqttp.NewClient(opts)
+	if options.DeviceHandlers != nil {
+		opts.SetDefaultPublishHandler(func(client mqttp.Client, msg mqttp.Message) {
+			fmt.Printf("[sdk-go sub] topic: %s, paload: %s\n", msg.Topic(), string(msg.Payload()))
 
-	if err != nil {
-		return nil, err
+			for _, handler := range options.DeviceHandlers {
+				switch {
+				case msg.Topic() == BuildServiceControlReply(options.ModelID, options.EntityID, handler.ServiceIdentifer):
+					var err error
+					topic := msg.Topic()
+					payload := msg.Payload()
+
+					message, err := ParseMessage(payload)
+					if err != nil {
+						return
+					}
+
+					// 执行回调函数进行设备控制
+					if err = handler.ServiceHandler(handler.InputIdentifier, message); err != nil {
+						fmt.Printf("topic:%s, execute callback error: %s\n", topic, err.Error())
+					}
+
+					// reply
+					if err = Reply(message, client, topic); err != nil {
+						fmt.Printf("topic:%s, reply error: %s\n", topic, err.Error())
+						return
+					}
+				default:
+				}
+			}
+		})
 	}
-	m.Client = client
-	m.EntityId = options.EntityID
-	m.ModelId = options.ModelID
+
+	mqttClient := mqttp.NewClient(opts)
+	return mqttClient
+}
+
+// InitWithToken 使用 token 进行设备通讯
+func InitWithToken(options *Options) (iClient.Client, error) {
+
+	m := &MqttClient{
+		UnSubScribeChan: make(chan bool),
+	}
+
+	if options.Token == "" {
+		return nil, fmt.Errorf("token can not be blank")
+	}
+
+	entityID, modelID, err := ParseToken(options.Token)
+	if err != nil {
+		return nil, fmt.Errorf("token is invalid: %s", err.Error())
+	}
+	options.EntityID = entityID
+	options.ModelID = modelID
+	mqttClient := initMQTTClient(options)
+
+	m.Client = mqttClient
+	m.EntityId = entityID
+	m.ModelId = modelID
 
 	m.MessageID = options.MessageID
+
 	if options.PropertyType != "" {
 		m.PropertyType = options.PropertyType
 	}
 	return m, nil
+}
+
+// InitWithMiddleCredential 使用中间凭证进行设备通讯
+func InitWithMiddleCredential(options *Options) (iClient.Client, error) {
+
+	if options.MiddleCredential == "" {
+		return nil, fmt.Errorf("MiddleCredential can not be blank")
+	}
+
+	if options.DynamocRegisterAddress == "" {
+		return nil, fmt.Errorf("DynamocRegisterAddress can not be blank")
+	}
+
+	// 通过 middleCredential 进行动态注册，获取设备 token
+	r := register.NewRegister(options.DynamocRegisterAddress)
+	resp, err := r.DynamicRegistry(options.MiddleCredential)
+	if err != nil {
+		return nil, err
+	}
+
+	options.Token = resp.Token
+	return InitWithToken(options)
 }
 
 // Connect 连接 ihub 或 ehub

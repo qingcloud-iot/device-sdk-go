@@ -79,7 +79,7 @@ func (c *HttpClient) Post() (*Data, error) {
 		return nil, err
 	}
 	if respData.Code != "0" {
-		return nil, errors.New(respData.Data.(string))
+		return nil, errors.New(respData.Code)
 	}
 
 	d, err := json.Marshal(respData.Data)

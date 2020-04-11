@@ -4,10 +4,12 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"time"
+
 	"git.internal.yunify.com/iot-sdk/device-sdk-go/internal/constant"
 	"git.internal.yunify.com/iot-sdk/device-sdk-go/internal/define"
 	"github.com/dgrijalva/jwt-go"
-	"time"
+	mqttp "github.com/eclipse/paho.mqtt.golang"
 
 	uuid "github.com/satori/go.uuid"
 )
@@ -139,4 +141,26 @@ func buildServiceReply(name, entityID, modelID string) string {
 
 func BuildServiceControlReply(modelID, entityID, identifer string) string {
 	return fmt.Sprintf(constant.DEVICE_CONTROL_TOPIC, modelID, entityID, identifer)
+}
+
+func Reply(message *define.Message, client mqttp.Client, topic string) error {
+	reply := &define.Reply{
+		ID:   message.ID,
+		Code: constant.RPC_SUCCESS,
+		Data: make(define.PropertyKV),
+	}
+	reply.Data = message.Params
+
+	data, err := json.Marshal(reply)
+	if err != nil {
+		fmt.Printf("[recvDeviceControlReply] err:%s\n", err.Error())
+		return err
+	}
+	token := client.Publish(topic+"_reply", byte(0), false, data)
+	if token.Error() != nil {
+		fmt.Printf("[recvDeviceControlReply] err:%s\n", err.Error())
+		return err
+	}
+	fmt.Printf("[recvDeviceControlReply] success\n")
+	return nil
 }
