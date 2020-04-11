@@ -63,7 +63,7 @@ func buildPropertyMessage(meta define.PropertyKV, m *MqttClient) *define.ThingPr
 		params[k] = property
 	}
 	message := &define.ThingPropertyMsg{
-		ID:      m.MessageID,
+		ID:      uuid.NewV4().String(),
 		Version: constant.MQTT_VERSION,
 		Type:    constant.PROPERTY_TYPE,
 		Params:  params,
@@ -99,7 +99,7 @@ func buildEventMessage(meta define.PropertyKV, m *MqttClient, eventIdentifier st
 	timeNow := time.Now().Unix() * 1000
 
 	message := &define.ThingEventMsg{
-		ID:      m.MessageID,
+		ID:      uuid.NewV4().String(),
 		Version: constant.MQTT_VERSION,
 		Type:    fmt.Sprintf("thing.event.%s.post", eventIdentifier),
 		MetaData: define.MetaData{
@@ -143,10 +143,11 @@ func BuildServiceControlReply(modelID, entityID, identifer string) string {
 	return fmt.Sprintf(constant.DEVICE_CONTROL_TOPIC, modelID, entityID, identifer)
 }
 
+// Reply 服务调用的返回信息
 func Reply(message *define.Message, client mqttp.Client, topic string) error {
 	reply := &define.Reply{
 		ID:   message.ID,
-		Code: constant.RPC_SUCCESS,
+		Code: constant.SUCCESS,
 		Data: make(define.PropertyKV),
 	}
 	reply.Data = message.Params
@@ -156,6 +157,7 @@ func Reply(message *define.Message, client mqttp.Client, topic string) error {
 		fmt.Printf("[recvDeviceControlReply] err:%s\n", err.Error())
 		return err
 	}
+	fmt.Println(string(data))
 	token := client.Publish(topic+"_reply", byte(0), false, data)
 	if token.Error() != nil {
 		fmt.Printf("[recvDeviceControlReply] err:%s\n", err.Error())

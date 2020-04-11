@@ -4,19 +4,17 @@
 
 ----------------------
 
-这篇文档介绍了如何安装和配置 设备sdk，以及提供了相关例子来演示如何使用 设备sdk 上报设备数据以及控制设备；
+这篇文档介绍了如何安装和配置 设备sdk，以及提供了相关例子来演示如何使用 设备sdk 上报设备数据以及服务调用；
 
 支持MQTT 协议版本：3.1.1
-golang version：1.13及以上
 
-
+golang version：1.13及以上  
 
 ### SDK 获取
 
 -------
 
 - [最新版本：1.0](https://git.internal.yunify.com/iot-sdk/device-sdk-go)
-
 
 
 ### SDK 功能列表
@@ -26,18 +24,18 @@ golang version：1.13及以上
 | **模块功能** | **功能点**                                                   |
 | :----------: | :----------------------------------------------------------- |
 |   设备连云   | 设备可通过该 sdk 与青云IoT物联网平台通信，使用 mqtt 协议进行数据传输，用于设备主动上报信息的场景 |
-| 设备身份认证 | token(即设备凭证)                                            |
-|   属性上报   | 向特定 topic 上报设备属性数据 [物模型](http://103.61.37.229:20080/document/index?document_id=22) |
+| 设备身份认证 | token(设备凭证)                                              |
+|   属性上报   | 向特定 topic 上报设备属性数据                                |
 |   事件上报   | 向特定 topic上报设备事件                                     |
 |   设备控制   | 通过订阅相关 topic，获取下行数据实时控制设备状态             |
+|   动态注册   | 利用中间凭证实现大批量设备接入青云 IoT 物联网平台            |
 
 
-
-### SDK使用示例
+### SDK使用简介
 
 ------------------------
 
-#### 前置条件
+#### 1. 前置条件
 
 1. 系统
 
@@ -45,20 +43,27 @@ golang version：1.13及以上
 
 2. go 环境
 
-    - 下载安装包
+    - 下载安装包  
+
         wget https://dl.google.com/go/go1.13.linux-amd64.tar.gz
 
-    - 解压并移动到指定目录
-        tar -xvzf go1.13.linux-amd64.tar.gz
-        sudo mv go /usr/local/
+    - 解压并移动到指定目录   
 
-    - 建立 go 的工作空间
-        在/home目录下, 建立一个 gopath目录，然后建立三个子目录：src、pkg、bin
-        src — 里面每一个子目录，就是一个包。包内是Go的源码文件
-        pkg — 编译后生成的，包的目标文件
+        tar -xvzf go1.13.linux-amd64.tar.gz  
+
+        sudo mv go /usr/local/  
+
+    - 建立 go 的工作空间  
+
+        在/home目录下, 建立一个 gopath目录，然后建立三个子目录：src、pkg、bin  
+
+        src — 里面每一个子目录，就是一个包。包内是Go的源码文件  
+
+        pkg — 编译后生成的，包的目标文件  
+
         bin — 生成的可执行文件
 
-    - 设置 GOPATH 环境变量
+    - 设置 GOPATH 环境变量  
 
         vim ~/.zshrc
 
@@ -67,284 +72,196 @@ golang version：1.13及以上
         export PATH=$PATH:/usr/local/go/bin:$GOPATH/bin
         ```
 
-        source ~/.zshrc
-        
-        
+        source ~/.zshrc  
 
-#### 示例1：设备直连 ihub(青云iot平台)
+#### 2. 配置文件
 
-##### 准备工作
+config.yml
 
-1. 环境配置
-    - /etc/hosts 添加：
-        192.168.14.179     console-staging.qingcloud.com iot-staging.qingcloud.com
-        192.168.14.121     iot-api.qingcloud.com
-    - 连接公司 vpn
-    - 地址及账户
-        http://iot-staging.qingcloud.com
-        rainsong@yunify.com
-        zhu88jie
+```yaml
+device:
+    token: 
+mqttbroker:
+    address:
+registry:
+    middle_credential:
+    service_address:
+```
 
-2. 了解青云的数据模型
+- device.token
 
-    http://103.61.37.229:20080/document/index?document_id=22
+    设备凭证，注册设备时可获取到，解析 token 可获取到 设备ID、模型ID 等信息；
 
-3. 在青云iot平台创建模型
-    本例中使用物模型：自定义数据模型
-    具体定义：demo.json
-    青云平台创建模型，可以得到属性名称、属性类型、事件identifier、控制identifier等；
+- mqttbroker.address
 
-4. 在青云iot平台注册设备，绑定模型
-    本例使用设备：test-endpoint-yt
-    在青云平台注册设备，以及将上面创建的物模型和设备进行绑定，获取设备凭证(token)；
+    设备数据上报的目的地址，可以是边端，也可以是云端；
 
-#####  代码演示
+- registry.middle_credential
 
-1. 设备连接
+    中间凭证，大批量设备注册后会产生一个中间凭证，通过该凭证能够实现同批次的海量设备使用相同的方式和信息接入平台。同时还可以在动态注册之后获得专属的设备凭证，也就是上面的 token；
+
+- registry.service_address
+
+    动态注册的服务地址
+
+#### 3. 设备接入
+
+- 通过 token 接入
+
+    options 中传入参数为配置文件中的 token、mqttbroker.address
 
     ```go
-    package main
-
-    import (
-        "context"
-        "fmt"
-        "time"
-
-        "git.internal.yunify.com/iot-sdk/device-sdk-go/index"
-        "git.internal.yunify.com/iot-sdk/device-sdk-go/mqtt"
-    )
-
-    // 设备连接，token 为设备凭证，Server 为青云 iot 平台 ihub
-    func main() {
-        options := &index.Options{
-            Token:  "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJhY3IiOiIxIiwiYXVkIjoiaWFtIiwiYXpwIjoiaWFtIiwiY3VpZCI6ImlhbXItajI3ZXAzZmciLCJlaXNrIjoiVXd1YXktY0s2X2xiTUdwcXJmaTNoQlk3anZoTlA4N0NCeHRjN1BLbzYwdz0iLCJleHAiOjE2MDk0ODQxOTQsImlhdCI6MTU3Nzk0ODE5NCwiaXNzIjoic3RzIiwianRpIjoiVWpJNFdQQW9wNWdQNldPdHJIUUlBVSIsIm5iZiI6MCwib3JnaSI6ImlvdGQtNGQ1NTUyZTAtYWUyNy00OTc1LTllMmEtYjk2NTRhZjI1NjM2Iiwib3d1ciI6InVzci1rZUF5dG16MSIsInByZWYiOiJxcm46cWluZ2Nsb3VkOmlhbToiLCJydHlwIjoicm9sZSIsInN1YiI6InN0cyIsInRoaWQiOiJpb3R0LXlWQXd4OXJiOGoiLCJ0eXAiOiJJRCJ9.NDId6MS_Fi-9mCuUaBeS4sufhoWPCihz5TSgyscD1LMdvSs6KKXaND2fmDhlJcFi3-nbTZS32LR_fx8cYS8_8pHNF2pdyfXStYsm1sbBg6G7mfCXmXLywVfzUUxSgJbXJ7Px1oIIPjcuPCmlEK4BtDyK5a5Ncxw9NO0aZxKviNqPKMOqQAPP8_2Ev6MGQ4SwsLuZP3dE75bTp02XID1xCGY_0ABIPhHQrypqs2T-_h1DE-5MZegSL5sUjjgha4AVH_2xzPcgLKO709e77tWhu5BpJXUmUfTlZwUp3PoDG4eNYC3gqVEgAkZtUxjoCvGXypqV7lV8YudYmrN7BBuXmw",
-            Server: "tcp://192.168.14.120:8055", // 127.0.0.1:1883
-        }
-
-        m, err := mqtt.NewMqtt(options)
-        if err != nil {
-            panic(err)
-        }
-
-        // 连接
-        err = m.Connect()
-        if err != nil {
-            panic(err)
-        }
-
-        select {}
+    options := &mqtt.Options{
+        Token:     conf.Device.Token,
+        Server:    conf.Mqttbroker.Address,
     }
-    ```
-    运行上述代码前后，即可在青云 iot 平台查看设备连接状态，如：
-
-    ![image.png](https://upload-images.jianshu.io/upload_images/7998142-dd7c5790db12afe5.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
-
-    ![image.png](https://upload-images.jianshu.io/upload_images/7998142-25f110a214a9b64e.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
-
-2. 属性上报
-    用于将设备相关数据上报，可在青云iot 平台实时查看设备运行动态；
-    ```go
-    package main
-
-    import (
-        "context"
-        "fmt"
-        "time"
-
-        "git.internal.yunify.com/iot-sdk/device-sdk-go/index"
-        "git.internal.yunify.com/iot-sdk/device-sdk-go/mqtt"
-    )
-
-    func main() {
-        options := &index.Options{
-            Token:        "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJhY3IiOiIxIiwiYXVkIjoiaWFtIiwiYXpwIjoiaWFtIiwiY3VpZCI6ImlhbXItajI3ZXAzZmciLCJlaXNrIjoiVXd1YXktY0s2X2xiTUdwcXJmaTNoQlk3anZoTlA4N0NCeHRjN1BLbzYwdz0iLCJleHAiOjE2MDk0ODQxOTQsImlhdCI6MTU3Nzk0ODE5NCwiaXNzIjoic3RzIiwianRpIjoiVWpJNFdQQW9wNWdQNldPdHJIUUlBVSIsIm5iZiI6MCwib3JnaSI6ImlvdGQtNGQ1NTUyZTAtYWUyNy00OTc1LTllMmEtYjk2NTRhZjI1NjM2Iiwib3d1ciI6InVzci1rZUF5dG16MSIsInByZWYiOiJxcm46cWluZ2Nsb3VkOmlhbToiLCJydHlwIjoicm9sZSIsInN1YiI6InN0cyIsInRoaWQiOiJpb3R0LXlWQXd4OXJiOGoiLCJ0eXAiOiJJRCJ9.NDId6MS_Fi-9mCuUaBeS4sufhoWPCihz5TSgyscD1LMdvSs6KKXaND2fmDhlJcFi3-nbTZS32LR_fx8cYS8_8pHNF2pdyfXStYsm1sbBg6G7mfCXmXLywVfzUUxSgJbXJ7Px1oIIPjcuPCmlEK4BtDyK5a5Ncxw9NO0aZxKviNqPKMOqQAPP8_2Ev6MGQ4SwsLuZP3dE75bTp02XID1xCGY_0ABIPhHQrypqs2T-_h1DE-5MZegSL5sUjjgha4AVH_2xzPcgLKO709e77tWhu5BpJXUmUfTlZwUp3PoDG4eNYC3gqVEgAkZtUxjoCvGXypqV7lV8YudYmrN7BBuXmw",
-            Server:       "tcp://192.168.14.120:8055", // 127.0.0.1:1883 192.168.14.120:1883
-            PropertyType: index.PROPERTY_TYPE_BASE,
-            MessageID:    "message-device.1",
-        }
-
-        m, err := mqtt.NewMqtt(options)
-        if err != nil {
-            panic(err)
-        }
-
-        // 连接
-        err = m.Connect()
-        if err != nil {
-            panic(err)
-        }
-
-        data := index.PropertyKV{
-            "MaxValue":   float64(22),
-            "AlarmState": true,
-        }
-
-        ctx, _ := context.WithTimeout(context.Background(), 3*time.Second)
-        reply, err := m.PubProperty(ctx, data)
-        if err != nil {
-            panic(err)
-        }
-
-        fmt.Println("PubPropertySync reply", reply)
-        select {}
-    }
-    ```
-
-    上述代码中，CO2Concentration、humidity 分别是 **前置条件3** 中创建的模型属性；
-    属性上报成功后，将会在 青云iot 平台 设备界面的属性模块显示上报数据信息：
     
-    ![image.png](https://upload-images.jianshu.io/upload_images/7998142-944efe481c009482.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
-
-
-3. 事件上报
-
-    ```go
-    package main
-
-    import (
-        "context"
-        "fmt"
-        "time"
-
-        "git.internal.yunify.com/iot-sdk/device-sdk-go/index"
-        "git.internal.yunify.com/iot-sdk/device-sdk-go/mqtt"
-    )
-
-    func main() {
-        options := &index.Options{
-            Token:           "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJhY3IiOiIxIiwiYXVkIjoiaWFtIiwiYXpwIjoiaWFtIiwiY3VpZCI6ImlhbXItajI3ZXAzZmciLCJlaXNrIjoiVXd1YXktY0s2X2xiTUdwcXJmaTNoQlk3anZoTlA4N0NCeHRjN1BLbzYwdz0iLCJleHAiOjE2MDk0ODQxOTQsImlhdCI6MTU3Nzk0ODE5NCwiaXNzIjoic3RzIiwianRpIjoiVWpJNFdQQW9wNWdQNldPdHJIUUlBVSIsIm5iZiI6MCwib3JnaSI6ImlvdGQtNGQ1NTUyZTAtYWUyNy00OTc1LTllMmEtYjk2NTRhZjI1NjM2Iiwib3d1ciI6InVzci1rZUF5dG16MSIsInByZWYiOiJxcm46cWluZ2Nsb3VkOmlhbToiLCJydHlwIjoicm9sZSIsInN1YiI6InN0cyIsInRoaWQiOiJpb3R0LXlWQXd4OXJiOGoiLCJ0eXAiOiJJRCJ9.NDId6MS_Fi-9mCuUaBeS4sufhoWPCihz5TSgyscD1LMdvSs6KKXaND2fmDhlJcFi3-nbTZS32LR_fx8cYS8_8pHNF2pdyfXStYsm1sbBg6G7mfCXmXLywVfzUUxSgJbXJ7Px1oIIPjcuPCmlEK4BtDyK5a5Ncxw9NO0aZxKviNqPKMOqQAPP8_2Ev6MGQ4SwsLuZP3dE75bTp02XID1xCGY_0ABIPhHQrypqs2T-_h1DE-5MZegSL5sUjjgha4AVH_2xzPcgLKO709e77tWhu5BpJXUmUfTlZwUp3PoDG4eNYC3gqVEgAkZtUxjoCvGXypqV7lV8YudYmrN7BBuXmw",
-            Server:          "tcp://192.168.14.120:8055", // 127.0.0.1:1883  192.168.14.120:8055
-            EventIdentifier: "serviceStatus",
-            MessageID:       "message-device.1",
-        }
-
-        m, err := mqtt.NewMqtt(options)
-        if err != nil {
-            panic(err)
-        }
-
-        // 连接
-        err = m.Connect()
-        if err != nil {
-            panic(err)
-        }
-
-        // output
-        data := index.PropertyKV{
-            "ServiceName":   "qqq",
-            "ServiceStatus": "aaa",
-        }
-        reply, err := m.PubEvent(context.Background(), data)
-        if err != nil {
-            panic(err)
-        }
-        fmt.Printf("PubEvent reply:%+v\n", reply)
-        select {}
+    m, err := mqtt.InitWithToken(options)
+    if err != nil {
+        panic(err)
     }
-    ```
-    PubEvent 函数中第三个参数为 事件的 identifier；
-    事件上报成功后，将会在 青云iot 平台 设备界面的事件模块显示上报数据信息：
-
-    ![image.png](https://upload-images.jianshu.io/upload_images/7998142-a3834da7f90d116d.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
-
-4. 设备控制(下行)
-
-    ```go
-    package main
-
-    import (
-        "context"
-        "fmt"
-        "time"
-
-        "git.internal.yunify.com/iot-sdk/device-sdk-go/index"
-        "git.internal.yunify.com/iot-sdk/device-sdk-go/mqtt"
-    )
-
-    func main() {
-        options := &index.Options{
-            Token:     "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJhY3IiOiIxIiwiYXVkIjoiaWFtIiwiYXpwIjoiaWFtIiwiY3VpZCI6ImlhbXItdm9maW4wYmUiLCJlaXNrIjoiblV4MTJkZDNQWVU1c2RjMlhzcU40Z0I4enNreHVwbTl5R0FjVXFMVDB5az0iLCJleHAiOjE2MTMwMDY3MTUsImlhdCI6MTU4MTQ3MDcxNSwiaXNzIjoic3RzIiwianRpIjoiVWpJNFdQQW9wNWdQNldPdHJIUU82ZCIsIm5iZiI6MCwib3JnaSI6ImlvdGQtNTlmNjg1Y2UtNzBmOS00NDg1LTk5ODUtMjcxZDVkZmI5NDc1Iiwib3d1ciI6InVzci1rZUF5dG16MSIsInByZWYiOiJxcm46cWluZ2Nsb3VkOmlhbToiLCJydHlwIjoicm9sZSIsInN1YiI6InN0cyIsInRoaWQiOiJpb3R0LXlWQXd4OXJiOGoiLCJ0eXAiOiJJRCJ9.M03UZOE_llNCR80LYdmforG5_Bc_QTJN9A2BPLfYX5OZAeawaRoqzOOBIqjORk_HKMLk210ex5DTcQflrUSTNhXiVMilau8a3loi-qY5-13aB45Ra_-qaQpGKcIzCtSsOofNhnOBsshLgvLG0W_ThlY-L5i6FAsTDp9fWKs_hS4VMn1cb8iexi3Oljcy7255J-wWRSaAMcm4KzZNc3kS_HR7NdfGlu9zmjE22rnmlZS60OEvjhqU-SKJBsalHAiFbAWTemHuk5jlB7P2sFiM4JAxIuznq23s0WrNM0oQTRi6xb0bMglGuBmyvPkoh1jMAGklHStprNoxwY_S2aKiUA",
-            Server:    "tcp://192.168.14.120:8055", // 127.0.0.1:1883
-            Identifer: "connect",
-        }
-
-        m, err := mqtt.NewMqtt(options)
-        if err != nil {
-            panic(err)
-        }
-
-        // 连接
-        err = m.Connect()
-        if err != nil {
-            panic(err)
-        }
-
-        go m.SubDeviceControl()
-
-        time.Sleep(15 * time.Second)
-
-        select {}
-
-        m.UnSubDeviceControl()
-
-        time.Sleep(3 * time.Second)
+    
+    // 连接
+    err = m.Connect()
+    if err != nil {
+        panic(err)
     }
     ```
 
-    Identifer：设备控制标识符;
-    通过接口下发数据，并可以得到响应结果：
-    Identifer：设备标识符
-    id：设备id
-    Params：根据 准备工作1 中的青云物模型的设备控制模型 和 准备工作2 中新建的控制的数据模可以得到
+    设备接入云端或边端后，才能上报数据和服务调用；
 
-    ![image.png](https://upload-images.jianshu.io/upload_images/7998142-079de02295e411a6.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+- 通过中间凭证接入
 
-    ![image.png](https://upload-images.jianshu.io/upload_images/7998142-b1d225dc7c3786d1.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+    除了通过设备专属凭证接入外，还可以通过批量设备的中间凭证接入
 
-    或使用命令行命令 curl：
+    options 中传入参数为配置文件中的 middle_credential、service_address
+
     ```go
-    curl -X POST "http://iot-api.qingcloud.com:8889/api/v1/devices/iotd-59f685ce-70f9-4485-9985-271d5dfb9475/call/connect" -H "accept: application/json" -H "Authorization: QCUUCDRNSJECJRCMOMPPHP:signaturea" -H "Content-Type: application/json" -d "{ \"params\": { \"reply\":\"this is control test\" }, \"thing_id\": \"iott-yVAwx9rb8j\"}"
-
-    reply: {"code":"0","data":{"reply":"this is control test"}}
-    ```
-    或运行：
-    ```go
-    // SendMessageToSDK 用于 deviceControl 的测试
-    func SendMessageToSDK() {
-        client := &http.Client{}
-
-        params := `
-            {
-                "params":{
-                    "reply":"this is control test"
-                },
-                "thing_id":"iott-yVAwx9rb8j"
-            }
-        `
-
-        requst, err := http.NewRequest("POST", "http://iot-api.qingcloud.com:8889/api/v1/devices/iotd-4d5552e0-ae27-4975-9e2a-b9654af25636/call/connect", strings.NewReader(params))
-        if err != nil {
-            fmt.Println("NewRequest err:", err.Error())
-            return
-        }
-        requst.Header.Set("Authorization", " QCUUCDRNSJECJRCMOMPPHP:signaturea")
-
-        resp, err := client.Do(requst)
-        if err != nil {
-            fmt.Println("Do err:", err.Error())
-            return
-        }
-        _, err = ioutil.ReadAll(resp.Body)
-        if err != nil {
-            return
-        }
+    options := &mqtt.Options{
+    MiddleCredential:       conf.Registry.MiddleCredential,
+    DynamocRegisterAddress: conf.Registry.ServiceAddress,
+    
+    Server:       conf.Mqttbroker.Address,
+    PropertyType: constant.PROPERTY_TYPE_BASE,
+    }
+    m, err := mqtt.InitWithMiddleCredential(options)
+    if err != nil {
+    panic(err)
+    }
+    
+    // 连接
+    err = client.Connect()
+    if err != nil {
+    panic(err)
     }
     ```
-    便可在程序端收到下行消息
+
+[设备接入使用守则](http://192.168.14.120:8085/beta/zh-CN/quick-start/first-course/)
+
+#### 4. 属性上报
+
+通过 PubProperty 方法上报设备属性，传入参数 propertyData 为模型中定义的属性 identifier 及属性值
+
+```
+propertyData := define.PropertyKV{
+		"temp": 11,
+	}
+ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+reply, err := client.PubProperty(ctx, propertyData)
+```
+
+属性上报后，会响应 reply 给用户，如果 reply.Code 等于 200，则表示上报成功，否则上报失败，失败信息可在 reply.Data 中查看；
+
+属性上报成功后，可以在 iot 平台查看上报的属性值；
+
+[属性上报使用守则]([http://192.168.14.120:8085/beta/zh-CN/quick-start/second-course/#%E4%B8%8A%E6%8A%A5%E5%B1%9E%E6%80%A7%E6%95%B0%E6%8D%AE](http://192.168.14.120:8085/beta/zh-CN/quick-start/second-course/#上报属性数据))
+
+#### 5. 事件上报
+
+通过 PubEvent 方法上报事件，传入参数 PubEvent 为模型中定义的事件 identifier 及事件信息
+
+```
+eventData := define.PropertyKV{
+    "temperature": float64(DeviceTemprature),
+    "reason":      reason,
+}
+ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+reply, err := client.PubEvent(ctx, eventData, eventIdentifier)
+```
+
+属性上报后，会响应 reply 给用户，如果 reply.Code 等于 200，则表示上报成功，否则上报失败，失败信息可在 reply.Data 中查看；
+
+事件上报成功后，可以在 iot 平台查看上报的事件信息；
+
+[事件上报使用守则]([http://192.168.14.120:8085/beta/zh-CN/quick-start/second-course/#%E4%B8%8A%E6%8A%A5%E4%BA%8B%E4%BB%B6%E6%95%B0%E6%8D%AE](http://192.168.14.120:8085/beta/zh-CN/quick-start/second-course/#上报事件数据))
+
+#### 6. 服务调用
+
+通过 SubDeviceControl 方法进行服务调用；
+
+服务调用即服务端对设备属性值进行设置，用户需要对服务端下发的数据根据需求进行处理；
+
+```go
+serviceIdentifer := "setTemperature" // 服务调用的 服务 identifer
+inputIdentifier := "temperature"     // 执行服务调用改变的参数值
+
+options := &mqtt.Options{
+	Token:        conf.Device.Token,
+	Server:       conf.Mqttbroker.Address,
+	PropertyType: constant.PROPERTY_TYPE_BASE,
+
+	DeviceHandlers: []mqtt.DeviceControlHandler{
+		mqtt.DeviceControlHandler{
+			ServiceIdentifer: serviceIdentifer,
+			InputIdentifier:  inputIdentifier,
+			ServiceHandler:   DeviceControlCallback,
+		},
+	},
+}
+
+// 服务调用
+client.SubDeviceControl(serviceIdentifer)
+
+// DeviceControlCallback 服务调用的回调函数
+func DeviceControlCallback(inputIdentifier string, msg *define.Message) error {
+	for k, v := range msg.Params {
+		if k == inputIdentifier {
+
+			// 将设备温度调节为服务下发的温度值
+			// float64 为 input 对应的类型
+			DeviceTemprature = v.(float64)
+		}
+	}
+	return nil
+}
+```
+
+[服务调用使用守则]([http://192.168.14.120:8085/beta/zh-CN/quick-start/second-course/#%E8%B0%83%E7%94%A8%E6%9C%8D%E5%8A%A1](http://192.168.14.120:8085/beta/zh-CN/quick-start/second-course/#调用服务))
+
+#### 7. 动态注册
+
+通过 DynamicRegistry 方法进行批量设备的动态注册
+
+```go
+midCredential := conf.Registry.MiddleCredential
+
+r := register.NewRegister(conf.Registry.ServiceAddress)
+resp, err := r.DynamicRegistry(midCredential)
+if err != nil {
+	fmt.Printf("%s dynamic registry failed, error: %s\n", midCredential, err.Error())
+	return
+}
+```
+
+注册成功后，可以通过 resp.Name 获取设备名，通过 resp.Token 获取设备的专属凭证；
+
+[动态注册使用守则]([http://192.168.14.120:8085/beta/zh-CN/use-guide/dev-token/#%E4%BD%BF%E7%94%A8%E4%B8%AD%E9%97%B4%E5%87%AD%E8%AF%81](http://192.168.14.120:8085/beta/zh-CN/use-guide/dev-token/#使用中间凭证))
 
 
 ### 历史版本清单
+
 -------------
+
 | **版本号** | **发布日期** | **下载链接** | **更新内容**                                                 |
 | :--------- | :----------- | :----------- | :----------------------------------------------------------- |
 | 1.0        | 2020/02/07   |              | 读取设备凭证：手动拷贝到设备上，替换示例程序中的变量；<br />端设备连接、收发消息消息、重连<br />边设备连接、收发消息消息、重连<br /> |
@@ -379,4 +296,3 @@ golang version：1.13及以上
 
     使用：[MQTT系列教程3（客户端工具MQTTBox的安装和使用）](https://www.hangge.com/blog/cache/detail_2350.html)
 
------

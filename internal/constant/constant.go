@@ -29,8 +29,8 @@ const (
 )
 
 const (
-	RPC_SUCCESS = 200
-	RPC_TIMEOUT = 1001
+	SUCCESS = 200
+	FAIL    = 500
 )
 
 const (

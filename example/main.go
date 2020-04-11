@@ -12,7 +12,6 @@ import (
 
 	"git.internal.yunify.com/iot-sdk/device-sdk-go/internal/register"
 	"git.internal.yunify.com/iot-sdk/device-sdk-go/mqtt"
-	uuid "github.com/satori/go.uuid"
 )
 
 const (
@@ -31,8 +30,8 @@ var (
 	connect       bool // 上线
 	pubProperty   bool // 上报属性
 	pubEvent      bool // 上报事件
-	serviceContol bool // 设备控制
-	all           bool // 上线、上报属性、上报事件、设备控制
+	serviceContol bool // 服务调用
+	all           bool // 上线、上报属性、上报事件、服务调用
 
 	reg           bool // 动态注册
 	regAndConnect bool // 动态注册并上线设备
@@ -89,9 +88,8 @@ func main() {
 // ConnectFunc 提供设备上线功能
 func ConnectFunc() {
 	options := &mqtt.Options{
-		Token:     conf.Device.Token,
-		Server:    conf.Mqttbroker.Address,
-		MessageID: uuid.NewV4().String(),
+		Token:  conf.Device.Token,
+		Server: conf.Mqttbroker.Address,
 	}
 
 	m, err := mqtt.InitWithToken(options)
@@ -112,7 +110,6 @@ func PubPropertyFunc() {
 	options := &mqtt.Options{
 		Token:        conf.Device.Token,
 		Server:       conf.Mqttbroker.Address,
-		MessageID:    uuid.NewV4().String(),
 		PropertyType: constant.PROPERTY_TYPE_BASE,
 	}
 
@@ -152,7 +149,6 @@ func PubEventFunc() {
 	options := &mqtt.Options{
 		Token:        conf.Device.Token,
 		Server:       conf.Mqttbroker.Address,
-		MessageID:    uuid.NewV4().String(),
 		PropertyType: constant.PROPERTY_TYPE_BASE,
 	}
 
@@ -187,7 +183,8 @@ func PubEventFunc() {
 				"temperature": float64(DeviceTemprature),
 				"reason":      reason,
 			}
-			reply, err := m.PubEvent(context.Background(), eventData, eventIdentifier)
+			ctx, _ := context.WithTimeout(context.Background(), 3*time.Second)
+			reply, err := m.PubEvent(ctx, eventData, eventIdentifier)
 			if err != nil {
 				panic(err)
 			}
@@ -197,26 +194,25 @@ func PubEventFunc() {
 	}
 }
 
-// ServiceDeviceControlFunc 设备控制
+// ServiceDeviceControlFunc 服务调用
 func ServiceDeviceControlFunc() {
+
+	serviceIdentifer := "setTemperature" // 服务调用的 服务 identifer
+	inputIdentifier := "temperature"     // 执行服务调用改变的参数值
 
 	options := &mqtt.Options{
 		Token:        conf.Device.Token,
 		Server:       conf.Mqttbroker.Address,
 		PropertyType: constant.PROPERTY_TYPE_BASE,
-		MessageID:    uuid.NewV4().String(),
-	}
-	serviceIdentifer := "setTemperature" // 服务调用的 服务 identifer
 
-	// 供设备控制使用
-	// options.SetDeviceControlHandler(func(client mqttp.Client, msg mqttp.Message) {
-	// 	fmt.Printf("[sdk-go sub] topic:%s, message:%s\n", msg.Topic(), string(msg.Payload()))
-	// 	switch {
-	// 	case msg.Topic() == mqtt.BuildServiceControlReply(modelID, entityID, serviceIdentifer):
-	// 		RecvDeviceControlReply(client, msg)
-	// 	default:
-	// 	}
-	// })
+		DeviceHandlers: []mqtt.DeviceControlHandler{
+			mqtt.DeviceControlHandler{
+				ServiceIdentifer: serviceIdentifer,
+				InputIdentifier:  inputIdentifier,
+				ServiceHandler:   DeviceControlCallback,
+			},
+		},
+	}
 
 	m, err := mqtt.InitWithToken(options)
 	if err != nil {
@@ -250,7 +246,7 @@ func ServiceDeviceControlFunc() {
 		}
 	}()
 
-	// 设备控制
+	// 服务调用
 	m.SubDeviceControl(serviceIdentifer)
 
 }
@@ -266,7 +262,6 @@ func PropertyAndEventAndServiceFunc() {
 		Token:        conf.Device.Token,
 		Server:       conf.Mqttbroker.Address,
 		PropertyType: constant.PROPERTY_TYPE_BASE,
-		MessageID:    uuid.NewV4().String(),
 
 		DeviceHandlers: []mqtt.DeviceControlHandler{
 			mqtt.DeviceControlHandler{
@@ -336,11 +331,11 @@ func PropertyAndEventAndServiceFunc() {
 		}
 	}()
 
-	// 设备控制
+	// 服务调用
 	m.SubDeviceControl(serviceIdentifer)
 }
 
-// DeviceControlCallback 设备控制的回调函数
+// DeviceControlCallback 服务调用的回调函数
 func DeviceControlCallback(inputIdentifier string, msg *define.Message) error {
 	for k, v := range msg.Params {
 		if k == inputIdentifier {
@@ -370,7 +365,6 @@ func DynamicRegistry() {
 
 // DynamicRegistryAndConnect 设备的动态注册并上线
 func DynamicRegistryAndConnect() {
-	// ConnectFunc 提供设备上线功能
 
 	options := &mqtt.Options{
 		MiddleCredential:       conf.Registry.MiddleCredential,
@@ -378,7 +372,6 @@ func DynamicRegistryAndConnect() {
 
 		Server:       conf.Mqttbroker.Address,
 		PropertyType: constant.PROPERTY_TYPE_BASE,
-		MessageID:    uuid.NewV4().String(),
 	}
 	m, err := mqtt.InitWithMiddleCredential(options)
 	if err != nil {

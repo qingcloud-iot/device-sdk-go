@@ -18,7 +18,7 @@ import (
 //
 type Handler func(inputIdentifier string, msg *define.Message) error
 
-// DeviceControlHandler 设备控制结构体，用于处理下行数据的业务逻辑
+// DeviceControlHandler 服务调用结构体，用于处理下行数据的业务逻辑
 type DeviceControlHandler struct {
 	ServiceIdentifer string
 	InputIdentifier  string
@@ -33,8 +33,7 @@ type Options struct {
 
 	Server         string                 // mqtt server
 	PropertyType   string                 // 属性分组（系统属性platform、基础属性base）
-	MessageID      string                 // 消息ID，设备内自增
-	DeviceHandlers []DeviceControlHandler // 设备控制的回调函数
+	DeviceHandlers []DeviceControlHandler // 服务调用的回调函数
 	EntityID       string                 // 设备 id
 	ModelID        string                 // 模型 id
 }
@@ -46,7 +45,6 @@ type MqttClient struct {
 	ModelId  string
 
 	PropertyType    string
-	MessageID       string
 	UnSubScribeChan chan bool
 }
 
@@ -85,7 +83,7 @@ func initMQTTClient(options *Options) mqttp.Client {
 						return
 					}
 
-					// 执行回调函数进行设备控制
+					// 执行回调函数进行服务调用
 					if err = handler.ServiceHandler(handler.InputIdentifier, message); err != nil {
 						fmt.Printf("topic:%s, execute callback error: %s\n", topic, err.Error())
 					}
@@ -127,8 +125,6 @@ func InitWithToken(options *Options) (iClient.Client, error) {
 	m.Client = mqttClient
 	m.EntityId = entityID
 	m.ModelId = modelID
-
-	m.MessageID = options.MessageID
 
 	if options.PropertyType != "" {
 		m.PropertyType = options.PropertyType
@@ -174,7 +170,7 @@ func (m *MqttClient) DisConnect() {
 // PubProperty 上报属性
 func (m *MqttClient) PubProperty(ctx context.Context, meta define.PropertyKV) (*define.Reply, error) {
 	reply := &define.Reply{
-		Code: constant.RPC_SUCCESS,
+		Code: constant.SUCCESS,
 	}
 	if len(meta) == 0 {
 		return reply, errors.New("param length is zero")
@@ -185,9 +181,9 @@ func (m *MqttClient) PubProperty(ctx context.Context, meta define.PropertyKV) (*
 		return reply, nil
 	}
 	topic := buildPropertyTopic(m.EntityId, m.ModelId, m.PropertyType)
-	// fmt.Printf("[PubProperty] topic:%s, message:%s\n", topic, string(data))
 	if token := m.Client.Publish(topic, byte(0), false, data); token.WaitTimeout(5*time.Second) && token.Error() != nil {
-		reply.Code = constant.RPC_TIMEOUT
+		reply.Code = constant.FAIL
+		reply.Data = token.Error().Error()
 		return reply, nil
 	}
 	return reply, nil
@@ -196,7 +192,7 @@ func (m *MqttClient) PubProperty(ctx context.Context, meta define.PropertyKV) (*
 // PubEvent 上报事件
 func (m *MqttClient) PubEvent(ctx context.Context, meta define.PropertyKV, eventIdentifier string) (*define.Reply, error) {
 	reply := &define.Reply{
-		Code: constant.RPC_SUCCESS,
+		Code: constant.SUCCESS,
 	}
 	if len(meta) == 0 {
 		return reply, errors.New("param length is zero")
@@ -210,7 +206,8 @@ func (m *MqttClient) PubEvent(ctx context.Context, meta define.PropertyKV, event
 	topic := buildEventTopic(m.EntityId, m.ModelId, eventIdentifier)
 	// fmt.Printf("[PubEvent pub] topic:%s, message:%s\n", topic, string(data))
 	if token := m.Client.Publish(topic, byte(0), false, data); token.WaitTimeout(5*time.Second) && token.Error() != nil {
-		reply.Code = constant.RPC_TIMEOUT
+		reply.Code = constant.FAIL
+		reply.Data = token.Error().Error()
 		return reply, nil
 	}
 	return reply, nil
@@ -243,18 +240,3 @@ func (m *MqttClient) UnSubDeviceControl(serviceIdentifier string) error {
 	}
 	return nil
 }
-
-// normal publish
-// func (m *MqttClient) Publish(topic string, data []byte) (*index.Reply, error) {
-// 	reply := &index.Reply{
-// 		Code: index.RPC_SUCCESS,
-// 	}
-// 	if token := m.Client.Publish(topic+"_reply", byte(0), false, data); token.WaitTimeout(5*time.Second) && token.Error() != nil {
-// 		fmt.Printf("[recvDeviceControlReply] err:%s", token.Error())
-// 		reply.Code = index.RPC_FAIL
-// 	} else {
-// 		fmt.Println("[recvDeviceControlReply]", topic+"_reply", string(data))
-// 	}
-
-// 	return reply, nil
-// }
