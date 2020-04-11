@@ -40,15 +40,17 @@ type EventData struct {
 	Time  int64      `json:"time"`
 }
 
-type Reply struct {
-	Code int         `json:"code"`
-	ID   string      `json:"id"`
-	Data interface{} `json:"data"`
-}
-
+// Message 数据下行，下发的数据结构
 type Message struct {
 	ID      string     `json:"id"`
 	Version string     `json:"version"`
 	Type    string     `json:"type"`
 	Params  PropertyKV `json:"params"`
+}
+
+// Reply client 返回的数据结构
+type Reply struct {
+	Code int         `json:"code"`
+	ID   string      `json:"id"`
+	Data interface{} `json:"data"`
 }

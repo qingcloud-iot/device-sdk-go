@@ -201,39 +201,3 @@ func (m *MqttClient) UnSubDeviceControl(serviceIdentifier string) error {
 
 // 	return reply, nil
 // }
-
-// recvDeviceControlReply 订阅消息后的回调函数
-func (m *MqttClient) recvDeviceControlReply(client mqttp.Client, msg mqttp.Message) {
-
-	topic := msg.Topic()
-	payload := msg.Payload()
-
-	//qos := msg.Qos()
-	fmt.Println("[sdk-go-device-control] ", topic, string(payload))
-	message, err := ParseMessage(payload)
-	if err != nil {
-		fmt.Printf("recvDeviceControlReply err:%s", err.Error())
-		return
-	}
-
-	fmt.Printf("[recvDeviceControlReply] topic:%s payload:%s\n", topic, string(payload))
-
-	reply := &define.Reply{
-		ID:   message.ID,
-		Code: constant.RPC_SUCCESS,
-		Data: make(define.PropertyKV),
-	}
-
-	reply.Data = message.Params
-
-	data, err := json.Marshal(reply)
-	if err != nil {
-		fmt.Printf("[recvDeviceControlReply] err:%s\n", err.Error())
-		return
-	}
-	if token := m.Client.Publish(topic+"_reply", byte(0), false, data); token.WaitTimeout(5*time.Second) && token.Error() != nil {
-		fmt.Printf("[recvDeviceControlReply] err:%s", token.Error())
-	} else {
-		fmt.Println("[recvDeviceControlReply]", topic+"_reply", string(data))
-	}
-}

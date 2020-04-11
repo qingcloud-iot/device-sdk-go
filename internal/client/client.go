@@ -5,12 +5,9 @@ import (
 	"git.internal.yunify.com/iot-sdk/device-sdk-go/internal/define"
 )
 
-/*
-
- */
-
-// Client
+// Client 设备 sdk
 type Client interface {
+
 	// Connect 设备连接物联网平台
 	Connect() error
 
