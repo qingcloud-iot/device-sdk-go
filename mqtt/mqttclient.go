@@ -5,10 +5,11 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"time"
+
 	"git.internal.yunify.com/iot-sdk/device-sdk-go/internal/client"
 	"git.internal.yunify.com/iot-sdk/device-sdk-go/internal/constant"
 	"git.internal.yunify.com/iot-sdk/device-sdk-go/internal/define"
-	"time"
 
 	mqttp "github.com/eclipse/paho.mqtt.golang"
 )
@@ -16,16 +17,13 @@ import (
 type DeviceControlHandler func(mqttp.Client, mqttp.Message)
 
 type Options struct {
-	Token        string // 权限验证，及获取modelID、entityID
-	Server       string // mqtt server
-	PropertyType string // 属性分组（系统属性platform、基础属性base）
-	MessageID    string // 消息ID，设备内自增
-	// EventIdentifier string // 事件 identifier
-	// Identifer       string // sub 需定义
-	DeviceControl mqttp.MessageHandler
-
-	EntityId string
-	ModelId  string
+	Token         string               // 权限验证，及获取 ModelID、EntityID
+	Server        string               // mqtt server
+	PropertyType  string               // 属性分组（系统属性platform、基础属性base）
+	MessageID     string               // 消息ID，设备内自增
+	DeviceControl mqttp.MessageHandler // 设备控制的回调函数
+	EntityID      string               // 设备 id
+	ModelID       string               // 模型 id
 }
 
 type Client interface {
@@ -69,19 +67,19 @@ func NewMqtt(options *Options) (client.Client, error) {
 
 	opts := mqttp.NewClientOptions()
 	opts.AddBroker("tcp://" + options.Server)
-	if options.EntityId != "" {
-		opts.SetClientID(options.EntityId)
-		opts.SetUsername(options.EntityId)
+	if options.EntityID != "" {
+		opts.SetClientID(options.EntityID)
+		opts.SetUsername(options.EntityID)
 	}
 	opts.SetPassword(options.Token)
 	opts.SetCleanSession(true)
 	opts.SetAutoReconnect(true)
 	opts.SetKeepAlive(30 * time.Second)
 	opts.SetConnectionLostHandler(func(client mqttp.Client, e error) {
-		fmt.Println("lost connect")
+		fmt.Println("lost connect!")
 	})
 	opts.SetOnConnectHandler(func(client mqttp.Client) {
-		fmt.Println("connect success")
+		fmt.Println("connect ehub/ihub success!")
 	})
 	opts.SetDefaultPublishHandler(options.DeviceControl)
 
@@ -91,8 +89,8 @@ func NewMqtt(options *Options) (client.Client, error) {
 		return nil, err
 	}
 	m.Client = client
-	m.EntityId = options.EntityId
-	m.ModelId = options.ModelId
+	m.EntityId = options.EntityID
+	m.ModelId = options.ModelID
 
 	m.MessageID = options.MessageID
 	if options.PropertyType != "" {
@@ -128,7 +126,7 @@ func (m *MqttClient) PubProperty(ctx context.Context, meta define.PropertyKV) (*
 		return reply, nil
 	}
 	topic := buildPropertyTopic(m.EntityId, m.ModelId, m.PropertyType)
-	fmt.Printf("[PubProperty] topic:%s, message:%s\n", topic, string(data))
+	// fmt.Printf("[PubProperty] topic:%s, message:%s\n", topic, string(data))
 	if token := m.Client.Publish(topic, byte(0), false, data); token.WaitTimeout(5*time.Second) && token.Error() != nil {
 		reply.Code = constant.RPC_TIMEOUT
 		return reply, nil
@@ -151,7 +149,7 @@ func (m *MqttClient) PubEvent(ctx context.Context, meta define.PropertyKV, event
 		return reply, nil
 	}
 	topic := buildEventTopic(m.EntityId, m.ModelId, eventIdentifier)
-	fmt.Printf("[PubEvent pub] topic:%s, message:%s\n", topic, string(data))
+	// fmt.Printf("[PubEvent pub] topic:%s, message:%s\n", topic, string(data))
 	if token := m.Client.Publish(topic, byte(0), false, data); token.WaitTimeout(5*time.Second) && token.Error() != nil {
 		reply.Code = constant.RPC_TIMEOUT
 		return reply, nil
@@ -162,13 +160,13 @@ func (m *MqttClient) PubEvent(ctx context.Context, meta define.PropertyKV, event
 // SubDeviceControl 同步订阅消息
 func (m *MqttClient) SubDeviceControl(serviceIdentifier string) {
 	topic := BuildServiceControlReply(m.ModelId, m.EntityId, serviceIdentifier)
-	fmt.Printf("[SubDeviceControl] topic:%s\n", topic)
+	// fmt.Printf("[SubDeviceControl] topic:%s\n", topic)
 	if token := m.Client.Subscribe(topic, 0, nil); token.Wait() && token.Error() != nil {
-		fmt.Printf("SubDeviceControl err:%s", token.Error())
+		// fmt.Printf("SubDeviceControl err:%s", token.Error())
 	}
 
 	<-m.UnSubScribeChan
-	fmt.Printf("[SubDeviceControl] closed, topic:%s\n", topic)
+	// fmt.Printf("[SubDeviceControl] closed, topic:%s\n", topic)
 }
 
 func (m *MqttClient) UnSubDeviceControl(serviceIdentifier string) error {
@@ -177,7 +175,7 @@ func (m *MqttClient) UnSubDeviceControl(serviceIdentifier string) error {
 		close(m.UnSubScribeChan)
 	}()
 	topic := BuildServiceControlReply(m.ModelId, m.EntityId, serviceIdentifier)
-	fmt.Printf("[UnSubDeviceControl] topic:%s\n", topic)
+	// fmt.Printf("[UnSubDeviceControl] topic:%s\n", topic)
 	token := m.Client.Unsubscribe(topic)
 	token.Wait()
 	err := token.Error()

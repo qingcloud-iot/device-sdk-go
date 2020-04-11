@@ -13,7 +13,7 @@ import (
 )
 
 const (
-	QUIESCE      = 30000 // milliseconds
+	QUIESCE = 30000 // milliseconds
 )
 
 // ParseToken return token payload
@@ -113,11 +113,12 @@ func buildEventMessage(meta define.PropertyKV, m *MqttClient, eventIdentifier st
 	}
 	return message
 }
+
 func ParseMessage(payload []byte) (*define.Message, error) {
 	message := &define.Message{}
 	err := json.Unmarshal(payload, message)
 	if err != nil {
-		fmt.Errorf("parseMessage err:%s", err.Error())
+		// fmt.Errorf("parseMessage err:%s", err.Error())
 		return nil, err
 	}
 	return message, nil

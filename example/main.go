@@ -98,8 +98,8 @@ func ConnectFunc() {
 		Token:     token,
 		Server:    conf.Mqttbroker.Address,
 		MessageID: uuid.NewV4().String(),
-		EntityId:  entityID,
-		ModelId:   modelID,
+		EntityID:  entityID,
+		ModelID:   modelID,
 	}
 	m, err := mqtt.NewMqtt(options)
 	if err != nil {
@@ -127,8 +127,8 @@ func PubPropertyFunc() {
 		Server:       conf.Mqttbroker.Address,
 		MessageID:    uuid.NewV4().String(),
 		PropertyType: constant.PROPERTY_TYPE_BASE,
-		EntityId:     entityID,
-		ModelId:      modelID,
+		EntityID:     entityID,
+		ModelID:      modelID,
 	}
 	m, err := mqtt.NewMqtt(options)
 	if err != nil {
@@ -173,8 +173,8 @@ func PubEventFunc() {
 		Token:     token,
 		Server:    conf.Mqttbroker.Address,
 		MessageID: uuid.NewV4().String(),
-		EntityId:  entityID,
-		ModelId:   modelID,
+		EntityID:  entityID,
+		ModelID:   modelID,
 	}
 	m, err := mqtt.NewMqtt(options)
 	if err != nil {
@@ -232,8 +232,8 @@ func ServiceDeviceControlFunc() {
 		Server:       conf.Mqttbroker.Address,
 		PropertyType: constant.PROPERTY_TYPE_BASE,
 		MessageID:    uuid.NewV4().String(),
-		EntityId:     entityID,
-		ModelId:      modelID,
+		EntityID:     entityID,
+		ModelID:      modelID,
 	}
 
 	// 供设备控制使用
@@ -300,8 +300,8 @@ func PropertyAndEventAndServiceFunc() {
 		Server:       conf.Mqttbroker.Address,
 		PropertyType: constant.PROPERTY_TYPE_BASE,
 		MessageID:    uuid.NewV4().String(),
-		EntityId:     entityID,
-		ModelId:      modelID,
+		EntityID:     entityID,
+		ModelID:      modelID,
 	}
 
 	// 供设备控制使用的回调函数
