@@ -83,6 +83,8 @@ func main() {
 	if regAndConnect {
 		DynamicRegistryAndConnect()
 	}
+
+	select {}
 }
 
 // ConnectFunc 提供设备上线功能
@@ -102,7 +104,6 @@ func ConnectFunc() {
 	if err != nil {
 		panic(err)
 	}
-	select {}
 }
 
 // PubPropertyFunc 在 0 ～ 100 范围内上报温度属性值
@@ -383,5 +384,4 @@ func DynamicRegistryAndConnect() {
 	if err != nil {
 		panic(err)
 	}
-	select {}
 }
