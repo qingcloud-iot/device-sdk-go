@@ -155,15 +155,15 @@ registry:
 
     ```go
     options := &mqtt.Options{
-    MiddleCredential:       conf.Registry.MiddleCredential,
-    DynamocRegisterAddress: conf.Registry.ServiceAddress,
-    
-    Server:       conf.Mqttbroker.Address,
-    PropertyType: constant.PROPERTY_TYPE_BASE,
+        MiddleCredential:       conf.Registry.MiddleCredential,
+        DynamocRegisterAddress: conf.Registry.ServiceAddress,
+        Server:       conf.Mqttbroker.Address,
+        PropertyType: constant.PROPERTY_TYPE_BASE,
     }
+
     m, err := mqtt.InitWithMiddleCredential(options)
     if err != nil {
-    panic(err)
+        panic(err)
     }
     
     // 连接
