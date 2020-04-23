@@ -14,21 +14,38 @@ golang version：1.13及以上
 
 -------
 
-- [最新版本：1.0](https://git.internal.yunify.com/iot-sdk/device-sdk-go)
+- 最新版本：1.0
 
 
 ### SDK 功能列表
 
 -------------
 
-| **模块功能** | **功能点**                                                   |
-| :----------: | :----------------------------------------------------------- |
-|   设备连云   | 设备可通过该 sdk 与青云IoT物联网平台通信，使用 mqtt 协议进行数据传输，用于设备主动上报信息的场景 |
-| 设备身份认证 | token(设备凭证)                                              |
-|   属性上报   | 向特定 topic 上报设备属性数据                                |
-|   事件上报   | 向特定 topic上报设备事件                                     |
-|   设备控制   | 通过订阅相关 topic，获取下行数据实时控制设备状态             |
-|   动态注册   | 利用中间凭证实现大批量设备接入青云 IoT 物联网平台            |
+|    **模块功能**    | **功能点**                                                   |
+| :----------------: | :----------------------------------------------------------- |
+|      设备连云      | 设备可通过该 sdk 与青云IoT物联网平台通信，使用 mqtt 协议进行数据传输，用于设备主动上报信息的场景 |
+|    设备身份认证    | token(设备凭证)                                              |
+|      属性上报      | 向特定 topic 上报设备属性数据                                |
+|      事件上报      | 向特定 topic上报设备事件                                     |
+|      设备控制      | 通过订阅相关 topic，获取下行数据实时控制设备状态             |
+|      动态注册      | 利用中间凭证实现大批量设备接入青云 IoT 物联网平台            |
+| 动态注册并设备连云 | 使用中间凭证动态注册后，通过获得的设备 token 直接连云        |
+
+### SDK API 列表
+
+-------------
+
+|         函数         | 功能                                       |
+| :------------------: | :----------------------------------------- |
+|       Options        | 初始化 SDK Client 相关选项                 |
+| DeviceControlHandler | 服务调用结构体，用于处理下行数据的业务逻辑 |
+|       Connect        | 设备连接物联网平台                         |
+|      DisConnect      | 设备取消连接物联网平台                     |
+|     PubProperty      | 推送设备属性                               |
+|       PubEvent       | 推送设备事件                               |
+|   SubDeviceControl   | 订阅 topic，获取下行数据，对设备进行调节   |
+|  UnSubDeviceControl  | 取消订阅                                   |
+
 
 
 ### SDK使用简介
@@ -65,14 +82,14 @@ golang version：1.13及以上
 
     - 设置 GOPATH 环境变量  
 
-        vim ~/.zshrc
+        vim ~/.bashrc
 
         ```go
         export GOPATH=$HOME/gopath
         export PATH=$PATH:/usr/local/go/bin:$GOPATH/bin
         ```
 
-        source ~/.zshrc  
+        source ~/.bashrc  
 
 #### 2. 配置文件
 
@@ -90,7 +107,7 @@ registry:
 
 - device.token
 
-    设备凭证，注册设备时可获取到，解析 token 可获取到 设备ID、模型ID 等信息；
+    设备凭证，注册设备时可获取到，解析 token 可获取到 设备ID、数据模型ID 等信息；
 
 - mqttbroker.address
 
@@ -156,11 +173,11 @@ registry:
     }
     ```
 
-[设备接入使用守则](http://192.168.14.120:8085/beta/zh-CN/quick-start/first-course/)
+[设备接入使用示例](https://iot-docs.qingcloud.com/beta/zh-CN/quick-start/first-course/)
 
 #### 4. 属性上报
 
-通过 PubProperty 方法上报设备属性，传入参数 propertyData 为模型中定义的属性 identifier 及属性值
+通过 PubProperty 方法上报设备属性，传入参数 propertyData 为**数据模型**中定义的属性 identifier 及属性值
 
 ```
 propertyData := define.PropertyKV{
@@ -174,11 +191,11 @@ reply, err := client.PubProperty(ctx, propertyData)
 
 属性上报成功后，可以在 iot 平台查看上报的属性值；
 
-[属性上报使用守则]([http://192.168.14.120:8085/beta/zh-CN/quick-start/second-course/#%E4%B8%8A%E6%8A%A5%E5%B1%9E%E6%80%A7%E6%95%B0%E6%8D%AE](http://192.168.14.120:8085/beta/zh-CN/quick-start/second-course/#上报属性数据))
+[属性上报使用示例](https://iot-docs.qingcloud.com/beta/zh-CN/quick-start/second-course/#%E4%B8%8A%E6%8A%A5%E5%B1%9E%E6%80%A7%E6%95%B0%E6%8D%AE)
 
 #### 5. 事件上报
 
-通过 PubEvent 方法上报事件，传入参数 PubEvent 为模型中定义的事件 identifier 及事件信息
+通过 PubEvent 方法上报事件，传入参数 PubEvent 为**数据模型**中定义的事件 identifier 及事件信息
 
 ```
 eventData := define.PropertyKV{
@@ -193,7 +210,7 @@ reply, err := client.PubEvent(ctx, eventData, eventIdentifier)
 
 事件上报成功后，可以在 iot 平台查看上报的事件信息；
 
-[事件上报使用守则]([http://192.168.14.120:8085/beta/zh-CN/quick-start/second-course/#%E4%B8%8A%E6%8A%A5%E4%BA%8B%E4%BB%B6%E6%95%B0%E6%8D%AE](http://192.168.14.120:8085/beta/zh-CN/quick-start/second-course/#上报事件数据))
+[事件上报使用示例](https://iot-docs.qingcloud.com/beta/zh-CN/quick-start/second-course/#%E4%B8%8A%E6%8A%A5%E4%BA%8B%E4%BB%B6%E6%95%B0%E6%8D%AE)
 
 #### 6. 服务调用
 
@@ -236,7 +253,7 @@ func DeviceControlCallback(inputIdentifier string, msg *define.Message) error {
 }
 ```
 
-[服务调用使用守则]([http://192.168.14.120:8085/beta/zh-CN/quick-start/second-course/#%E8%B0%83%E7%94%A8%E6%9C%8D%E5%8A%A1](http://192.168.14.120:8085/beta/zh-CN/quick-start/second-course/#调用服务))
+[服务调用使用示例](https://iot-docs.qingcloud.com/beta/zh-CN/quick-start/second-course/#%E8%B0%83%E7%94%A8%E6%9C%8D%E5%8A%A1)
 
 #### 7. 动态注册
 
@@ -255,7 +272,7 @@ if err != nil {
 
 注册成功后，可以通过 resp.Name 获取设备名，通过 resp.Token 获取设备的专属凭证；
 
-[动态注册使用守则]([http://192.168.14.120:8085/beta/zh-CN/use-guide/dev-token/#%E4%BD%BF%E7%94%A8%E4%B8%AD%E9%97%B4%E5%87%AD%E8%AF%81](http://192.168.14.120:8085/beta/zh-CN/use-guide/dev-token/#使用中间凭证))
+[动态注册使用示例](https://iot-docs.qingcloud.com/beta/zh-CN/use-guide/dev-token/#%E5%8A%A8%E6%80%81%E6%B3%A8%E5%86%8C%E8%AE%BE%E5%A4%87)
 
 
 ### 历史版本清单
@@ -274,25 +291,20 @@ if err != nil {
 
 #### 1. SDK 的本地辅助测试
 
-   - mosquitto 或 ehub
+- mosquitto
 
-     - mosquitto
+    - mosquitto
 
-         sudo apt-get install mosquitto
+        sudo apt-get install mosquitto
 
-         sudo service mosquitto start 
+        sudo service mosquitto start 
 
-         sudo service mosquitto stop
+        sudo service mosquitto stop
 
-         sudo service mosquitto status
-
-     - ehub
-
-         https://git.internal.yunify.com/edge/exia
+        sudo service mosquitto status
 
 - mqttbox
 
     下载：http://workswithweb.com/html/mqttbox/installing_apps.html
 
-    使用：[MQTT系列教程3（客户端工具MQTTBox的安装和使用）](https://www.hangge.com/blog/cache/detail_2350.html)
-
+    使用：[MQTT系列教程3（客户端工具MQTTBox的安装和使用）](
