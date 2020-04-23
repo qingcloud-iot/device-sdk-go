@@ -1,4 +1,4 @@
-# 设备 SDK 文档
+# 设备 SDK 文档 - go
 
 ### 概述
 
@@ -97,12 +97,12 @@ config.yml
 
 ```yaml
 device:
-    token: 
+    token: <your_device_token>
 mqttbroker:
-    address:
+    address: <your_gateway_address>
 registry:
-    middle_credential:
-    service_address:
+    middle_credential: <your_middle_credential>
+    service_address: <your_service_address>
 ```
 
 - device.token
