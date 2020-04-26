@@ -2,11 +2,15 @@ package mqtt
 
 import (
 	"context"
+	"crypto/tls"
+	"crypto/x509"
 	"encoding/json"
 	"errors"
 	"fmt"
-	"git.internal.yunify.com/iot-sdk/device-sdk-go/internal/register"
+	"io/ioutil"
 	"time"
+
+	"git.internal.yunify.com/iot-sdk/device-sdk-go/internal/register"
 
 	iClient "git.internal.yunify.com/iot-sdk/device-sdk-go/internal/client"
 	"git.internal.yunify.com/iot-sdk/device-sdk-go/internal/constant"
@@ -36,6 +40,8 @@ type Options struct {
 	DeviceHandlers []DeviceControlHandler // 服务调用的回调函数
 	EntityID       string                 // 设备 id
 	ModelID        string                 // 模型 id
+
+	CertFilePath string // mqtts 证书地址
 }
 
 type MqttClient struct {
@@ -51,7 +57,28 @@ type MqttClient struct {
 func initMQTTClient(options *Options) mqttp.Client {
 
 	opts := mqttp.NewClientOptions()
-	opts.AddBroker("tcp://" + options.Server)
+
+	// use mqtts communicate
+	if options.CertFilePath != "" {
+		fmt.Println("use mqtts!")
+		cert := x509.NewCertPool()
+		pemCerts, err := ioutil.ReadFile(options.CertFilePath)
+		if err == nil {
+			if !cert.AppendCertsFromPEM(pemCerts) {
+				panic("failed to parse root certificate")
+			}
+		} else {
+			panic(err)
+		}
+
+		tlsConfig := &tls.Config{
+			RootCAs: cert,
+		}
+		opts.SetTLSConfig(tlsConfig)
+		opts.AddBroker("ssl://" + options.Server)
+	} else {
+		opts.AddBroker("tcp://" + options.Server)
+	}
 	if options.EntityID != "" {
 		opts.SetClientID(options.EntityID)
 		opts.SetUsername(options.EntityID)
@@ -157,7 +184,7 @@ func InitWithMiddleCredential(options *Options) (iClient.Client, error) {
 // Connect 连接 ihub 或 ehub
 func (m *MqttClient) Connect() error {
 	if token := m.Client.Connect(); !token.WaitTimeout(5*time.Second) || token.Error() != nil {
-		return fmt.Errorf("mqtt client connect fail")
+		return fmt.Errorf("mqtt client connect fail, please check (1)the mqttbroker address is accessible or not, or (2) the cert is match mqttbroker address you provide or not!")
 	}
 	return nil
 }

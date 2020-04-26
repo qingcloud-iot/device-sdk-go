@@ -27,11 +27,12 @@ var DeviceTemprature float64 = 30
 var (
 	configPath string
 
-	connect       bool // 上线
-	pubProperty   bool // 上报属性
-	pubEvent      bool // 上报事件
-	serviceContol bool // 服务调用
-	all           bool // 上线、上报属性、上报事件、服务调用
+	connect            bool // 上线
+	pubProperty        bool // 上报属性
+	pubPropertyByMqtts bool // 上报属性
+	pubEvent           bool // 上报事件
+	serviceContol      bool // 服务调用
+	all                bool // 上线、上报属性、上报事件、服务调用
 
 	reg           bool // 动态注册
 	regAndConnect bool // 动态注册并上线设备
@@ -43,6 +44,7 @@ func init() {
 	flag.StringVar(&configPath, "conf", "./config.yml", "")
 	flag.BoolVar(&connect, "c", false, "")
 	flag.BoolVar(&pubProperty, "p", false, "")
+	flag.BoolVar(&pubPropertyByMqtts, "ps", false, "")
 	flag.BoolVar(&pubEvent, "e", false, "")
 	flag.BoolVar(&serviceContol, "s", false, "")
 	flag.BoolVar(&all, "all", false, "")
@@ -62,6 +64,10 @@ func main() {
 	}
 	if pubProperty {
 		PubPropertyFunc()
+	}
+
+	if pubPropertyByMqtts {
+		PubPropertyFuncByMQTTS()
 	}
 
 	if pubEvent {
@@ -112,6 +118,48 @@ func PubPropertyFunc() {
 		Token:        conf.Device.Token,
 		Server:       conf.Mqttbroker.Address,
 		PropertyType: constant.PROPERTY_TYPE_BASE,
+	}
+
+	m, err := mqtt.InitWithToken(options)
+	if err != nil {
+		panic(err)
+	}
+
+	// 连接
+	err = m.Connect()
+	if err != nil {
+		panic(err)
+	}
+
+	data := define.PropertyKV{
+		"temp": DeviceTemprature,
+	}
+
+	// 上报属性
+	for {
+		ctx, _ := context.WithTimeout(context.Background(), 3*time.Second)
+		_, err := m.PubProperty(ctx, data)
+		if err != nil {
+			panic(err)
+		}
+		time.Sleep(2 * time.Second)
+		fmt.Println("DeviceTemprature:", DeviceTemprature)
+		DeviceTemprature++
+		if DeviceTemprature < 0 || DeviceTemprature > 100 {
+			DeviceTemprature = float64(rand.Int63n(int64(HIGH) - int64(LOW)))
+		}
+		data["temp"] = DeviceTemprature
+	}
+}
+
+// PubPropertyFuncByMQTTS 通过 mqtts 在 0 ～ 100 范围内上报温度属性值
+func PubPropertyFuncByMQTTS() {
+	options := &mqtt.Options{
+		Token:        conf.Device.Token,
+		Server:       conf.Mqttbroker.Address,
+		PropertyType: constant.PROPERTY_TYPE_BASE,
+		// 如果提供证书路径，将会使用 mqtts 进行通信
+		CertFilePath: "cert/iot.qingcloud.com.cer",
 	}
 
 	m, err := mqtt.InitWithToken(options)
