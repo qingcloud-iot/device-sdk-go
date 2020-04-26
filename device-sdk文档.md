@@ -173,6 +173,8 @@ registry:
     }
     ```
 
+如果要使用 mqtts 进行加密通信，将 options 的 CertFilePath 字段设置为证书地址即可！
+
 [设备接入使用示例](https://iot-docs.qingcloud.com/beta/zh-CN/quick-start/first-course/)
 
 #### 4. 属性上报
