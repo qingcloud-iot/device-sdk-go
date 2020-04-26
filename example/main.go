@@ -142,8 +142,8 @@ func PubPropertyFunc() {
 		if err != nil {
 			panic(err)
 		}
-		time.Sleep(2 * time.Second)
 		fmt.Println("DeviceTemprature:", DeviceTemprature)
+		time.Sleep(2 * time.Second)
 		DeviceTemprature++
 		if DeviceTemprature < 0 || DeviceTemprature > 100 {
 			DeviceTemprature = float64(rand.Int63n(int64(HIGH) - int64(LOW)))

@@ -1,10 +1,4 @@
-# 设备 SDK 文档 - go
-
-### 概述
-
-----------------------
-
-这篇文档介绍了如何安装和配置 设备sdk，以及提供了相关例子来演示如何使用 设备sdk 上报设备数据以及服务调用；
+本章节介绍了如何安装和配置**设备 SDK**，以及提供了相关例子来演示如何使用**设备 SDK**上报设备数据以及服务调用；
 
 支持MQTT 协议版本：3.1.1
 
@@ -14,8 +8,7 @@ golang version：1.13及以上
 
 -------
 
-- 最新版本：1.0
-
+- 最新版本：[1.0](https://iot-sdk.pek3a.qingstor.com/v1.0/device-sdk-go.tar.gz)
 
 ### SDK 功能列表
 
@@ -23,7 +16,7 @@ golang version：1.13及以上
 
 |    **模块功能**    | **功能点**                                                   |
 | :----------------: | :----------------------------------------------------------- |
-|      设备连云      | 设备可通过该 sdk 与青云IoT物联网平台通信，使用 mqtt 协议进行数据传输，用于设备主动上报信息的场景 |
+|      设备连云      | 设备可通过该 SDK 与青云IoT物联网平台通信，使用 mqtt/mqtts 协议进行数据传输，用于设备主动上报信息的场景 |
 |    设备身份认证    | token(设备凭证)                                              |
 |      属性上报      | 向特定 topic 上报设备属性数据                                |
 |      事件上报      | 向特定 topic上报设备事件                                     |
@@ -175,7 +168,7 @@ registry:
 
 如果要使用 mqtts 进行加密通信，将 options 的 CertFilePath 字段设置为证书地址即可！
 
-[设备接入使用示例](https://iot-docs.qingcloud.com/beta/zh-CN/quick-start/first-course/)
+[设备接入使用示例](https://iot-docs.qingcloud.com/beta/zh-CN/tutorials/access-end-devices/)
 
 #### 4. 属性上报
 
@@ -193,7 +186,7 @@ reply, err := client.PubProperty(ctx, propertyData)
 
 属性上报成功后，可以在 iot 平台查看上报的属性值；
 
-[属性上报使用示例](https://iot-docs.qingcloud.com/beta/zh-CN/quick-start/second-course/#%E4%B8%8A%E6%8A%A5%E5%B1%9E%E6%80%A7%E6%95%B0%E6%8D%AE)
+[属性上报使用示例](https://iot-docs.qingcloud.com/beta/zh-CN/tutorials/send-data/#%E4%B8%8A%E6%8A%A5%E5%B1%9E%E6%80%A7%E6%95%B0%E6%8D%AE)
 
 #### 5. 事件上报
 
@@ -212,7 +205,7 @@ reply, err := client.PubEvent(ctx, eventData, eventIdentifier)
 
 事件上报成功后，可以在 iot 平台查看上报的事件信息；
 
-[事件上报使用示例](https://iot-docs.qingcloud.com/beta/zh-CN/quick-start/second-course/#%E4%B8%8A%E6%8A%A5%E4%BA%8B%E4%BB%B6%E6%95%B0%E6%8D%AE)
+[事件上报使用示例](https://iot-docs.qingcloud.com/beta/zh-CN/tutorials/send-data/#%E4%B8%8A%E6%8A%A5%E4%BA%8B%E4%BB%B6%E6%95%B0%E6%8D%AE)
 
 #### 6. 服务调用
 
@@ -255,7 +248,7 @@ func DeviceControlCallback(inputIdentifier string, msg *define.Message) error {
 }
 ```
 
-[服务调用使用示例](https://iot-docs.qingcloud.com/beta/zh-CN/quick-start/second-course/#%E8%B0%83%E7%94%A8%E6%9C%8D%E5%8A%A1)
+[服务调用使用示例](https://iot-docs.qingcloud.com/beta/zh-CN/tutorials/send-data/#%E8%B0%83%E7%94%A8%E6%9C%8D%E5%8A%A1)
 
 #### 7. 动态注册
 
@@ -309,4 +302,4 @@ if err != nil {
 
     下载：http://workswithweb.com/html/mqttbox/installing_apps.html
 
-    使用：[MQTT系列教程3（客户端工具MQTTBox的安装和使用）](
+    使用：[MQTT系列教程3（客户端工具MQTTBox的安装和使用）](https://www.hangge.com/blog/cache/detail_2350.html)
