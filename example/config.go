@@ -13,7 +13,8 @@ type Config struct {
 		Token string `yaml:"token"`
 	}
 	Mqttbroker struct {
-		Address string `yaml:"address"`
+		AddressMqtt  string `yaml:"address_mqtt"`
+		AddressMqtts string `yaml:"address_mqtts"`
 	}
 	Registry struct {
 		ServiceAddress   string `yaml:"service_address"`

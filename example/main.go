@@ -97,7 +97,7 @@ func main() {
 func ConnectFunc() {
 	options := &mqtt.Options{
 		Token:  conf.Device.Token,
-		Server: conf.Mqttbroker.Address,
+		Server: conf.Mqttbroker.AddressMqtt,
 	}
 
 	m, err := mqtt.InitWithToken(options)
@@ -116,7 +116,7 @@ func ConnectFunc() {
 func PubPropertyFunc() {
 	options := &mqtt.Options{
 		Token:        conf.Device.Token,
-		Server:       conf.Mqttbroker.Address,
+		Server:       conf.Mqttbroker.AddressMqtt,
 		PropertyType: constant.PROPERTY_TYPE_BASE,
 	}
 
@@ -156,7 +156,7 @@ func PubPropertyFunc() {
 func PubPropertyFuncByMQTTS() {
 	options := &mqtt.Options{
 		Token:        conf.Device.Token,
-		Server:       conf.Mqttbroker.Address,
+		Server:       conf.Mqttbroker.AddressMqtts,
 		PropertyType: constant.PROPERTY_TYPE_BASE,
 		// 如果提供证书路径，将会使用 mqtts 进行通信
 		CertFilePath: "cert/iot.qingcloud.com.cer",
@@ -184,8 +184,8 @@ func PubPropertyFuncByMQTTS() {
 		if err != nil {
 			panic(err)
 		}
-		time.Sleep(2 * time.Second)
 		fmt.Println("DeviceTemprature:", DeviceTemprature)
+		time.Sleep(2 * time.Second)
 		DeviceTemprature++
 		if DeviceTemprature < 0 || DeviceTemprature > 100 {
 			DeviceTemprature = float64(rand.Int63n(int64(HIGH) - int64(LOW)))
@@ -198,7 +198,7 @@ func PubPropertyFuncByMQTTS() {
 func PubEventFunc() {
 	options := &mqtt.Options{
 		Token:        conf.Device.Token,
-		Server:       conf.Mqttbroker.Address,
+		Server:       conf.Mqttbroker.AddressMqtt,
 		PropertyType: constant.PROPERTY_TYPE_BASE,
 	}
 
@@ -252,7 +252,7 @@ func ServiceDeviceControlFunc() {
 
 	options := &mqtt.Options{
 		Token:        conf.Device.Token,
-		Server:       conf.Mqttbroker.Address,
+		Server:       conf.Mqttbroker.AddressMqtt,
 		PropertyType: constant.PROPERTY_TYPE_BASE,
 
 		DeviceHandlers: []mqtt.DeviceControlHandler{
@@ -286,6 +286,7 @@ func ServiceDeviceControlFunc() {
 			if err != nil {
 				panic(err)
 			}
+			fmt.Println("DeviceTemprature:", DeviceTemprature)
 
 			DeviceTemprature++
 			if DeviceTemprature < 0 || DeviceTemprature > 100 {
@@ -310,7 +311,7 @@ func PropertyAndEventAndServiceFunc() {
 
 	options := &mqtt.Options{
 		Token:        conf.Device.Token,
-		Server:       conf.Mqttbroker.Address,
+		Server:       conf.Mqttbroker.AddressMqtt,
 		PropertyType: constant.PROPERTY_TYPE_BASE,
 
 		DeviceHandlers: []mqtt.DeviceControlHandler{
@@ -344,6 +345,7 @@ func PropertyAndEventAndServiceFunc() {
 			if err != nil {
 				panic(err)
 			}
+			fmt.Println("DeviceTemprature:", DeviceTemprature)
 
 			DeviceTemprature++
 			if DeviceTemprature < 0 || DeviceTemprature > 100 {
@@ -420,7 +422,7 @@ func DynamicRegistryAndConnect() {
 		MiddleCredential:       conf.Registry.MiddleCredential,
 		DynamocRegisterAddress: conf.Registry.ServiceAddress,
 
-		Server:       conf.Mqttbroker.Address,
+		Server:       conf.Mqttbroker.AddressMqtt,
 		PropertyType: constant.PROPERTY_TYPE_BASE,
 	}
 	m, err := mqtt.InitWithMiddleCredential(options)
