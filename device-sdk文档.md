@@ -92,7 +92,8 @@ config.yml
 device:
     token: <your_device_token>
 mqttbroker:
-    address: <your_gateway_address>
+    address_mqtt: <your_gateway_address>
+    address_mqtts: <your_tls_gateway_address>
 registry:
     middle_credential: <your_middle_credential>
     service_address: <your_service_address>
@@ -105,6 +106,10 @@ registry:
 - mqttbroker.address
 
     设备数据上报的目的地址，可以是边端，也可以是云端；
+
+    mqttbroker.address_mqtt: 通过 mqtt 方式上报数据
+    
+    mqttbroker.address_mqtts: 通过 mqtts 方式加密上报数据
 
 - registry.middle_credential
 
