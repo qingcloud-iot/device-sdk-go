@@ -10,7 +10,8 @@ var conf *Config
 
 type Config struct {
 	Device struct {
-		Token string `yaml:"token"`
+		Token         string `yaml:"token"`
+		AutoReconnect bool   `yaml:"auto_reconnect"`
 	}
 	Mqttbroker struct {
 		AddressMqtt  string `yaml:"address_mqtt"`

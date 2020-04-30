@@ -42,6 +42,9 @@ type Options struct {
 	ModelID        string                 // 模型 id
 
 	CertFilePath string // mqtts 证书地址
+
+	AutoReconnect   bool      // 是否自动重连
+	LostConnectChan chan bool // 掉线后通知 chan，方便程序自处理
 }
 
 type MqttClient struct {
@@ -85,10 +88,16 @@ func initMQTTClient(options *Options) mqttp.Client {
 	}
 	opts.SetPassword(options.Token)
 	opts.SetCleanSession(true)
-	opts.SetAutoReconnect(true)
+	if options.AutoReconnect {
+		fmt.Println("This device will auto reconnect to ehub/ihub!")
+		opts.SetAutoReconnect(true)
+	} else {
+		fmt.Println("This device will not auto reconnect to ehub/ihub, you can ensure reconnect by set the config param <auto_reconnect:true>!")
+		opts.SetAutoReconnect(false)
+	}
 	opts.SetKeepAlive(30 * time.Second)
 	opts.SetConnectionLostHandler(func(client mqttp.Client, e error) {
-		fmt.Println("lost connect!")
+		options.LostConnectChan <- true
 	})
 	opts.SetOnConnectHandler(func(client mqttp.Client) {
 		fmt.Println("connect ehub/ihub success!")
@@ -184,7 +193,7 @@ func InitWithMiddleCredential(options *Options) (iClient.Client, error) {
 // Connect 连接 ihub 或 ehub
 func (m *MqttClient) Connect() error {
 	if token := m.Client.Connect(); !token.WaitTimeout(5*time.Second) || token.Error() != nil {
-		return fmt.Errorf("mqtt client connect fail, please check (1)the mqttbroker address is accessible or not, or (2) the cert is match mqttbroker address you provide or not!")
+		return fmt.Errorf("mqtt client connect fail, please check (1)the mqttbroker address is accessible or not, or (2) the cert is match mqttbroker address you provide or not! err:%s", token.Error())
 	}
 	return nil
 }

@@ -5,6 +5,7 @@ import (
 	"flag"
 	"fmt"
 	"math/rand"
+	"os"
 	"time"
 
 	"git.internal.yunify.com/iot-sdk/device-sdk-go/internal/constant"
@@ -96,8 +97,10 @@ func main() {
 // ConnectFunc 提供设备上线功能
 func ConnectFunc() {
 	options := &mqtt.Options{
-		Token:  conf.Device.Token,
-		Server: conf.Mqttbroker.AddressMqtt,
+		Token:           conf.Device.Token,
+		AutoReconnect:   conf.Device.AutoReconnect,
+		LostConnectChan: make(chan bool),
+		Server:          conf.Mqttbroker.AddressMqtt,
 	}
 
 	m, err := mqtt.InitWithToken(options)
@@ -110,14 +113,33 @@ func ConnectFunc() {
 	if err != nil {
 		panic(err)
 	}
+
+	// 掉线后的处理动作
+	go func(o *mqtt.Options) {
+		for {
+			select {
+			case <-options.LostConnectChan:
+				// 如果不重连，则退出程序
+				if !o.AutoReconnect {
+					fmt.Println("not reconnect to ehub/ihub, procedure will quit!")
+					os.Exit(0)
+					return
+				}
+				// 重连，则提示目前暂时掉线
+				fmt.Println("lost connect to ehub/ihub, will auto reconnect!")
+			}
+		}
+	}(options)
 }
 
 // PubPropertyFunc 在 0 ～ 100 范围内上报温度属性值
 func PubPropertyFunc() {
 	options := &mqtt.Options{
-		Token:        conf.Device.Token,
-		Server:       conf.Mqttbroker.AddressMqtt,
-		PropertyType: constant.PROPERTY_TYPE_BASE,
+		Token:           conf.Device.Token,
+		AutoReconnect:   conf.Device.AutoReconnect,
+		LostConnectChan: make(chan bool),
+		Server:          conf.Mqttbroker.AddressMqtt,
+		PropertyType:    constant.PROPERTY_TYPE_BASE,
 	}
 
 	m, err := mqtt.InitWithToken(options)
@@ -130,6 +152,23 @@ func PubPropertyFunc() {
 	if err != nil {
 		panic(err)
 	}
+
+	// 失去连接后的处理动作
+	go func(o *mqtt.Options) {
+		for {
+			select {
+			case <-options.LostConnectChan:
+				// 如果不重连，则退出程序
+				if !o.AutoReconnect {
+					fmt.Println("not reconnect to ehub/ihub, procedure will quit!")
+					os.Exit(0)
+					return
+				}
+				// 重连，则提示目前暂时掉线
+				fmt.Println("lost connect to ehub/ihub, will auto reconnect!")
+			}
+		}
+	}(options)
 
 	data := define.PropertyKV{
 		"temp": DeviceTemprature,
@@ -155,9 +194,11 @@ func PubPropertyFunc() {
 // PubPropertyFuncByMQTTS 通过 mqtts 在 0 ～ 100 范围内上报温度属性值
 func PubPropertyFuncByMQTTS() {
 	options := &mqtt.Options{
-		Token:        conf.Device.Token,
-		Server:       conf.Mqttbroker.AddressMqtts,
-		PropertyType: constant.PROPERTY_TYPE_BASE,
+		Token:           conf.Device.Token,
+		AutoReconnect:   conf.Device.AutoReconnect,
+		LostConnectChan: make(chan bool),
+		Server:          conf.Mqttbroker.AddressMqtts,
+		PropertyType:    constant.PROPERTY_TYPE_BASE,
 		// 如果提供证书路径，将会使用 mqtts 进行通信
 		CertFilePath: "cert/iot.qingcloud.com.cer",
 	}
@@ -172,6 +213,23 @@ func PubPropertyFuncByMQTTS() {
 	if err != nil {
 		panic(err)
 	}
+
+	// 失去连接后的处理动作
+	go func(o *mqtt.Options) {
+		for {
+			select {
+			case <-options.LostConnectChan:
+				// 如果不重连，则退出程序
+				if !o.AutoReconnect {
+					fmt.Println("not reconnect to ehub/ihub, procedure will quit!")
+					os.Exit(0)
+					return
+				}
+				// 重连，则提示目前暂时掉线
+				fmt.Println("lost connect to ehub/ihub, will auto reconnect!")
+			}
+		}
+	}(options)
 
 	data := define.PropertyKV{
 		"temp": DeviceTemprature,
@@ -197,9 +255,11 @@ func PubPropertyFuncByMQTTS() {
 // PubEventFunc 上报事件
 func PubEventFunc() {
 	options := &mqtt.Options{
-		Token:        conf.Device.Token,
-		Server:       conf.Mqttbroker.AddressMqtt,
-		PropertyType: constant.PROPERTY_TYPE_BASE,
+		Token:           conf.Device.Token,
+		AutoReconnect:   conf.Device.AutoReconnect,
+		LostConnectChan: make(chan bool),
+		Server:          conf.Mqttbroker.AddressMqtt,
+		PropertyType:    constant.PROPERTY_TYPE_BASE,
 	}
 
 	m, err := mqtt.InitWithToken(options)
@@ -212,6 +272,23 @@ func PubEventFunc() {
 	if err != nil {
 		panic(err)
 	}
+
+	// 失去连接后的处理动作
+	go func(o *mqtt.Options) {
+		for {
+			select {
+			case <-options.LostConnectChan:
+				// 如果不重连，则退出程序
+				if !o.AutoReconnect {
+					fmt.Println("not reconnect to ehub/ihub, procedure will quit!")
+					os.Exit(0)
+					return
+				}
+				// 重连，则提示目前暂时掉线
+				fmt.Println("lost connect to ehub/ihub, will auto reconnect!")
+			}
+		}
+	}(options)
 
 	eventIdentifier := "temperatureEvent" // 上报事件的 事件 identifer
 
@@ -251,9 +328,11 @@ func ServiceDeviceControlFunc() {
 	inputIdentifier := "temperature"     // 执行服务调用改变的参数值
 
 	options := &mqtt.Options{
-		Token:        conf.Device.Token,
-		Server:       conf.Mqttbroker.AddressMqtt,
-		PropertyType: constant.PROPERTY_TYPE_BASE,
+		Token:           conf.Device.Token,
+		AutoReconnect:   conf.Device.AutoReconnect,
+		LostConnectChan: make(chan bool),
+		Server:          conf.Mqttbroker.AddressMqtt,
+		PropertyType:    constant.PROPERTY_TYPE_BASE,
 
 		DeviceHandlers: []mqtt.DeviceControlHandler{
 			mqtt.DeviceControlHandler{
@@ -274,6 +353,23 @@ func ServiceDeviceControlFunc() {
 	if err != nil {
 		panic(err)
 	}
+
+	// 失去连接后的处理动作
+	go func(o *mqtt.Options) {
+		for {
+			select {
+			case <-options.LostConnectChan:
+				// 如果不重连，则退出程序
+				if !o.AutoReconnect {
+					fmt.Println("not reconnect to ehub/ihub, procedure will quit!")
+					os.Exit(0)
+					return
+				}
+				// 重连，则提示目前暂时掉线
+				fmt.Println("lost connect to ehub/ihub, will auto reconnect!")
+			}
+		}
+	}(options)
 
 	// 上报属性
 	go func() {
@@ -310,9 +406,11 @@ func PropertyAndEventAndServiceFunc() {
 	inputIdentifier := "temperature"      // 执行服务调用改变的参数值
 
 	options := &mqtt.Options{
-		Token:        conf.Device.Token,
-		Server:       conf.Mqttbroker.AddressMqtt,
-		PropertyType: constant.PROPERTY_TYPE_BASE,
+		Token:           conf.Device.Token,
+		AutoReconnect:   conf.Device.AutoReconnect,
+		LostConnectChan: make(chan bool),
+		Server:          conf.Mqttbroker.AddressMqtt,
+		PropertyType:    constant.PROPERTY_TYPE_BASE,
 
 		DeviceHandlers: []mqtt.DeviceControlHandler{
 			mqtt.DeviceControlHandler{
@@ -333,6 +431,23 @@ func PropertyAndEventAndServiceFunc() {
 	if err != nil {
 		panic(err)
 	}
+
+	// 失去连接后的处理动作
+	go func(o *mqtt.Options) {
+		for {
+			select {
+			case <-options.LostConnectChan:
+				// 如果不重连，则退出程序
+				if !o.AutoReconnect {
+					fmt.Println("not reconnect to ehub/ihub, procedure will quit!")
+					os.Exit(0)
+					return
+				}
+				// 重连，则提示目前暂时掉线
+				fmt.Println("lost connect to ehub/ihub, will auto reconnect!")
+			}
+		}
+	}(options)
 
 	// 上报属性
 	go func() {
@@ -421,9 +536,10 @@ func DynamicRegistryAndConnect() {
 	options := &mqtt.Options{
 		MiddleCredential:       conf.Registry.MiddleCredential,
 		DynamocRegisterAddress: conf.Registry.ServiceAddress,
-
-		Server:       conf.Mqttbroker.AddressMqtt,
-		PropertyType: constant.PROPERTY_TYPE_BASE,
+		AutoReconnect:          conf.Device.AutoReconnect,
+		LostConnectChan:        make(chan bool),
+		Server:                 conf.Mqttbroker.AddressMqtt,
+		PropertyType:           constant.PROPERTY_TYPE_BASE,
 	}
 	m, err := mqtt.InitWithMiddleCredential(options)
 	if err != nil {
@@ -435,4 +551,21 @@ func DynamicRegistryAndConnect() {
 	if err != nil {
 		panic(err)
 	}
+
+	// 掉线后的处理动作
+	go func(o *mqtt.Options) {
+		for {
+			select {
+			case <-options.LostConnectChan:
+				// 如果不重连，则退出程序
+				if !o.AutoReconnect {
+					fmt.Println("not reconnect to ehub/ihub, procedure will quit!")
+					os.Exit(0)
+					return
+				}
+				// 重连，则提示目前暂时掉线
+				fmt.Println("lost connect to ehub/ihub, will auto reconnect!")
+			}
+		}
+	}(options)
 }

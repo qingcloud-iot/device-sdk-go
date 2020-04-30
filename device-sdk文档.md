@@ -17,6 +17,7 @@ golang version：1.13及以上
 |    **模块功能**    | **功能点**                                                   |
 | :----------------: | :----------------------------------------------------------- |
 |      设备连云      | 设备可通过该 SDK 与青云IoT物联网平台通信，使用 mqtt/mqtts 协议进行数据传输，用于设备主动上报信息的场景 |
+|      自动重连      | 由于网络等原因，设备存在掉线的可能，用户可以通过配置控制设备掉线后是否需要重新连接云平台 |
 |    设备身份认证    | token(设备凭证)                                              |
 |      属性上报      | 向特定 topic 上报设备属性数据                                |
 |      事件上报      | 向特定 topic上报设备事件                                     |
@@ -91,6 +92,7 @@ config.yml
 ```yaml
 device:
     token: <your_device_token>
+    auto_reconnect: true
 mqttbroker:
     address_mqtt: <your_gateway_address>
     address_mqtts: <your_tls_gateway_address>
@@ -99,25 +101,25 @@ registry:
     service_address: <your_service_address>
 ```
 
-- device.token
+- device
 
-    设备凭证，注册设备时可获取到，解析 token 可获取到 设备ID、数据模型ID 等信息；
+    token: 设备凭证，注册设备时可获取到，解析 token 可获取到 设备ID、数据模型ID 等信息；
 
-- mqttbroker.address
+    auto_reconnect: 设置设备掉线后是否自动重连，true / false；
+
+- mqttbroker
 
     设备数据上报的目的地址，可以是边端，也可以是云端；
 
-    mqttbroker.address_mqtt: 通过 mqtt 方式上报数据
-    
-    mqttbroker.address_mqtts: 通过 mqtts 方式加密上报数据
+    address_mqtt: 通过 mqtt 方式上报数据
 
-- registry.middle_credential
+    address_mqtts: 通过 mqtts 方式加密上报数据
 
-    中间凭证，大批量设备注册后会产生一个中间凭证，通过该凭证能够实现同批次的海量设备使用相同的方式和信息接入平台。同时还可以在动态注册之后获得专属的设备凭证，也就是上面的 token；
+- registry.
 
-- registry.service_address
+    middle_credential: 中间凭证，大批量设备注册后会产生一个中间凭证，通过该凭证能够实现同批次的海量设备使用相同的方式和信息接入平台。同时还可以在动态注册之后获得专属的设备凭证，也就是上面的 token；
 
-    动态注册的服务地址
+    service_address: 动态注册的服务地址
 
 #### 3. 设备接入
 
@@ -128,19 +130,39 @@ registry:
     ```go
     options := &mqtt.Options{
         Token:     conf.Device.Token,
+        AutoReconnect:   conf.Device.AutoReconnect,
+		LostConnectChan: make(chan bool),
         Server:    conf.Mqttbroker.Address,
     }
     
+    // 初始化
     m, err := mqtt.InitWithToken(options)
     if err != nil {
         panic(err)
     }
-    
+
     // 连接
     err = m.Connect()
     if err != nil {
         panic(err)
     }
+
+    // 掉线(离线)后的处理动作
+    go func(o *mqtt.Options) {
+        for {
+            select {
+            case <-options.LostConnectChan:
+                // 如果不重连，则退出程序
+                if !o.AutoReconnect {
+                    fmt.Println("not reconnect to ehub/ihub, procedure will quit!")
+                    os.Exit(0)
+                    return
+                }
+                // 重连，则提示目前暂时掉线
+                fmt.Println("lost connect to ehub/ihub, will auto reconnect!")
+            }
+        }
+    }(options)
     ```
 
     设备接入云端或边端后，才能上报数据和服务调用；
@@ -155,6 +177,8 @@ registry:
     options := &mqtt.Options{
         MiddleCredential:       conf.Registry.MiddleCredential,
         DynamocRegisterAddress: conf.Registry.ServiceAddress,
+        AutoReconnect:   conf.Device.AutoReconnect,
+        LostConnectChan: make(chan bool),
         Server:       conf.Mqttbroker.Address,
         PropertyType: constant.PROPERTY_TYPE_BASE,
     }
@@ -169,6 +193,23 @@ registry:
     if err != nil {
     panic(err)
     }
+
+    // 掉线(离线)后的处理动作
+    go func(o *mqtt.Options) {
+        for {
+            select {
+            case <-options.LostConnectChan:
+                // 如果不重连，则退出程序
+                if !o.AutoReconnect {
+                    fmt.Println("not reconnect to ehub/ihub, procedure will quit!")
+                    os.Exit(0)
+                    return
+                }
+                // 重连，则提示目前暂时掉线
+                fmt.Println("lost connect to ehub/ihub, will auto reconnect!")
+            }
+        }
+    }(options)
     ```
 
 如果要使用 mqtts 进行加密通信，将 options 的 CertFilePath 字段设置为证书地址即可！
@@ -189,7 +230,7 @@ reply, err := client.PubProperty(ctx, propertyData)
 
 属性上报后，会响应 reply 给用户，如果 reply.Code 等于 200，则表示上报成功，否则上报失败，失败信息可在 reply.Data 中查看；
 
-属性上报成功后，可以在 iot 平台查看上报的属性值；
+属性上报成功后，可以在物联网平台查看上报的属性值；
 
 [属性上报使用示例](https://iot-docs.qingcloud.com/beta/zh-CN/tutorials/send-data/#%E4%B8%8A%E6%8A%A5%E5%B1%9E%E6%80%A7%E6%95%B0%E6%8D%AE)
 
@@ -208,7 +249,7 @@ reply, err := client.PubEvent(ctx, eventData, eventIdentifier)
 
 属性上报后，会响应 reply 给用户，如果 reply.Code 等于 200，则表示上报成功，否则上报失败，失败信息可在 reply.Data 中查看；
 
-事件上报成功后，可以在 iot 平台查看上报的事件信息；
+事件上报成功后，可以在物联网平台查看上报的事件信息；
 
 [事件上报使用示例](https://iot-docs.qingcloud.com/beta/zh-CN/tutorials/send-data/#%E4%B8%8A%E6%8A%A5%E4%BA%8B%E4%BB%B6%E6%95%B0%E6%8D%AE)
 
