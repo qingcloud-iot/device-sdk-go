@@ -45,6 +45,11 @@ type Options struct {
 
 	AutoReconnect   bool      // 是否自动重连
 	LostConnectChan chan bool // 掉线后通知 chan，方便程序自处理
+	ReConnectChan   chan bool // 掉线后重连 chan，通知设备已经重连
+	n               int
+
+	KeepAlive            time.Duration // 心跳间隔, 默认 30s
+	MaxReconnectInterval time.Duration // 最大重连间隔, 默认 10 * time.Minute
 }
 
 type MqttClient struct {
@@ -95,12 +100,26 @@ func initMQTTClient(options *Options) mqttp.Client {
 		fmt.Println("This device will not auto reconnect to ehub/ihub, you can ensure reconnect by set the config param <auto_reconnect:true>!")
 		opts.SetAutoReconnect(false)
 	}
-	opts.SetKeepAlive(30 * time.Second)
+	if options.KeepAlive != 0 {
+		opts.SetKeepAlive(options.KeepAlive)
+	}
+	if options.MaxReconnectInterval != 0 {
+		opts.SetMaxReconnectInterval(options.MaxReconnectInterval)
+	}
 	opts.SetConnectionLostHandler(func(client mqttp.Client, e error) {
-		options.LostConnectChan <- true
+		if options.LostConnectChan != nil {
+			options.LostConnectChan <- true
+		}
 	})
 	opts.SetOnConnectHandler(func(client mqttp.Client) {
-		fmt.Println("connect ehub/ihub success!")
+		options.n++
+		// 表示重连
+		if options.n != 1 && options.ReConnectChan != nil {
+			fmt.Println("reconnect ehub/ihub success!")
+			options.ReConnectChan <- true
+		} else {
+			fmt.Println("connect ehub/ihub success!")
+		}
 	})
 
 	if options.DeviceHandlers != nil {

@@ -100,7 +100,11 @@ func ConnectFunc() {
 		Token:           conf.Device.Token,
 		AutoReconnect:   conf.Device.AutoReconnect,
 		LostConnectChan: make(chan bool),
+		ReConnectChan:   make(chan bool),
 		Server:          conf.Mqttbroker.AddressMqtt,
+
+		KeepAlive:            60,               // 心跳间隔, 默认 30s
+		MaxReconnectInterval: 20 * time.Minute, // 最大重连间隔, 默认 10 * time.Minute
 	}
 
 	m, err := mqtt.InitWithToken(options)
@@ -127,6 +131,10 @@ func ConnectFunc() {
 				}
 				// 重连，则提示目前暂时掉线
 				fmt.Println("lost connect to ehub/ihub, will auto reconnect!")
+			case ok := <-options.ReConnectChan:
+				if ok {
+					fmt.Println("设备已连接")
+				}
 			}
 		}
 	}(options)
@@ -138,6 +146,7 @@ func PubPropertyFunc() {
 		Token:           conf.Device.Token,
 		AutoReconnect:   conf.Device.AutoReconnect,
 		LostConnectChan: make(chan bool),
+		ReConnectChan:   make(chan bool),
 		Server:          conf.Mqttbroker.AddressMqtt,
 		PropertyType:    constant.PROPERTY_TYPE_BASE,
 	}
@@ -166,6 +175,10 @@ func PubPropertyFunc() {
 				}
 				// 重连，则提示目前暂时掉线
 				fmt.Println("lost connect to ehub/ihub, will auto reconnect!")
+			case ok := <-options.ReConnectChan:
+				if ok {
+					fmt.Println("设备已连接")
+				}
 			}
 		}
 	}(options)
@@ -197,6 +210,7 @@ func PubPropertyFuncByMQTTS() {
 		Token:           conf.Device.Token,
 		AutoReconnect:   conf.Device.AutoReconnect,
 		LostConnectChan: make(chan bool),
+		ReConnectChan:   make(chan bool),
 		Server:          conf.Mqttbroker.AddressMqtts,
 		PropertyType:    constant.PROPERTY_TYPE_BASE,
 		// 如果提供证书路径，将会使用 mqtts 进行通信
@@ -227,6 +241,10 @@ func PubPropertyFuncByMQTTS() {
 				}
 				// 重连，则提示目前暂时掉线
 				fmt.Println("lost connect to ehub/ihub, will auto reconnect!")
+			case ok := <-options.ReConnectChan:
+				if ok {
+					fmt.Println("设备已连接")
+				}
 			}
 		}
 	}(options)
@@ -258,6 +276,7 @@ func PubEventFunc() {
 		Token:           conf.Device.Token,
 		AutoReconnect:   conf.Device.AutoReconnect,
 		LostConnectChan: make(chan bool),
+		ReConnectChan:   make(chan bool),
 		Server:          conf.Mqttbroker.AddressMqtt,
 		PropertyType:    constant.PROPERTY_TYPE_BASE,
 	}
@@ -286,6 +305,10 @@ func PubEventFunc() {
 				}
 				// 重连，则提示目前暂时掉线
 				fmt.Println("lost connect to ehub/ihub, will auto reconnect!")
+			case ok := <-options.ReConnectChan:
+				if ok {
+					fmt.Println("设备已连接")
+				}
 			}
 		}
 	}(options)
@@ -331,6 +354,7 @@ func ServiceDeviceControlFunc() {
 		Token:           conf.Device.Token,
 		AutoReconnect:   conf.Device.AutoReconnect,
 		LostConnectChan: make(chan bool),
+		ReConnectChan:   make(chan bool),
 		Server:          conf.Mqttbroker.AddressMqtt,
 		PropertyType:    constant.PROPERTY_TYPE_BASE,
 
@@ -367,6 +391,10 @@ func ServiceDeviceControlFunc() {
 				}
 				// 重连，则提示目前暂时掉线
 				fmt.Println("lost connect to ehub/ihub, will auto reconnect!")
+			case ok := <-options.ReConnectChan:
+				if ok {
+					fmt.Println("设备已连接")
+				}
 			}
 		}
 	}(options)
@@ -409,6 +437,7 @@ func PropertyAndEventAndServiceFunc() {
 		Token:           conf.Device.Token,
 		AutoReconnect:   conf.Device.AutoReconnect,
 		LostConnectChan: make(chan bool),
+		ReConnectChan:   make(chan bool),
 		Server:          conf.Mqttbroker.AddressMqtt,
 		PropertyType:    constant.PROPERTY_TYPE_BASE,
 
@@ -445,6 +474,10 @@ func PropertyAndEventAndServiceFunc() {
 				}
 				// 重连，则提示目前暂时掉线
 				fmt.Println("lost connect to ehub/ihub, will auto reconnect!")
+			case ok := <-options.ReConnectChan:
+				if ok {
+					fmt.Println("设备已连接")
+				}
 			}
 		}
 	}(options)
@@ -538,6 +571,7 @@ func DynamicRegistryAndConnect() {
 		DynamocRegisterAddress: conf.Registry.ServiceAddress,
 		AutoReconnect:          conf.Device.AutoReconnect,
 		LostConnectChan:        make(chan bool),
+		ReConnectChan:          make(chan bool),
 		Server:                 conf.Mqttbroker.AddressMqtt,
 		PropertyType:           constant.PROPERTY_TYPE_BASE,
 	}
@@ -565,6 +599,10 @@ func DynamicRegistryAndConnect() {
 				}
 				// 重连，则提示目前暂时掉线
 				fmt.Println("lost connect to ehub/ihub, will auto reconnect!")
+			case ok := <-options.ReConnectChan:
+				if ok {
+					fmt.Println("设备已连接")
+				}
 			}
 		}
 	}(options)
