@@ -534,10 +534,11 @@ func PropertyAndEventAndServiceFunc() {
 // DeviceControlCallback 服务调用的回调函数
 func DeviceControlCallback(msg *define.Message) define.PropertyKV {
 
+	// 服务调用返回给平台的值 (对应 output 参数)
 	callbackResult := make(define.PropertyKV)
 
 	for k, v := range msg.Params {
-		// 服务调用调节的值
+		// 服务调用调节的值 (对应 input 参数)
 		if k == "temperature" {
 			// 将设备温度调节为服务下发的温度值, float64 为 input 对应的类型
 			// 这里是设置值的相应逻辑，通过设置的成功与否，定义返回值
