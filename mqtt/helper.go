@@ -6,8 +6,8 @@ import (
 	"fmt"
 	"time"
 
-	"git.internal.yunify.com/iot-sdk/device-sdk-go/internal/constant"
-	"git.internal.yunify.com/iot-sdk/device-sdk-go/internal/define"
+	"git.internal.yunify.com/iot-sdk/device-sdk-go/constant"
+	"git.internal.yunify.com/iot-sdk/device-sdk-go/define"
 	"github.com/dgrijalva/jwt-go"
 	mqttp "github.com/eclipse/paho.mqtt.golang"
 

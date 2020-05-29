@@ -8,11 +8,11 @@ import (
 	"os"
 	"time"
 
-	"git.internal.yunify.com/iot-sdk/device-sdk-go/internal/constant"
-	"git.internal.yunify.com/iot-sdk/device-sdk-go/internal/define"
+	"git.internal.yunify.com/iot-sdk/device-sdk-go/constant"
+	"git.internal.yunify.com/iot-sdk/device-sdk-go/define"
 
-	"git.internal.yunify.com/iot-sdk/device-sdk-go/internal/register"
 	"git.internal.yunify.com/iot-sdk/device-sdk-go/mqtt"
+	"git.internal.yunify.com/iot-sdk/device-sdk-go/register"
 )
 
 const (

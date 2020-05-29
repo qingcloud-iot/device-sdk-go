@@ -10,11 +10,11 @@ import (
 	"io/ioutil"
 	"time"
 
-	"git.internal.yunify.com/iot-sdk/device-sdk-go/internal/register"
+	"git.internal.yunify.com/iot-sdk/device-sdk-go/register"
 
+	"git.internal.yunify.com/iot-sdk/device-sdk-go/constant"
+	"git.internal.yunify.com/iot-sdk/device-sdk-go/define"
 	iClient "git.internal.yunify.com/iot-sdk/device-sdk-go/internal/client"
-	"git.internal.yunify.com/iot-sdk/device-sdk-go/internal/constant"
-	"git.internal.yunify.com/iot-sdk/device-sdk-go/internal/define"
 
 	mqttp "github.com/eclipse/paho.mqtt.golang"
 )
