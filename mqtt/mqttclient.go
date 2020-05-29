@@ -20,12 +20,11 @@ import (
 )
 
 //
-type Handler func(inputIdentifier string, msg *define.Message) error
+type Handler func(msg *define.Message) define.PropertyKV
 
 // DeviceControlHandler 服务调用结构体，用于处理下行数据的业务逻辑
 type DeviceControlHandler struct {
 	ServiceIdentifer string
-	InputIdentifier  string
 	ServiceHandler   Handler
 }
 
@@ -139,12 +138,10 @@ func initMQTTClient(options *Options) mqttp.Client {
 					}
 
 					// 执行回调函数进行服务调用
-					if err = handler.ServiceHandler(handler.InputIdentifier, message); err != nil {
-						fmt.Printf("topic:%s, execute callback error: %s\n", topic, err.Error())
-					}
+					result := handler.ServiceHandler(message)
 
 					// reply
-					if err = Reply(message, client, topic); err != nil {
+					if err = Reply(message, client, topic, result); err != nil {
 						fmt.Printf("topic:%s, reply error: %s\n", topic, err.Error())
 						return
 					}

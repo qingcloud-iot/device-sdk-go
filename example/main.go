@@ -348,7 +348,6 @@ func PubEventFunc() {
 func ServiceDeviceControlFunc() {
 
 	serviceIdentifer := "setTemperature" // 服务调用的 服务 identifer
-	inputIdentifier := "temperature"     // 执行服务调用改变的参数值
 
 	options := &mqtt.Options{
 		Token:           conf.Device.Token,
@@ -361,7 +360,6 @@ func ServiceDeviceControlFunc() {
 		DeviceHandlers: []mqtt.DeviceControlHandler{
 			mqtt.DeviceControlHandler{
 				ServiceIdentifer: serviceIdentifer,
-				InputIdentifier:  inputIdentifier,
 				ServiceHandler:   DeviceControlCallback,
 			},
 		},
@@ -431,7 +429,6 @@ func PropertyAndEventAndServiceFunc() {
 
 	eventIdentifier := "temperatureEvent" // 上报事件的 事件 identifer
 	serviceIdentifer := "setTemperature"  // 服务调用的 服务 identifer
-	inputIdentifier := "temperature"      // 执行服务调用改变的参数值
 
 	options := &mqtt.Options{
 		Token:           conf.Device.Token,
@@ -444,7 +441,6 @@ func PropertyAndEventAndServiceFunc() {
 		DeviceHandlers: []mqtt.DeviceControlHandler{
 			mqtt.DeviceControlHandler{
 				ServiceIdentifer: serviceIdentifer,
-				InputIdentifier:  inputIdentifier,
 				ServiceHandler:   DeviceControlCallback,
 			},
 		},
@@ -536,16 +532,28 @@ func PropertyAndEventAndServiceFunc() {
 }
 
 // DeviceControlCallback 服务调用的回调函数
-func DeviceControlCallback(inputIdentifier string, msg *define.Message) error {
-	for k, v := range msg.Params {
-		if k == inputIdentifier {
+func DeviceControlCallback(msg *define.Message) define.PropertyKV {
 
-			// 将设备温度调节为服务下发的温度值
-			// float64 为 input 对应的类型
-			DeviceTemprature = v.(float64)
+	callbackResult := make(define.PropertyKV)
+
+	for k, v := range msg.Params {
+		// 服务调用调节的值
+		if k == "temperature" {
+			// 将设备温度调节为服务下发的温度值, float64 为 input 对应的类型
+			// 这里是设置值的相应逻辑，通过设置的成功与否，定义返回值
+			assertValue, ok := v.(float64)
+			if ok {
+				DeviceTemprature = assertValue
+				// 如果设置成功
+				callbackResult["result"] = 1
+				callbackResult["temperature"] = assertValue
+			} else {
+				// 如果设置不成功
+				callbackResult["result"] = 0
+			}
 		}
 	}
-	return nil
+	return callbackResult
 }
 
 // -------------------------

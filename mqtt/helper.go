@@ -144,13 +144,13 @@ func BuildServiceControlReply(modelID, entityID, identifer string) string {
 }
 
 // Reply 服务调用的返回信息
-func Reply(message *define.Message, client mqttp.Client, topic string) error {
+func Reply(message *define.Message, client mqttp.Client, topic string, result define.PropertyKV) error {
 	reply := &define.Reply{
 		ID:   message.ID,
 		Code: constant.SUCCESS,
 		Data: make(define.PropertyKV),
 	}
-	reply.Data = message.Params
+	reply.Data = result
 
 	data, err := json.Marshal(reply)
 	if err != nil {
