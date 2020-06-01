@@ -349,12 +349,6 @@ func ServiceDeviceControlFunc() {
 
 	serviceIdentifer := "setTemperature" // 服务调用的 服务 identifer
 
-	params := &InAndOutputParameters{
-		InputParam1:  "temperature",
-		OutputParam1: "result",
-		OutputParam2: "temperature",
-	}
-
 	options := &mqtt.Options{
 		Token:           conf.Device.Token,
 		AutoReconnect:   conf.Device.AutoReconnect,
@@ -366,7 +360,7 @@ func ServiceDeviceControlFunc() {
 		DeviceHandlers: []mqtt.DeviceControlHandler{
 			mqtt.DeviceControlHandler{
 				ServiceIdentifer: serviceIdentifer,
-				ServiceHandler:   params,
+				ServiceHandler:   DeviceControlCallback,
 			},
 		},
 	}
@@ -436,12 +430,6 @@ func PropertyAndEventAndServiceFunc() {
 	eventIdentifier := "temperatureEvent" // 上报事件的 事件 identifer
 	serviceIdentifer := "setTemperature"  // 服务调用的 服务 identifer
 
-	params := &InAndOutputParameters{
-		InputParam1:  "temperature",
-		OutputParam1: "result",
-		OutputParam2: "temperature",
-	}
-
 	options := &mqtt.Options{
 		Token:           conf.Device.Token,
 		AutoReconnect:   conf.Device.AutoReconnect,
@@ -453,7 +441,7 @@ func PropertyAndEventAndServiceFunc() {
 		DeviceHandlers: []mqtt.DeviceControlHandler{
 			mqtt.DeviceControlHandler{
 				ServiceIdentifer: serviceIdentifer,
-				ServiceHandler:   params,
+				ServiceHandler:   DeviceControlCallback,
 			},
 		},
 	}
@@ -543,32 +531,26 @@ func PropertyAndEventAndServiceFunc() {
 	m.SubDeviceControl(serviceIdentifer)
 }
 
-type InAndOutputParameters struct {
-	InputParam1  string
-	OutputParam1 string
-	OutputParam2 string
-}
-
 // DeviceControlCallback 服务调用的回调函数
-func (p *InAndOutputParameters) Handler(msg *define.Message) define.PropertyKV {
+func DeviceControlCallback(msg *define.Message) define.PropertyKV {
 
 	// 服务调用返回给平台的值 (对应 output 参数)
 	callbackResult := make(define.PropertyKV)
 
 	for k, v := range msg.Params {
 		// 服务调用调节的值 (对应 input 参数)
-		if k == p.InputParam1 {
+		if k == "temperature" {
 			// 将设备温度调节为服务下发的温度值, float64 为 input 对应的类型
 			// 这里是设置值的相应逻辑，通过设置的成功与否，定义返回值
 			assertValue, ok := v.(float64)
 			if ok {
 				DeviceTemprature = assertValue
 				// 如果设置成功
-				callbackResult[p.OutputParam1] = 1
-				callbackResult[p.OutputParam2] = assertValue
+				callbackResult["result"] = 1
+				callbackResult["temperature"] = assertValue
 			} else {
 				// 如果设置不成功
-				callbackResult[p.OutputParam1] = 0
+				callbackResult["result"] = 0
 			}
 		}
 	}

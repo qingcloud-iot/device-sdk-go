@@ -25,7 +25,7 @@ type Handler func(msg *define.Message) define.PropertyKV
 // DeviceControlHandler 服务调用结构体，用于处理下行数据的业务逻辑
 type DeviceControlHandler struct {
 	ServiceIdentifer string
-	ServiceHandler   iClient.CallBack
+	ServiceHandler   Handler
 }
 
 type Options struct {
@@ -138,7 +138,7 @@ func initMQTTClient(options *Options) mqttp.Client {
 					}
 
 					// 执行回调函数进行服务调用
-					result := handler.ServiceHandler.Handler(message)
+					result := handler.ServiceHandler(message)
 
 					// reply
 					if err = Reply(message, client, topic, result); err != nil {
