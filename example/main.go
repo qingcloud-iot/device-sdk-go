@@ -133,7 +133,7 @@ func ConnectFunc() {
 				fmt.Println("lost connect to ehub/ihub, will auto reconnect!")
 			case ok := <-options.ReConnectChan:
 				if ok {
-					fmt.Println("设备已连接")
+					fmt.Println("设备已重新连接")
 				}
 			}
 		}

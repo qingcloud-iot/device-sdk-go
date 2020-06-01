@@ -12,9 +12,9 @@ import (
 
 	"git.internal.yunify.com/iot-sdk/device-sdk-go/register"
 
+	iClient "git.internal.yunify.com/iot-sdk/device-sdk-go/client"
 	"git.internal.yunify.com/iot-sdk/device-sdk-go/constant"
 	"git.internal.yunify.com/iot-sdk/device-sdk-go/define"
-	iClient "git.internal.yunify.com/iot-sdk/device-sdk-go/internal/client"
 
 	mqttp "github.com/eclipse/paho.mqtt.golang"
 )
