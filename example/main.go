@@ -424,10 +424,6 @@ func ServiceDeviceControlFunc() {
 			time.Sleep(2 * time.Second)
 		}
 	}()
-
-	// 服务调用
-	m.SubDeviceControl(serviceIdentifer)
-
 }
 
 // PropertyAndEventAndServiceFunc 提供全功能 demo
@@ -538,9 +534,6 @@ func PropertyAndEventAndServiceFunc() {
 			time.Sleep(2 * time.Second)
 		}
 	}()
-
-	// 服务调用
-	m.SubDeviceControl(serviceIdentifer)
 }
 
 type InAndOutputParameters struct {

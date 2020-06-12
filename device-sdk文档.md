@@ -37,7 +37,7 @@ golang version：1.13及以上
 |      DisConnect      | 设备取消连接物联网平台                     |
 |     PubProperty      | 推送设备属性                               |
 |       PubEvent       | 推送设备事件                               |
-|   SubDeviceControl   | 订阅 topic，获取下行数据，对设备进行调节   |
+|   SubDeviceControl   | 订阅 topic   |
 |  UnSubDeviceControl  | 取消订阅                                   |
 
 
@@ -133,6 +133,9 @@ registry:
         AutoReconnect:   conf.Device.AutoReconnect,
 		LostConnectChan: make(chan bool),
         Server:    conf.Mqttbroker.Address,
+
+        KeepAlive:            60,               // 心跳间隔, 默认 30s
+	    MaxReconnectInterval: 20 * time.Minute, // 最大重连间隔, 默认 10 * time.Minute
     }
     
     // 初始化
@@ -255,42 +258,63 @@ reply, err := client.PubEvent(ctx, eventData, eventIdentifier)
 
 #### 6. 服务调用
 
-通过 SubDeviceControl 方法进行服务调用；
-
 服务调用即服务端对设备属性值进行设置，用户需要对服务端下发的数据根据需求进行处理；
 
 ```go
 serviceIdentifer := "setTemperature" // 服务调用的 服务 identifer
-inputIdentifier := "temperature"     // 执行服务调用改变的参数值
 
-options := &mqtt.Options{
-	Token:        conf.Device.Token,
-	Server:       conf.Mqttbroker.Address,
-	PropertyType: constant.PROPERTY_TYPE_BASE,
-
-	DeviceHandlers: []mqtt.DeviceControlHandler{
-		mqtt.DeviceControlHandler{
-			ServiceIdentifer: serviceIdentifer,
-			InputIdentifier:  inputIdentifier,
-			ServiceHandler:   DeviceControlCallback,
-		},
-	},
+params := &InAndOutputParameters{
+    InputParam1:  "temperature",
+    OutputParam1: "result",
+    OutputParam2: "temperature",
 }
 
-// 服务调用
-client.SubDeviceControl(serviceIdentifer)
+options := &mqtt.Options{
+    Token:           conf.Device.Token,
+    AutoReconnect:   conf.Device.AutoReconnect,
+    LostConnectChan: make(chan bool),
+    ReConnectChan:   make(chan bool),
+    Server:          conf.Mqttbroker.AddressMqtt,
+    PropertyType:    constant.PROPERTY_TYPE_BASE,
 
-// DeviceControlCallback 服务调用的回调函数
-func DeviceControlCallback(inputIdentifier string, msg *define.Message) error {
+    DeviceHandlers: []mqtt.DeviceControlHandler{
+        mqtt.DeviceControlHandler{
+            ServiceIdentifer: serviceIdentifer,
+            ServiceHandler:   params,
+        },
+    },
+}
+
+type InAndOutputParameters struct {
+	InputParam1  string
+	OutputParam1 string
+	OutputParam2 string
+}
+
+// DeviceControlCallback 服务调用的回调函数, 实现 handler 方法即可
+func (p *InAndOutputParameters) Handler(msg *define.Message) define.PropertyKV {
+
+	// 服务调用返回给平台的值 (对应 output 参数)
+	callbackResult := make(define.PropertyKV)
+
 	for k, v := range msg.Params {
-		if k == inputIdentifier {
-
-			// 将设备温度调节为服务下发的温度值
-			// float64 为 input 对应的类型
-			DeviceTemprature = v.(float64)
+		// 服务调用调节的值 (对应 input 参数)
+		if k == p.InputParam1 {
+			// 将设备温度调节为服务下发的温度值, float64 为 input 对应的类型
+			// 这里是设置值的相应逻辑，通过设置的成功与否，定义返回值
+			assertValue, ok := v.(float64)
+			if ok {
+				DeviceTemprature = assertValue
+				// 如果设置成功
+				callbackResult[p.OutputParam1] = 1
+				callbackResult[p.OutputParam2] = assertValue
+			} else {
+				// 如果设置不成功
+				callbackResult[p.OutputParam1] = 0
+			}
 		}
 	}
-	return nil
+	return callbackResult
 }
 ```
 
