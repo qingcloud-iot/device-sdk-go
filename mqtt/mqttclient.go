@@ -10,11 +10,11 @@ import (
 	"io/ioutil"
 	"time"
 
-	"git.internal.yunify.com/iot-sdk/device-sdk-go/register"
+	"github.com/qingcloud-iot/device-sdk-go/register"
 
-	iClient "git.internal.yunify.com/iot-sdk/device-sdk-go/client"
-	"git.internal.yunify.com/iot-sdk/device-sdk-go/constant"
-	"git.internal.yunify.com/iot-sdk/device-sdk-go/define"
+	iClient "github.com/qingcloud-iot/device-sdk-go/client"
+	"github.com/qingcloud-iot/device-sdk-go/constant"
+	"github.com/qingcloud-iot/device-sdk-go/define"
 
 	mqttp "github.com/eclipse/paho.mqtt.golang"
 )

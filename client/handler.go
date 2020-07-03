@@ -1,7 +1,7 @@
 package client
 
 import (
-	"git.internal.yunify.com/iot-sdk/device-sdk-go/define"
+	"github.com/qingcloud-iot/device-sdk-go/define"
 )
 
 // CallBack 回调

@@ -1,6 +1,6 @@
 package register
 
-import "git.internal.yunify.com/iot-sdk/device-sdk-go/internal/utils/httpclient"
+import "github.com/qingcloud-iot/device-sdk-go/internal/utils/httpclient"
 
 const (
 	REGISTER_API = "/api/register/devices"

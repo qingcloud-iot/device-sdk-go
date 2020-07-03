@@ -2,7 +2,7 @@ package client
 
 import (
 	"context"
-	"git.internal.yunify.com/iot-sdk/device-sdk-go/define"
+	"github.com/qingcloud-iot/device-sdk-go/define"
 )
 
 // Client 设备 sdk
