@@ -209,7 +209,7 @@ func InitWithMiddleCredential(options *Options) (iClient.Client, error) {
 // Connect 连接 ihub 或 ehub
 func (m *MqttClient) Connect() error {
 	if token := m.Client.Connect(); !token.WaitTimeout(5*time.Second) || token.Error() != nil {
-		return fmt.Errorf("mqtt client connect fail, please check (1)the mqttbroker address is accessible or not, or (2) the cert is match mqttbroker address you provide or not! err:%s", token.Error())
+		return errors.New("mqtt client connect fail, please check (1)the mqttbroker address is accessible or not, or (2) the cert is match mqttbroker address you provide or not!")
 	}
 	return nil
 }
