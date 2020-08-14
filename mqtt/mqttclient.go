@@ -8,6 +8,7 @@ import (
 	"errors"
 	"fmt"
 	"io/ioutil"
+	"sync"
 	"time"
 
 	"github.com/qingcloud-iot/device-sdk-go/register"
@@ -17,6 +18,10 @@ import (
 	"github.com/qingcloud-iot/device-sdk-go/define"
 
 	mqttp "github.com/eclipse/paho.mqtt.golang"
+)
+
+var (
+	DefaultTimeout = 5 * time.Second
 )
 
 //
@@ -59,6 +64,11 @@ type MqttClient struct {
 
 	PropertyType    string
 	UnSubScribeChan chan bool
+
+	Timeout  time.Duration
+	mu       sync.Mutex
+	inactive bool
+	donec    chan struct{} // For watcher done
 }
 
 func initMQTTClient(options *Options) mqttp.Client {
@@ -208,13 +218,69 @@ func InitWithMiddleCredential(options *Options) (iClient.Client, error) {
 
 // Connect 连接 ihub 或 ehub
 func (m *MqttClient) Connect() error {
-	if token := m.Client.Connect(); !token.WaitTimeout(5*time.Second) || token.Error() != nil {
-		if token.Error() != nil {
-			return fmt.Errorf("mqtt client connect fail, please check (1)the mqttbroker address is accessible or not, or (2) the cert is match mqttbroker address you provide or not! err:%s", token.Error().Error())
-		}
-		return errors.New("mqtt client connect fail, please check (1)the mqttbroker address is accessible or not, or (2) the cert is match mqttbroker address you provide or not")
+	m.donec = make(chan struct{})
+	if m.Timeout == time.Duration(0) {
+		m.Timeout = DefaultTimeout
+	}
+
+	token := m.Client.Connect()
+	b := token.WaitTimeout(m.Timeout)
+
+	// try to connect
+	if b == false || token.Error() != nil {
+		// turn on the watcher
+		m.inactivate()
+		go m.runWatcher()
 	}
 	return nil
+}
+
+func (m *MqttClient) runWatcher() {
+	for {
+		select {
+		case <-time.After(time.Second * 2):
+			if m.isActive() {
+				continue
+			}
+			if err := m.tryReactivate(); err != nil {
+				fmt.Println(fmt.Sprintf("重试连接失败, err:%s\n", err.Error()))
+			} else {
+				fmt.Println("重试连接成功")
+			}
+		case <-m.donec:
+			return
+		}
+	}
+}
+
+func (m *MqttClient) tryReactivate() error {
+	token := m.Client.Connect()
+	e := token.WaitTimeout(m.Timeout)
+	if e == false {
+		return errors.New("timeout")
+	}
+	if token.Error() != nil {
+		return token.Error()
+	}
+
+	m.mu.Lock()
+	m.inactive = false
+	m.mu.Unlock()
+
+	close(m.donec)
+	return nil
+}
+
+func (m *MqttClient) isActive() bool {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	return !m.inactive
+}
+
+func (m *MqttClient) inactivate() {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	m.inactive = true
 }
 
 // DisConnect 断开连接 ihub 或 ehub
