@@ -210,9 +210,9 @@ func InitWithMiddleCredential(options *Options) (iClient.Client, error) {
 func (m *MqttClient) Connect() error {
 	if token := m.Client.Connect(); !token.WaitTimeout(5*time.Second) || token.Error() != nil {
 		if token.Error() != nil {
-			return fmt.Errorf("mqtt client connect fail, please check (1)the mqttbroker address is accessible or not, or (2) the cert is match mqttbroker address you provide or not! err:%s", token.Error().Error())
+			return fmt.Errorf("连接错误:%s", token.Error().Error())
 		}
-		return errors.New("mqtt client connect fail, please check (1)the mqttbroker address is accessible or not, or (2) the cert is match mqttbroker address you provide or not")
+		return errors.New("连接超时，请检查网络及配置")
 	}
 	return nil
 }
