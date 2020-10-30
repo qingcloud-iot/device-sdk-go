@@ -17,6 +17,9 @@ type Client interface {
 	// PubProperty 推送设备属性
 	PubProperty(ctx context.Context, meta define.PropertyKV) (*define.Reply, error)
 
+	// PubPropertyWithTime
+	PubPropertyWithTime(ctx context.Context, metaWithTime define.PropertyKVWithTime) (*define.Reply, error)
+
 	// PubEvent 推送设备事件
 	PubEvent(ctx context.Context, meta define.PropertyKV, eventIdentifier string) (*define.Reply, error)
 

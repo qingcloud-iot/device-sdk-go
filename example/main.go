@@ -28,12 +28,13 @@ var DeviceTemprature float64 = 30
 var (
 	configPath string
 
-	connect            bool // 上线
-	pubProperty        bool // 上报属性
-	pubPropertyByMqtts bool // 上报属性
-	pubEvent           bool // 上报事件
-	serviceContol      bool // 服务调用
-	all                bool // 上线、上报属性、上报事件、服务调用
+	connect             bool // 上线
+	pubProperty         bool // 上报属性
+	pubPropertyWithTime bool // 上报属性及自定义时间
+	pubPropertyByMqtts  bool // 上报属性
+	pubEvent            bool // 上报事件
+	serviceContol       bool // 服务调用
+	all                 bool // 上线、上报属性、上报事件、服务调用
 
 	reg           bool // 动态注册
 	regAndConnect bool // 动态注册并上线设备
@@ -45,6 +46,7 @@ func init() {
 	flag.StringVar(&configPath, "conf", "./config.yml", "")
 	flag.BoolVar(&connect, "c", false, "")
 	flag.BoolVar(&pubProperty, "p", false, "")
+	flag.BoolVar(&pubPropertyWithTime, "pt", false, "")
 	flag.BoolVar(&pubPropertyByMqtts, "ps", false, "")
 	flag.BoolVar(&pubEvent, "e", false, "")
 	flag.BoolVar(&serviceContol, "s", false, "")
@@ -65,6 +67,9 @@ func main() {
 	}
 	if pubProperty {
 		PubPropertyFunc()
+	}
+	if pubPropertyWithTime {
+		PubPropertyWithTimeFunc()
 	}
 
 	if pubPropertyByMqtts {
@@ -201,6 +206,79 @@ func PubPropertyFunc() {
 			DeviceTemprature = float64(rand.Int63n(int64(HIGH) - int64(LOW)))
 		}
 		data["temp"] = DeviceTemprature
+	}
+}
+
+// PubPropertyWithTimeFunc 在 0 ～ 100 范围内上报自定义时间及温度属性值
+func PubPropertyWithTimeFunc() {
+	options := &mqtt.Options{
+		Token:           conf.Device.Token,
+		AutoReconnect:   conf.Device.AutoReconnect,
+		LostConnectChan: make(chan bool),
+		ReConnectChan:   make(chan bool),
+		Server:          conf.Mqttbroker.AddressMqtt,
+		PropertyType:    constant.PROPERTY_TYPE_BASE,
+	}
+
+	m, err := mqtt.InitWithToken(options)
+	if err != nil {
+		panic(err)
+	}
+
+	// 连接
+	err = m.Connect()
+	if err != nil {
+		panic(err)
+	}
+
+	// 失去连接后的处理动作
+	go func(o *mqtt.Options) {
+		for {
+			select {
+			case <-options.LostConnectChan:
+				// 如果不重连，则退出程序
+				if !o.AutoReconnect {
+					fmt.Println("not reconnect to ehub/ihub, procedure will quit!")
+					os.Exit(0)
+					return
+				}
+				// 重连，则提示目前暂时掉线
+				fmt.Println("lost connect to ehub/ihub, will auto reconnect!")
+			case ok := <-options.ReConnectChan:
+				if ok {
+					fmt.Println("设备已连接")
+				}
+			}
+		}
+	}(options)
+
+	data := define.PropertyKVWithTime{
+		"temp": &define.PropertyValueAndTime{
+			Value: DeviceTemprature,
+			Time:  time.Now().UnixNano()/1e6 - 10,
+		},
+	}
+
+	// 上报属性
+	for {
+		ctx, _ := context.WithTimeout(context.Background(), 3*time.Second)
+		_, err := m.PubPropertyWithTime(ctx, data)
+		if err != nil {
+			panic(err)
+		}
+		fmt.Println("DeviceTemprature:", DeviceTemprature)
+		time.Sleep(2 * time.Second)
+		DeviceTemprature++
+		if DeviceTemprature < 0 || DeviceTemprature > 100 {
+			DeviceTemprature = float64(rand.Int63n(int64(HIGH) - int64(LOW)))
+		}
+
+		data = define.PropertyKVWithTime{
+			"temp": &define.PropertyValueAndTime{
+				Value: DeviceTemprature,
+				Time:  time.Now().UnixNano()/1e6 - 10,
+			},
+		}
 	}
 }
 

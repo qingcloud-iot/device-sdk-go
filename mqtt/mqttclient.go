@@ -244,6 +244,30 @@ func (m *MqttClient) PubProperty(ctx context.Context, meta define.PropertyKV) (*
 	return reply, nil
 }
 
+// PubPropertyWithTime 上报自定义时间属性
+func (m *MqttClient) PubPropertyWithTime(ctx context.Context, metaDataWithTime define.PropertyKVWithTime) (*define.Reply, error) {
+
+	reply := &define.Reply{
+		Code: constant.SUCCESS,
+	}
+	if len(metaDataWithTime) == 0 {
+		return reply, errors.New("param length is zero")
+	}
+	message := buildPropertyMessageWithTIme(metaDataWithTime, m)
+	data, err := json.Marshal(message)
+	if err != nil {
+		return reply, nil
+	}
+	fmt.Println("====", string(data))
+	topic := buildPropertyTopic(m.EntityId, m.ModelId, m.PropertyType)
+	if token := m.Client.Publish(topic, byte(0), false, data); token.WaitTimeout(5*time.Second) && token.Error() != nil {
+		reply.Code = constant.FAIL
+		reply.Data = token.Error().Error()
+		return reply, nil
+	}
+	return reply, nil
+}
+
 // PubEvent 上报事件
 func (m *MqttClient) PubEvent(ctx context.Context, meta define.PropertyKV, eventIdentifier string) (*define.Reply, error) {
 	reply := &define.Reply{

@@ -6,10 +6,10 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/qingcloud-iot/device-sdk-go/constant"
-	"github.com/qingcloud-iot/device-sdk-go/define"
 	"github.com/dgrijalva/jwt-go"
 	mqttp "github.com/eclipse/paho.mqtt.golang"
+	"github.com/qingcloud-iot/device-sdk-go/constant"
+	"github.com/qingcloud-iot/device-sdk-go/define"
 
 	uuid "github.com/satori/go.uuid"
 )
@@ -67,6 +67,23 @@ func buildPropertyMessage(meta define.PropertyKV, m *MqttClient) *define.ThingPr
 		Version: constant.MQTT_VERSION,
 		Type:    constant.PROPERTY_TYPE,
 		Params:  params,
+		MetaData: define.MetaData{
+			"modelId":   m.ModelId,
+			"entityId":  m.EntityId,
+			"epochTime": timeNow,
+			"source":    []string{m.EntityId},
+		},
+	}
+	return message
+}
+
+func buildPropertyMessageWithTIme(meta define.PropertyKVWithTime, m *MqttClient) *define.ThingPropertyMsg {
+	timeNow := time.Now().UnixNano() / 1e6
+	message := &define.ThingPropertyMsg{
+		ID:      uuid.NewV4().String(),
+		Version: constant.MQTT_VERSION,
+		Type:    constant.PROPERTY_TYPE,
+		Params:  meta,
 		MetaData: define.MetaData{
 			"modelId":   m.ModelId,
 			"entityId":  m.EntityId,

@@ -7,6 +7,9 @@ package define
 // PropertyKV 事件 kv 健值对
 type PropertyKV map[string]interface{}
 
+// PropertyKVWithTime 允许用户自定义时间
+type PropertyKVWithTime map[string]*PropertyValueAndTime
+
 // PropertyValueAndTime 属性
 type PropertyValueAndTime struct {
 	Value interface{} `json:"value"`
