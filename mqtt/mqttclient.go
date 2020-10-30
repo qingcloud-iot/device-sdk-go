@@ -258,7 +258,6 @@ func (m *MqttClient) PubPropertyWithTime(ctx context.Context, metaDataWithTime d
 	if err != nil {
 		return reply, nil
 	}
-	fmt.Println("====", string(data))
 	topic := buildPropertyTopic(m.EntityId, m.ModelId, m.PropertyType)
 	if token := m.Client.Publish(topic, byte(0), false, data); token.WaitTimeout(5*time.Second) && token.Error() != nil {
 		reply.Code = constant.FAIL
