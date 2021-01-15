@@ -19,6 +19,10 @@ import (
 	mqttp "github.com/eclipse/paho.mqtt.golang"
 )
 
+const (
+	DefaultWaitTimeout = 3 * time.Second
+)
+
 //
 type Handler func(msg *define.Message) define.PropertyKV
 
@@ -315,6 +319,51 @@ func (m *MqttClient) UnSubDeviceControl(serviceIdentifier string) error {
 	err := token.Error()
 	if err != nil {
 		return err
+	}
+	return nil
+}
+
+func (m *MqttClient) Subscribe(topic string, qos int32, cb iClient.MessageCallback) error {
+	if topic == "" || qos < 0 || qos > 2 || cb == nil {
+		return errors.New("invalid arguments")
+	}
+	if token := m.Client.Subscribe(topic, byte(qos), func(client mqttp.Client, message mqttp.Message) {
+		cb(message.Topic(), message.Payload())
+	}); token.WaitTimeout(DefaultWaitTimeout) && token.Error() != nil {
+		return token.Error()
+	}
+	return nil
+}
+
+func (m *MqttClient) SubscribeMultiple(topics []string, cb iClient.MessageCallback) error {
+	filters := make(map[string]byte)
+	for _, topic := range topics {
+		if topic == "" {
+			continue
+		}
+		filters[topic] = 0
+	}
+	if token := m.Client.SubscribeMultiple(filters, func(client mqttp.Client, message mqttp.Message) {
+		cb(message.Topic(), message.Payload())
+	}); token.WaitTimeout(DefaultWaitTimeout) && token.Error() != nil {
+		return token.Error()
+	}
+	return nil
+}
+
+func (m *MqttClient) Unsubscribe(topics []string) error {
+	if token := m.Client.Unsubscribe(topics...); token.WaitTimeout(DefaultWaitTimeout) && token.Error() != nil {
+		return token.Error()
+	}
+	return nil
+}
+
+func (m *MqttClient) Publish(topic string, qos int32, payload []byte) error {
+	if topic == "" || qos < 0 || qos > 2 || payload == nil {
+		return errors.New("invalid arguments")
+	}
+	if token := m.Client.Publish(topic, byte(qos), false, payload); token.WaitTimeout(DefaultWaitTimeout) && token.Error() != nil {
+		return token.Error()
 	}
 	return nil
 }

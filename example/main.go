@@ -96,6 +96,8 @@ func main() {
 		DynamicRegistryAndConnect()
 	}
 
+	sub()
+
 	select {}
 }
 
@@ -704,4 +706,36 @@ func DynamicRegistryAndConnect() {
 			}
 		}
 	}(options)
+}
+
+func sub() {
+	options := &mqtt.Options{
+		Token:           conf.Device.Token,
+		AutoReconnect:   conf.Device.AutoReconnect,
+		LostConnectChan: make(chan bool),
+		ReConnectChan:   make(chan bool),
+		Server:          conf.Mqttbroker.AddressMqtt,
+		PropertyType:    constant.PROPERTY_TYPE_BASE,
+	}
+
+	m, err := mqtt.InitWithToken(options)
+	if err != nil {
+		panic(err)
+	}
+
+	// 连接
+	err = m.Connect()
+	if err != nil {
+		panic(err)
+	}
+
+	cb := func(topic string, data []byte) {
+		fmt.Println("=====topic=====:", topic)
+		fmt.Println("=====data=====:", string(data))
+	}
+
+	err = m.Subscribe("/test/123456", 0, cb)
+	if err != nil {
+		panic(err)
+	}
 }

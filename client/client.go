@@ -29,6 +29,12 @@ type Client interface {
 	// UnSubDeviceControl 取消订阅
 	UnSubDeviceControl(serviceIdentifier string) error
 
-	// normal publish
-	// Publish(topic string, data []byte) (*Reply, error)
+	// normal subscribe
+	Subscribe(topic string, qos int32, cb MessageCallback) error
+
+	SubscribeMultiple(topics []string, cb MessageCallback) error
+
+	Unsubscribe(topics []string) error
+
+	Publish(topic string, qos int32, payload []byte) error
 }
