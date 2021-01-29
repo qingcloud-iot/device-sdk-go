@@ -25,7 +25,7 @@ type ThingPropertyMsg struct {
 	Version  string                           `json:"version"`
 	Params   map[string]*PropertyValueAndTime `json:"params"`
 	Type     string                           `json:"type"`
-	MetaData MetaData                         `json:"metaData"`
+	MetaData MetaData                         `json:"metadata"`
 }
 
 // ThingEventMsg 上报事件的数据结构
@@ -34,7 +34,7 @@ type ThingEventMsg struct {
 	Version  string     `json:"version"`
 	Params   *EventData `json:"params"`
 	Type     string     `json:"type"`
-	MetaData MetaData   `json:"metaData"`
+	MetaData MetaData   `json:"metadata"`
 }
 
 // EventData 事件参数及time
