@@ -38,6 +38,7 @@ var (
 
 	reg           bool // 动态注册
 	regAndConnect bool // 动态注册并上线设备
+	sub           bool // 订阅消息
 )
 
 func init() {
@@ -53,6 +54,7 @@ func init() {
 	flag.BoolVar(&all, "all", false, "")
 	flag.BoolVar(&reg, "r", false, "")
 	flag.BoolVar(&regAndConnect, "rc", false, "")
+	flag.BoolVar(&regAndConnect, "sub", false, "")
 
 	flag.Parse()
 
@@ -96,7 +98,9 @@ func main() {
 		DynamicRegistryAndConnect()
 	}
 
-	sub()
+	if sub {
+		Sub()
+	}
 
 	select {}
 }
@@ -708,7 +712,7 @@ func DynamicRegistryAndConnect() {
 	}(options)
 }
 
-func sub() {
+func Sub() {
 	options := &mqtt.Options{
 		Token:           conf.Device.Token,
 		AutoReconnect:   conf.Device.AutoReconnect,
