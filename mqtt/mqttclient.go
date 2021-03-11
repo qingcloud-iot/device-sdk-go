@@ -8,6 +8,8 @@ import (
 	"errors"
 	"fmt"
 	"io/ioutil"
+	"log"
+	"os"
 	"time"
 
 	"github.com/qingcloud-iot/device-sdk-go/register"
@@ -34,6 +36,8 @@ type DeviceControlHandler struct {
 
 type Options struct {
 	Token string // 权限验证，及获取 ModelID、EntityID
+
+	TLS bool // 使用 tls 连接
 
 	MiddleCredential       string // 批量设备注册的中间凭证
 	DynamocRegisterAddress string // 动态注册的服务地址
@@ -69,22 +73,28 @@ func initMQTTClient(options *Options) mqttp.Client {
 
 	opts := mqttp.NewClientOptions()
 
+	mqttp.CRITICAL = log.New(os.Stderr, "", log.Lshortfile|log.LstdFlags)
+	mqttp.ERROR = log.New(os.Stderr, "", log.Lshortfile|log.LstdFlags)
+	mqttp.WARN = log.New(os.Stderr, "", log.Lshortfile|log.LstdFlags)
+	mqttp.DEBUG = log.New(os.Stdout, "", log.Lshortfile|log.LstdFlags)
+
 	// use mqtts communicate
-	if options.CertFilePath != "" {
-		fmt.Println("use mqtts!")
-		cert := x509.NewCertPool()
-		pemCerts, err := ioutil.ReadFile(options.CertFilePath)
-		if err == nil {
-			if !cert.AppendCertsFromPEM(pemCerts) {
-				panic("failed to parse root certificate")
+	if options.TLS {
+		log.Println("use mqtts!")
+		tlsConfig := &tls.Config{}
+		if options.CertFilePath != "" {
+			cert := x509.NewCertPool()
+			pemCerts, err := ioutil.ReadFile(options.CertFilePath)
+			if err == nil {
+				if !cert.AppendCertsFromPEM(pemCerts) {
+					log.Panic("failed to parse root certificate")
+				}
+			} else {
+				log.Panic(err)
 			}
-		} else {
-			panic(err)
+			tlsConfig.RootCAs = cert
 		}
 
-		tlsConfig := &tls.Config{
-			RootCAs: cert,
-		}
 		opts.SetTLSConfig(tlsConfig)
 		opts.AddBroker("ssl://" + options.Server)
 	} else {
@@ -97,10 +107,10 @@ func initMQTTClient(options *Options) mqttp.Client {
 	opts.SetPassword(options.Token)
 	opts.SetCleanSession(true)
 	if options.AutoReconnect {
-		fmt.Println("This device will auto reconnect to ehub/ihub!")
+		log.Println("This device will auto reconnect to ehub/ihub!")
 		opts.SetAutoReconnect(true)
 	} else {
-		fmt.Println("This device will not auto reconnect to ehub/ihub, you can ensure reconnect by set the config param <auto_reconnect:true>!")
+		log.Println("This device will not auto reconnect to ehub/ihub, you can ensure reconnect by set the config param <auto_reconnect:true>!")
 		opts.SetAutoReconnect(false)
 	}
 	if options.KeepAlive != 0 {
@@ -118,16 +128,16 @@ func initMQTTClient(options *Options) mqttp.Client {
 		options.n++
 		// 表示重连
 		if options.n != 1 && options.ReConnectChan != nil {
-			fmt.Println("reconnect ehub/ihub success!")
+			log.Println("reconnect ehub/ihub success!")
 			options.ReConnectChan <- true
 		} else {
-			fmt.Println("connect ehub/ihub success!")
+			log.Println("connect ehub/ihub success!")
 		}
 	})
 
 	if options.DeviceHandlers != nil {
 		opts.SetDefaultPublishHandler(func(client mqttp.Client, msg mqttp.Message) {
-			fmt.Printf("[sdk-go sub] topic: %s, paload: %s\n", msg.Topic(), string(msg.Payload()))
+			log.Printf("[sdk-go sub] topic: %s, paload: %s\n", msg.Topic(), string(msg.Payload()))
 
 			for _, handler := range options.DeviceHandlers {
 				switch {
@@ -146,7 +156,7 @@ func initMQTTClient(options *Options) mqttp.Client {
 
 					// reply
 					if err = Reply(message, client, topic, result); err != nil {
-						fmt.Printf("topic:%s, reply error: %s\n", topic, err.Error())
+						log.Printf("topic:%s, reply error: %s\n", topic, err.Error())
 						return
 					}
 				default:
@@ -212,9 +222,9 @@ func InitWithMiddleCredential(options *Options) (iClient.Client, error) {
 
 // Connect 连接 ihub 或 ehub
 func (m *MqttClient) Connect() error {
-	if token := m.Client.Connect(); !token.WaitTimeout(5*time.Second) || token.Error() != nil {
+	if token := m.Client.Connect(); !token.WaitTimeout(5 * time.Second) || token.Error() != nil {
 		if token.Error() != nil {
-			return fmt.Errorf("连接错误:%s", token.Error().Error())
+			return fmt.Errorf("连接错误:%s", token.Error())
 		}
 		return errors.New("连接超时，请检查网络及配置")
 	}
@@ -286,7 +296,7 @@ func (m *MqttClient) PubEvent(ctx context.Context, meta define.PropertyKV, event
 		return reply, nil
 	}
 	topic := buildEventTopic(m.EntityId, m.ModelId, eventIdentifier)
-	// fmt.Printf("[PubEvent pub] topic:%s, message:%s\n", topic, string(data))
+	// log.Printf("[PubEvent pub] topic:%s, message:%s\n", topic, string(data))
 	if token := m.Client.Publish(topic, byte(0), false, data); token.WaitTimeout(5*time.Second) && token.Error() != nil {
 		reply.Code = constant.FAIL
 		reply.Data = token.Error().Error()
@@ -298,13 +308,13 @@ func (m *MqttClient) PubEvent(ctx context.Context, meta define.PropertyKV, event
 // SubDeviceControl 同步订阅消息
 func (m *MqttClient) SubDeviceControl(serviceIdentifier string) {
 	topic := BuildServiceControlReply(m.ModelId, m.EntityId, serviceIdentifier)
-	// fmt.Printf("[SubDeviceControl] topic:%s\n", topic)
+	// log.Printf("[SubDeviceControl] topic:%s\n", topic)
 	if token := m.Client.Subscribe(topic, 0, nil); token.Wait() && token.Error() != nil {
-		// fmt.Printf("SubDeviceControl err:%s", token.Error())
+		// log.Printf("SubDeviceControl err:%s", token.Error())
 	}
 
 	<-m.UnSubScribeChan
-	// fmt.Printf("[SubDeviceControl] closed, topic:%s\n", topic)
+	// log.Printf("[SubDeviceControl] closed, topic:%s\n", topic)
 }
 
 func (m *MqttClient) UnSubDeviceControl(serviceIdentifier string) error {
@@ -313,7 +323,7 @@ func (m *MqttClient) UnSubDeviceControl(serviceIdentifier string) error {
 		close(m.UnSubScribeChan)
 	}()
 	topic := BuildServiceControlReply(m.ModelId, m.EntityId, serviceIdentifier)
-	// fmt.Printf("[UnSubDeviceControl] topic:%s\n", topic)
+	// log.Printf("[UnSubDeviceControl] topic:%s\n", topic)
 	token := m.Client.Unsubscribe(topic)
 	token.Wait()
 	err := token.Error()

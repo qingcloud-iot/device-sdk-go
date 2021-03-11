@@ -3,7 +3,7 @@ package main
 import (
 	"context"
 	"flag"
-	"fmt"
+	"log"
 	"math/rand"
 	"os"
 	"time"
@@ -27,6 +27,7 @@ var DeviceTemprature float64 = 30
 
 var (
 	configPath string
+	certPath   string
 
 	connect             bool // 上线
 	pubProperty         bool // 上报属性
@@ -44,17 +45,18 @@ var (
 func init() {
 
 	// 通过命令行参数运行不同功能
-	flag.StringVar(&configPath, "conf", "./config.yml", "")
-	flag.BoolVar(&connect, "c", false, "")
-	flag.BoolVar(&pubProperty, "p", false, "")
-	flag.BoolVar(&pubPropertyWithTime, "pt", false, "")
-	flag.BoolVar(&pubPropertyByMqtts, "ps", false, "")
-	flag.BoolVar(&pubEvent, "e", false, "")
-	flag.BoolVar(&serviceContol, "s", false, "")
+	flag.StringVar(&configPath, "conf", "./config.yml", "指定配置文件")
+	flag.StringVar(&certPath, "ca", "", "tls证书文件(非官方CA机构颁发的证书，请使用本参数)")
+	flag.BoolVar(&connect, "c", false, "设备连接")
+	flag.BoolVar(&pubProperty, "p", false, "上报属性数据")
+	flag.BoolVar(&pubPropertyWithTime, "pt", false, "上报属性数据和时间")
+	flag.BoolVar(&pubPropertyByMqtts, "ps", false, "tls加密上报属性数据和时间")
+	flag.BoolVar(&pubEvent, "e", false, "上报事件")
+	flag.BoolVar(&serviceContol, "s", false, "服务调用")
 	flag.BoolVar(&all, "all", false, "")
-	flag.BoolVar(&reg, "r", false, "")
-	flag.BoolVar(&regAndConnect, "rc", false, "")
-	flag.BoolVar(&regAndConnect, "sub", false, "")
+	flag.BoolVar(&reg, "r", false, "动态注册")
+	flag.BoolVar(&regAndConnect, "rc", false, "动态注册并且连接")
+	flag.BoolVar(&sub, "sub", false, "订阅设备下行消息")
 
 	flag.Parse()
 
@@ -63,6 +65,8 @@ func init() {
 }
 
 func main() {
+
+	log.SetFlags(log.Lshortfile | log.LstdFlags)
 
 	if connect {
 		ConnectFunc()
@@ -120,13 +124,13 @@ func ConnectFunc() {
 
 	m, err := mqtt.InitWithToken(options)
 	if err != nil {
-		panic(err)
+		log.Panic(err)
 	}
 
 	// 连接
 	err = m.Connect()
 	if err != nil {
-		panic(err)
+		log.Panic(err)
 	}
 
 	// 掉线后的处理动作
@@ -136,15 +140,15 @@ func ConnectFunc() {
 			case <-options.LostConnectChan:
 				// 如果不重连，则退出程序
 				if !o.AutoReconnect {
-					fmt.Println("not reconnect to ehub/ihub, procedure will quit!")
+					log.Println("not reconnect to ehub/ihub, procedure will quit!")
 					os.Exit(0)
 					return
 				}
 				// 重连，则提示目前暂时掉线
-				fmt.Println("lost connect to ehub/ihub, will auto reconnect!")
+				log.Println("lost connect to ehub/ihub, will auto reconnect!")
 			case ok := <-options.ReConnectChan:
 				if ok {
-					fmt.Println("设备已重新连接")
+					log.Println("设备已重新连接")
 				}
 			}
 		}
@@ -164,13 +168,13 @@ func PubPropertyFunc() {
 
 	m, err := mqtt.InitWithToken(options)
 	if err != nil {
-		panic(err)
+		log.Panic(err)
 	}
 
 	// 连接
 	err = m.Connect()
 	if err != nil {
-		panic(err)
+		log.Panic(err)
 	}
 
 	// 失去连接后的处理动作
@@ -180,15 +184,15 @@ func PubPropertyFunc() {
 			case <-options.LostConnectChan:
 				// 如果不重连，则退出程序
 				if !o.AutoReconnect {
-					fmt.Println("not reconnect to ehub/ihub, procedure will quit!")
+					log.Println("not reconnect to ehub/ihub, procedure will quit!")
 					os.Exit(0)
 					return
 				}
 				// 重连，则提示目前暂时掉线
-				fmt.Println("lost connect to ehub/ihub, will auto reconnect!")
+				log.Println("lost connect to ehub/ihub, will auto reconnect!")
 			case ok := <-options.ReConnectChan:
 				if ok {
-					fmt.Println("设备已连接")
+					log.Println("设备已连接")
 				}
 			}
 		}
@@ -203,9 +207,9 @@ func PubPropertyFunc() {
 		ctx, _ := context.WithTimeout(context.Background(), 3*time.Second)
 		_, err := m.PubProperty(ctx, data)
 		if err != nil {
-			panic(err)
+			log.Panic(err)
 		}
-		fmt.Println("DeviceTemprature:", DeviceTemprature)
+		log.Println("DeviceTemprature:", DeviceTemprature)
 		time.Sleep(2 * time.Second)
 		DeviceTemprature++
 		if DeviceTemprature < 0 || DeviceTemprature > 100 {
@@ -228,13 +232,13 @@ func PubPropertyWithTimeFunc() {
 
 	m, err := mqtt.InitWithToken(options)
 	if err != nil {
-		panic(err)
+		log.Panic(err)
 	}
 
 	// 连接
 	err = m.Connect()
 	if err != nil {
-		panic(err)
+		log.Panic(err)
 	}
 
 	// 失去连接后的处理动作
@@ -244,15 +248,15 @@ func PubPropertyWithTimeFunc() {
 			case <-options.LostConnectChan:
 				// 如果不重连，则退出程序
 				if !o.AutoReconnect {
-					fmt.Println("not reconnect to ehub/ihub, procedure will quit!")
+					log.Println("not reconnect to ehub/ihub, procedure will quit!")
 					os.Exit(0)
 					return
 				}
 				// 重连，则提示目前暂时掉线
-				fmt.Println("lost connect to ehub/ihub, will auto reconnect!")
+				log.Println("lost connect to ehub/ihub, will auto reconnect!")
 			case ok := <-options.ReConnectChan:
 				if ok {
-					fmt.Println("设备已连接")
+					log.Println("设备已连接")
 				}
 			}
 		}
@@ -270,9 +274,9 @@ func PubPropertyWithTimeFunc() {
 		ctx, _ := context.WithTimeout(context.Background(), 3*time.Second)
 		_, err := m.PubPropertyWithTime(ctx, data)
 		if err != nil {
-			panic(err)
+			log.Panic(err)
 		}
-		fmt.Println("DeviceTemprature:", DeviceTemprature)
+		log.Println("DeviceTemprature:", DeviceTemprature)
 		time.Sleep(2 * time.Second)
 		DeviceTemprature++
 		if DeviceTemprature < 0 || DeviceTemprature > 100 {
@@ -298,18 +302,19 @@ func PubPropertyFuncByMQTTS() {
 		Server:          conf.Mqttbroker.AddressMqtts,
 		PropertyType:    constant.PROPERTY_TYPE_BASE,
 		// 如果提供证书路径，将会使用 mqtts 进行通信
-		CertFilePath: "cert/iot.qingcloud.com.cer",
+		CertFilePath: certPath,
+		TLS:          true,
 	}
 
 	m, err := mqtt.InitWithToken(options)
 	if err != nil {
-		panic(err)
+		log.Panic(err)
 	}
 
 	// 连接
 	err = m.Connect()
 	if err != nil {
-		panic(err)
+		log.Panic(err)
 	}
 
 	// 失去连接后的处理动作
@@ -319,15 +324,15 @@ func PubPropertyFuncByMQTTS() {
 			case <-options.LostConnectChan:
 				// 如果不重连，则退出程序
 				if !o.AutoReconnect {
-					fmt.Println("not reconnect to ehub/ihub, procedure will quit!")
+					log.Println("not reconnect to ehub/ihub, procedure will quit!")
 					os.Exit(0)
 					return
 				}
 				// 重连，则提示目前暂时掉线
-				fmt.Println("lost connect to ehub/ihub, will auto reconnect!")
+				log.Println("lost connect to ehub/ihub, will auto reconnect!")
 			case ok := <-options.ReConnectChan:
 				if ok {
-					fmt.Println("设备已连接")
+					log.Println("设备已连接")
 				}
 			}
 		}
@@ -342,9 +347,9 @@ func PubPropertyFuncByMQTTS() {
 		ctx, _ := context.WithTimeout(context.Background(), 3*time.Second)
 		_, err := m.PubProperty(ctx, data)
 		if err != nil {
-			panic(err)
+			log.Panic(err)
 		}
-		fmt.Println("DeviceTemprature:", DeviceTemprature)
+		log.Println("DeviceTemprature:", DeviceTemprature)
 		time.Sleep(2 * time.Second)
 		DeviceTemprature++
 		if DeviceTemprature < 0 || DeviceTemprature > 100 {
@@ -367,13 +372,13 @@ func PubEventFunc() {
 
 	m, err := mqtt.InitWithToken(options)
 	if err != nil {
-		panic(err)
+		log.Panic(err)
 	}
 
 	// 连接
 	err = m.Connect()
 	if err != nil {
-		panic(err)
+		log.Panic(err)
 	}
 
 	// 失去连接后的处理动作
@@ -383,15 +388,15 @@ func PubEventFunc() {
 			case <-options.LostConnectChan:
 				// 如果不重连，则退出程序
 				if !o.AutoReconnect {
-					fmt.Println("not reconnect to ehub/ihub, procedure will quit!")
+					log.Println("not reconnect to ehub/ihub, procedure will quit!")
 					os.Exit(0)
 					return
 				}
 				// 重连，则提示目前暂时掉线
-				fmt.Println("lost connect to ehub/ihub, will auto reconnect!")
+				log.Println("lost connect to ehub/ihub, will auto reconnect!")
 			case ok := <-options.ReConnectChan:
 				if ok {
-					fmt.Println("设备已连接")
+					log.Println("设备已连接")
 				}
 			}
 		}
@@ -420,9 +425,9 @@ func PubEventFunc() {
 			ctx, _ := context.WithTimeout(context.Background(), 3*time.Second)
 			reply, err := m.PubEvent(ctx, eventData, eventIdentifier)
 			if err != nil {
-				panic(err)
+				log.Panic(err)
 			}
-			fmt.Printf("PubEvent reply:%+v\n", reply)
+			log.Printf("PubEvent reply:%+v\n", reply)
 		}
 		time.Sleep(2 * time.Second)
 	}
@@ -457,13 +462,13 @@ func ServiceDeviceControlFunc() {
 
 	m, err := mqtt.InitWithToken(options)
 	if err != nil {
-		panic(err)
+		log.Panic(err)
 	}
 
 	// 连接
 	err = m.Connect()
 	if err != nil {
-		panic(err)
+		log.Panic(err)
 	}
 
 	// 失去连接后的处理动作
@@ -473,15 +478,15 @@ func ServiceDeviceControlFunc() {
 			case <-options.LostConnectChan:
 				// 如果不重连，则退出程序
 				if !o.AutoReconnect {
-					fmt.Println("not reconnect to ehub/ihub, procedure will quit!")
+					log.Println("not reconnect to ehub/ihub, procedure will quit!")
 					os.Exit(0)
 					return
 				}
 				// 重连，则提示目前暂时掉线
-				fmt.Println("lost connect to ehub/ihub, will auto reconnect!")
+				log.Println("lost connect to ehub/ihub, will auto reconnect!")
 			case ok := <-options.ReConnectChan:
 				if ok {
-					fmt.Println("设备已连接")
+					log.Println("设备已连接")
 				}
 			}
 		}
@@ -496,9 +501,9 @@ func ServiceDeviceControlFunc() {
 			ctx, _ := context.WithTimeout(context.Background(), 3*time.Second)
 			_, err := m.PubProperty(ctx, data)
 			if err != nil {
-				panic(err)
+				log.Panic(err)
 			}
-			fmt.Println("DeviceTemprature:", DeviceTemprature)
+			log.Println("DeviceTemprature:", DeviceTemprature)
 
 			DeviceTemprature++
 			if DeviceTemprature < 0 || DeviceTemprature > 100 {
@@ -540,13 +545,13 @@ func PropertyAndEventAndServiceFunc() {
 
 	m, err := mqtt.InitWithToken(options)
 	if err != nil {
-		panic(err)
+		log.Panic(err)
 	}
 
 	// 连接
 	err = m.Connect()
 	if err != nil {
-		panic(err)
+		log.Panic(err)
 	}
 
 	// 失去连接后的处理动作
@@ -556,15 +561,15 @@ func PropertyAndEventAndServiceFunc() {
 			case <-options.LostConnectChan:
 				// 如果不重连，则退出程序
 				if !o.AutoReconnect {
-					fmt.Println("not reconnect to ehub/ihub, procedure will quit!")
+					log.Println("not reconnect to ehub/ihub, procedure will quit!")
 					os.Exit(0)
 					return
 				}
 				// 重连，则提示目前暂时掉线
-				fmt.Println("lost connect to ehub/ihub, will auto reconnect!")
+				log.Println("lost connect to ehub/ihub, will auto reconnect!")
 			case ok := <-options.ReConnectChan:
 				if ok {
-					fmt.Println("设备已连接")
+					log.Println("设备已连接")
 				}
 			}
 		}
@@ -579,9 +584,9 @@ func PropertyAndEventAndServiceFunc() {
 			ctx, _ := context.WithTimeout(context.Background(), 3*time.Second)
 			_, err := m.PubProperty(ctx, data)
 			if err != nil {
-				panic(err)
+				log.Panic(err)
 			}
-			fmt.Println("DeviceTemprature:", DeviceTemprature)
+			log.Println("DeviceTemprature:", DeviceTemprature)
 
 			DeviceTemprature++
 			if DeviceTemprature < 0 || DeviceTemprature > 100 {
@@ -611,9 +616,9 @@ func PropertyAndEventAndServiceFunc() {
 				}
 				reply, err := m.PubEvent(context.Background(), eventData, eventIdentifier)
 				if err != nil {
-					panic(err)
+					log.Panic(err)
 				}
-				fmt.Printf("PubEvent reply:%+v\n", reply)
+				log.Printf("PubEvent reply:%+v\n", reply)
 			}
 			time.Sleep(2 * time.Second)
 		}
@@ -661,10 +666,10 @@ func DynamicRegistry() {
 	r := register.NewRegister(conf.Registry.ServiceAddress)
 	resp, err := r.DynamicRegistry(midCredential)
 	if err != nil {
-		fmt.Printf("%s dynamic registry failed, error: %s\n", midCredential, err.Error())
+		log.Printf("%s dynamic registry failed, error: %s\n", midCredential, err.Error())
 		return
 	}
-	fmt.Printf("%s dynamic registry success, ID:%s, device_name:%s, token:%s\n", midCredential, resp.ID, resp.DeviceName, resp.Token)
+	log.Printf("%s dynamic registry success, ID:%s, device_name:%s, token:%s\n", midCredential, resp.ID, resp.DeviceName, resp.Token)
 }
 
 // DynamicRegistryAndConnect 设备的动态注册并上线
@@ -681,13 +686,13 @@ func DynamicRegistryAndConnect() {
 	}
 	m, err := mqtt.InitWithMiddleCredential(options)
 	if err != nil {
-		panic(err)
+		log.Panic(err)
 	}
 
 	// 连接
 	err = m.Connect()
 	if err != nil {
-		panic(err)
+		log.Panic(err)
 	}
 
 	// 掉线后的处理动作
@@ -697,15 +702,15 @@ func DynamicRegistryAndConnect() {
 			case <-options.LostConnectChan:
 				// 如果不重连，则退出程序
 				if !o.AutoReconnect {
-					fmt.Println("not reconnect to ehub/ihub, procedure will quit!")
+					log.Println("not reconnect to ehub/ihub, procedure will quit!")
 					os.Exit(0)
 					return
 				}
 				// 重连，则提示目前暂时掉线
-				fmt.Println("lost connect to ehub/ihub, will auto reconnect!")
+				log.Println("lost connect to ehub/ihub, will auto reconnect!")
 			case ok := <-options.ReConnectChan:
 				if ok {
-					fmt.Println("设备已连接")
+					log.Println("设备已连接")
 				}
 			}
 		}
@@ -724,22 +729,22 @@ func Sub() {
 
 	m, err := mqtt.InitWithToken(options)
 	if err != nil {
-		panic(err)
+		log.Panic(err)
 	}
 
 	// 连接
 	err = m.Connect()
 	if err != nil {
-		panic(err)
+		log.Panic(err)
 	}
 
 	cb := func(topic string, data []byte) {
-		fmt.Println("=====topic=====:", topic)
-		fmt.Println("=====data=====:", string(data))
+		log.Println("=====topic=====:", topic)
+		log.Println("=====data=====:", string(data))
 	}
 
 	err = m.Subscribe("/test/123456", 0, cb)
 	if err != nil {
-		panic(err)
+		log.Panic(err)
 	}
 }

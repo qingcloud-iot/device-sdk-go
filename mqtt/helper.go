@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"log"
 	"time"
 
 	"github.com/dgrijalva/jwt-go"
@@ -137,7 +138,7 @@ func ParseMessage(payload []byte) (*define.Message, error) {
 	message := &define.Message{}
 	err := json.Unmarshal(payload, message)
 	if err != nil {
-		// fmt.Errorf("parseMessage err:%s", err.Error())
+		// log.Errorf("parseMessage err:%s", err.Error())
 		return nil, err
 	}
 	return message, nil
@@ -171,15 +172,15 @@ func Reply(message *define.Message, client mqttp.Client, topic string, result de
 
 	data, err := json.Marshal(reply)
 	if err != nil {
-		fmt.Printf("[recvDeviceControlReply] err:%s\n", err.Error())
+		log.Printf("[recvDeviceControlReply] err:%s\n", err.Error())
 		return err
 	}
-	fmt.Println(string(data))
+	log.Println(string(data))
 	token := client.Publish(topic+"_reply", byte(0), false, data)
 	if token.Error() != nil {
-		fmt.Printf("[recvDeviceControlReply] err:%s\n", err.Error())
+		log.Printf("[recvDeviceControlReply] err:%s\n", err.Error())
 		return err
 	}
-	fmt.Printf("[recvDeviceControlReply] success\n")
+	log.Printf("[recvDeviceControlReply] success\n")
 	return nil
 }

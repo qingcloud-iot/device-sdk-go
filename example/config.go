@@ -2,6 +2,7 @@ package main
 
 import (
 	"io/ioutil"
+	"log"
 
 	"gopkg.in/yaml.v2"
 )
@@ -26,11 +27,11 @@ type Config struct {
 func InitConfig() *Config {
 	yamlFile, err := ioutil.ReadFile(configPath)
 	if err != nil {
-		panic(err)
+		log.Panic(err)
 	}
 	err = yaml.Unmarshal(yamlFile, &conf)
 	if err != nil {
-		panic(err)
+		log.Panic(err)
 	}
 	return conf
 }

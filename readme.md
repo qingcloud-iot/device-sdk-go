@@ -141,13 +141,13 @@ registry:
     // 初始化
     m, err := mqtt.InitWithToken(options)
     if err != nil {
-        panic(err)
+        log.Panic(err)
     }
 
     // 连接
     err = m.Connect()
     if err != nil {
-        panic(err)
+        log.Panic(err)
     }
 
     // 掉线(离线)后的处理动作
@@ -157,12 +157,12 @@ registry:
             case <-options.LostConnectChan:
                 // 如果不重连，则退出程序
                 if !o.AutoReconnect {
-                    fmt.Println("not reconnect to ehub/ihub, procedure will quit!")
+                    log.Println("not reconnect to ehub/ihub, procedure will quit!")
                     os.Exit(0)
                     return
                 }
                 // 重连，则提示目前暂时掉线
-                fmt.Println("lost connect to ehub/ihub, will auto reconnect!")
+                log.Println("lost connect to ehub/ihub, will auto reconnect!")
             }
         }
     }(options)
@@ -188,13 +188,13 @@ registry:
 
     m, err := mqtt.InitWithMiddleCredential(options)
     if err != nil {
-        panic(err)
+        log.Panic(err)
     }
     
     // 连接
     err = client.Connect()
     if err != nil {
-    panic(err)
+    log.Panic(err)
     }
 
     // 掉线(离线)后的处理动作
@@ -204,12 +204,12 @@ registry:
             case <-options.LostConnectChan:
                 // 如果不重连，则退出程序
                 if !o.AutoReconnect {
-                    fmt.Println("not reconnect to ehub/ihub, procedure will quit!")
+                    log.Println("not reconnect to ehub/ihub, procedure will quit!")
                     os.Exit(0)
                     return
                 }
                 // 重连，则提示目前暂时掉线
-                fmt.Println("lost connect to ehub/ihub, will auto reconnect!")
+                log.Println("lost connect to ehub/ihub, will auto reconnect!")
             }
         }
     }(options)
@@ -330,7 +330,7 @@ midCredential := conf.Registry.MiddleCredential
 r := register.NewRegister(conf.Registry.ServiceAddress)
 resp, err := r.DynamicRegistry(midCredential)
 if err != nil {
-	fmt.Printf("%s dynamic registry failed, error: %s\n", midCredential, err.Error())
+	log.Printf("%s dynamic registry failed, error: %s\n", midCredential, err.Error())
 	return
 }
 ```
